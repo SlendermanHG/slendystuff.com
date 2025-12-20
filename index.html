@@ -4,14 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Slendy Stuff | The Chronicle for Dungeon Masters</title>
+
+<!-- Fonts for D&D tone -->
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600&family=Uncial+Antiqua&display=swap" rel="stylesheet">
+
 <style>
   body {
     margin: 0;
-    font-family: 'Georgia', serif;
-    color: #3a1f1f;
+    font-family: 'Crimson Pro', serif;
+    color: #3b1d14;
     background: radial-gradient(circle at center, #f5e6ca 0%, #e0caa1 90%) fixed;
     background-attachment: fixed;
-    line-height: 1.7;
+    line-height: 1.8;
+    font-size: 18px;
   }
   section {
     min-height: 100vh;
@@ -25,44 +30,30 @@
     transform: translateY(0);
   }
   h1, h2, h3 {
+    font-family: 'Uncial Antiqua', serif;
     color: #6b0f0f;
     text-align: center;
-    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
   }
-  h1 {
-    font-size: 3em;
-    margin-bottom: 0.5em;
-  }
-  h2 {
-    margin-top: 2em;
-  }
+  h1 { font-size: 3em; margin-bottom: 0.5em; }
+  h2 { margin-top: 2em; font-size: 2em; }
+  h3 { font-size: 1.4em; margin-top: 1.5em; }
   p {
     max-width: 900px;
-    margin: 0 auto 1em auto;
+    margin: 0 auto 1.2em auto;
     font-size: 1.1em;
     text-align: justify;
   }
-  .divider {
-    text-align: center;
-    margin: 3em auto;
-  }
-  .divider svg {
-    width: 180px;
-    height: 20px;
-    fill: #6b0f0f;
-    opacity: 0.4;
-  }
+  .divider { text-align: center; margin: 3em auto; }
+  .divider svg { width: 180px; height: 20px; fill: #6b0f0f; opacity: 0.4; }
   .tier {
     margin: 2em auto;
-    padding: 1em 2em;
+    padding: 1.5em 2em;
     border-left: 3px solid #6b0f0f;
     background: rgba(255,255,255,0.1);
-    max-width: 800px;
+    max-width: 850px;
   }
-  .tier h3 {
-    text-align: left;
-    margin-top: 0;
-  }
+  .tier h3 { text-align: left; margin-top: 0; }
   .button {
     display: inline-block;
     background: #6b0f0f;
@@ -73,9 +64,7 @@
     border-radius: 4px;
     transition: background 0.3s;
   }
-  .button:hover {
-    background: #8c1212;
-  }
+  .button:hover { background: #8c1212; }
   footer {
     text-align: center;
     padding: 2em;
@@ -94,14 +83,19 @@
 </section>
 
 <div class="divider"><svg viewBox="0 0 100 10"><path d="M0,5 Q25,0 50,5 T100,5" /></svg></div>
-
 <section id="ledger">
   <h2>The Ledger</h2>
-  <p>Every Dungeon Master needs a memory that endures. The Chronicle was forged to remember everything you and your players discover. From tavern gossip to divine revelation, it becomes your campaign’s living history — a record written not on parchment, but in persistence. It doesn’t judge, it doesn’t embellish; it simply remembers.</p>
-  <p>Whether your adventures span months or years, this Chronicle serves as your ally — tracking, recalling, and storing the knowledge that might otherwise fade. It allows you to be present at the table, confident that nothing will be lost to time or fatigue.</p>
+  <p>Every Dungeon Master carries a burden both sacred and heavy — the memory of a world that exists only because they remember it. The Chronicle was forged to bear that burden beside you. It remembers the truths your players uncover, the lies your villains tell, the taverns they stumble through, and the dreams that haunt them after. Every whisper, every triumph, every forgotten promise — all captured, all preserved.</p>
+
+  <p>Too many nights have ended with half-finished notes and fading recollections. Too many details — the name of a god, the scent of a forest, the words of a dying NPC — lost to time. The Chronicle exists to guard against that loss. It listens without judgment, recording faithfully every scrap of lore and revelation, transforming your campaign into a living ledger of legend.</p>
+
+  <p>It does not embellish. It does not forget. It is the quiet scribe who writes while you weave your story, a patient companion that never asks for rest. In its digital pages, memory becomes immortal. Where your hand would grow tired, the Chronicle endures — ensuring that every note, every choice, and every echo of adventure remains long after the table grows silent.</p>
+
+  <p>Whether your tale spans months or years, this Chronicle will stand watch — your ally through fatigue and doubt, a keeper of truth when memory falters. It allows you to be wholly present at the table, confident that nothing meaningful will be lost to time. Because stories, after all, deserve to be remembered.</p>
 </section>
 
 <div class="divider"><svg viewBox="0 0 100 10"><path d="M0,5 Q25,0 50,5 T100,5" /></svg></div>
+
 <section id="invocations">
   <h2>The Invocations</h2>
   <p>When you speak the right words, the Chronicle listens. These invocations are not mere commands—they are the means by which your story is kept whole. Each has its place, each with purpose. What follows are the words your players and you, the Dungeon Master, may call upon.</p>
@@ -163,6 +157,7 @@
 </section>
 
 <div class="divider"><svg viewBox="0 0 100 10"><path d="M0,5 Q25,0 50,5 T100,5" /></svg></div>
+
 <section id="contact">
   <h2>The Letter</h2>
   <p><em>To my fellow Dungeon Masters,</em></p>
@@ -189,9 +184,10 @@
 
   <p><em>— Slendy, Creator of the Chronicle</em></p>
 </section>
-
 <footer>
-  <div class="divider"><svg viewBox="0 0 100 10"><path d="M0,5 Q25,0 50,5 T100,5" /></svg></div>
+  <div class="divider">
+    <svg viewBox="0 0 100 10"><path d="M0,5 Q25,0 50,5 T100,5" /></svg>
+  </div>
   <p>© 2025 Slendy Stuff | Forged in ink, code, and imagination.</p>
 </footer>
 
@@ -204,6 +200,7 @@
       }
     });
   }, { threshold: 0.1 });
+
   document.querySelectorAll('section').forEach(sec => observer.observe(sec));
 </script>
 
