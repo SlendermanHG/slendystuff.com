@@ -539,6 +539,112 @@ h3 {
   width: min(520px, calc(100% - 2rem));
 }
 
+.site-helper {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 260;
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+}
+
+.helper-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 0.4rem 0.62rem;
+  background: linear-gradient(120deg, rgba(255, 46, 166, 0.92), rgba(29, 15, 56, 0.95));
+  color: #fff;
+  font-weight: 800;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+}
+
+.helper-face {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(120deg, var(--accent-yellow), var(--accent-cyan));
+  color: #120014;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.helper-toggle-label {
+  font-size: 0.85rem;
+}
+
+.helper-panel {
+  width: min(360px, calc(100vw - 1.5rem));
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: linear-gradient(165deg, rgba(29, 13, 50, 0.98), rgba(10, 7, 24, 0.98));
+  box-shadow: var(--shadow);
+  padding: 0.78rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.helper-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.helper-close {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  font-weight: 800;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.helper-message {
+  margin: 0;
+  color: var(--muted);
+}
+
+.helper-intents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+}
+
+.helper-chip {
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+  font-size: 0.78rem;
+  padding: 0.25rem 0.52rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.helper-chip.active {
+  color: #120014;
+  background: linear-gradient(120deg, var(--accent-yellow), var(--accent-cyan));
+  border-color: transparent;
+}
+
+.helper-actions {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.helper-action {
+  width: 100%;
+}
+
 @media (max-width: 1020px) {
   .hero-grid,
   .grid.two,
@@ -549,6 +655,17 @@ h3 {
 }
 
 @media (max-width: 780px) {
+  .site-helper {
+    right: 0.6rem;
+    left: 0.6rem;
+    bottom: 0.6rem;
+    justify-items: stretch;
+  }
+
+  .helper-panel {
+    width: 100%;
+  }
+
   .site-nav {
     display: none;
     position: absolute;

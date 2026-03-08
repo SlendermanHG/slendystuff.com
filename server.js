@@ -23,9 +23,9 @@ const USER_SESSION_COOKIE = "slendy_user_session";
 const USER_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const userSessions = new Map();
 
-const DEFAULT_ADMIN_EMAIL = "operations@slendystuff.com";
+const DEFAULT_ADMIN_EMAIL = "slender@slendystuff.com";
 const ADMIN_EMAIL = safeString(process.env.ADMIN_EMAIL, DEFAULT_ADMIN_EMAIL).trim().toLowerCase() || DEFAULT_ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "change-this-admin-password";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "1234567890";
 const PORT = Number(process.env.PORT || 4173);
 
 let settingsCache = null;
@@ -348,6 +348,10 @@ async function appendLog(logName, payload, req = null) {
 
 function safeString(value, fallback = "") {
   return typeof value === "string" ? value : fallback;
+}
+
+function isValidAdminPassword(value) {
+  return safeString(value, "").length >= 10;
 }
 
 function hashPassword(plainPassword) {
@@ -997,6 +1001,35 @@ app.get("/api/admin/session", requireAdmin, (req, res) => {
   res.json({ ok: true, admin: sanitizeAdmin(req.admin) });
 });
 
+app.post("/api/admin/change-password", requireAdmin, async (req, res) => {
+  try {
+    const currentPassword = safeString(req.body.currentPassword, "");
+    const newPassword = safeString(req.body.newPassword, "");
+    const confirmPassword = safeString(req.body.confirmPassword, "");
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ ok: false, error: "Current, new, and confirm password are required." });
+    }
+    if (!verifyPassword(currentPassword, req.admin.passwordHash)) {
+      return res.status(401).json({ ok: false, error: "Current password is incorrect." });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ ok: false, error: "New password and confirm password do not match." });
+    }
+    if (!isValidAdminPassword(newPassword)) {
+      return res.status(400).json({ ok: false, error: "New password must be at least 10 characters." });
+    }
+
+    req.admin.passwordHash = hashPassword(newPassword);
+    await saveJson(ADMINS_PATH, adminsCache);
+    await appendLog("admin-password-change", { adminId: req.admin.id, email: req.admin.email }, req);
+
+    return res.json({ ok: true, message: "Admin password updated." });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: safeString(error.message, "Failed to update admin password") });
+  }
+});
+
 app.get("/api/admin/settings", requireAdmin, (_req, res) => {
   res.json({
     ok: true,
@@ -1091,8 +1124,8 @@ async function start() {
   app.listen(PORT, () => {
     console.log(`Server listening on http://localhost:${PORT}`);
     console.log(`Admin bootstrap source: ADMIN_EMAIL (${ADMIN_EMAIL}) + ADMIN_PASSWORD env vars.`);
-    if (ADMIN_PASSWORD === "change-this-admin-password") {
-      console.warn("ADMIN_PASSWORD is using the default value. Set a strong value in production.");
+    if (ADMIN_PASSWORD === "1234567890") {
+      console.warn("ADMIN_PASSWORD is using the temporary default. Change it in admin settings or env vars for production.");
     }
     console.log(`Logs currently target: ${resolveLogDir()}`);
   });

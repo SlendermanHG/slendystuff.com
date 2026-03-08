@@ -14,8 +14,8 @@ Run locally:
 
 ```powershell
 npm install
-$env:ADMIN_EMAIL = "operations@slendystuff.com"
-$env:ADMIN_PASSWORD = "set-a-strong-password"
+$env:ADMIN_EMAIL = "Slender@slendystuff.com"
+$env:ADMIN_PASSWORD = "1234567890"
 npm start
 ```
 
@@ -35,8 +35,8 @@ Open:
 ## Admin login account
 - Admin page login now uses **email + password**.
 - On first backend start, the server auto-creates one admin account if it does not already exist:
-  - `ADMIN_EMAIL` (defaults to `operations@slendystuff.com`)
-  - `ADMIN_PASSWORD` (set this to a strong value)
+  - `ADMIN_EMAIL` (defaults to `slender@slendystuff.com`)
+  - `ADMIN_PASSWORD` (defaults to temporary `1234567890`)
 
 ## Account + support billing policy
 - Users can register/login from `/account.html`.

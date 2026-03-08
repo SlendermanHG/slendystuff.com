@@ -29,7 +29,7 @@
         <form data-login-form>
           <div class="field">
             <label for="email">Email</label>
-            <input id="email" name="email" type="email" required>
+            <input id="email" name="email" type="email" value="Slender@slendystuff.com" required>
           </div>
           <div class="field">
             <label for="password">Password</label>
@@ -43,6 +43,31 @@
       </article>
 
       <section class="admin-content hidden" data-admin-content>
+        <article class="card">
+          <h2>Admin Security</h2>
+          <p class="muted">Rotate your admin password here without editing server files.</p>
+          <form data-admin-password-form>
+            <div class="form-grid">
+              <div class="field">
+                <label for="admin-current-password">Current Password</label>
+                <input id="admin-current-password" name="currentPassword" type="password" required>
+              </div>
+              <div class="field">
+                <label for="admin-new-password">New Password</label>
+                <input id="admin-new-password" name="newPassword" type="password" minlength="10" required>
+              </div>
+            </div>
+            <div class="field">
+              <label for="admin-confirm-password">Confirm New Password</label>
+              <input id="admin-confirm-password" name="confirmPassword" type="password" minlength="10" required>
+            </div>
+            <div class="inline-actions">
+              <button class="btn btn-ghost" type="submit">Update Admin Password</button>
+            </div>
+            <p class="status" data-admin-password-status></p>
+          </form>
+        </article>
+
         <article class="card">
           <h2>Brand + Hero</h2>
           <div class="form-grid">

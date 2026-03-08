@@ -7,6 +7,8 @@
   const saveStatus = document.querySelector("[data-save-status]");
   const logoutButton = document.querySelector("[data-logout]");
   const refreshAnydeskButton = document.querySelector("[data-refresh-anydesk]");
+  const adminPasswordForm = document.querySelector("[data-admin-password-form]");
+  const adminPasswordStatus = document.querySelector("[data-admin-password-status]");
 
   const productTableBody = document.querySelector("[data-products-body]");
   const addProductButton = document.querySelector("[data-add-product]");
@@ -59,6 +61,9 @@
     addProductButton.addEventListener("click", addProductRow);
     logoutButton.addEventListener("click", onLogout);
     refreshAnydeskButton.addEventListener("click", onRefreshAnydesk);
+    if (adminPasswordForm) {
+      adminPasswordForm.addEventListener("submit", onAdminPasswordChange);
+    }
   }
 
   async function checkSession() {
@@ -268,6 +273,46 @@
     }
 
     setStatus(saveStatus, `AnyDesk refreshed: ${payload.resolvedUrl}`, "ok");
+  }
+
+  async function onAdminPasswordChange(event) {
+    event.preventDefault();
+    if (!adminPasswordForm) {
+      return;
+    }
+
+    const formData = new FormData(adminPasswordForm);
+    const payload = {
+      currentPassword: String(formData.get("currentPassword") || ""),
+      newPassword: String(formData.get("newPassword") || ""),
+      confirmPassword: String(formData.get("confirmPassword") || "")
+    };
+
+    if (payload.newPassword !== payload.confirmPassword) {
+      setStatus(adminPasswordStatus, "New password and confirm password must match.", "error");
+      return;
+    }
+    if (payload.newPassword.length < 10) {
+      setStatus(adminPasswordStatus, "New password must be at least 10 characters.", "error");
+      return;
+    }
+
+    setStatus(adminPasswordStatus, "Updating admin password...", "");
+    const response = await fetch("/api/admin/change-password", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const result = await parseJson(response);
+
+    if (!response.ok || !result.ok) {
+      setStatus(adminPasswordStatus, result.error || "Failed to update admin password.", "error");
+      return;
+    }
+
+    adminPasswordForm.reset();
+    setStatus(adminPasswordStatus, "Admin password updated.", "ok");
   }
 
   function collectProducts() {

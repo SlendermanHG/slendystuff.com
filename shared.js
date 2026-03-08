@@ -1,6 +1,10 @@
 (() => {
+  const SLENDY_HELPER_SEEN_KEY = "slendy-helper-seen-v1";
+
   const SlendyApp = {
     config: null,
+    userSession: null,
+    helperMounted: false,
 
     async fetchPublicConfig() {
       if (this.config) {
@@ -31,6 +35,26 @@
       };
 
       return this.config;
+    },
+
+    async getUserSession(forceRefresh = false) {
+      if (!forceRefresh && this.userSession) {
+        return this.userSession;
+      }
+
+      try {
+        const response = await fetch("/api/auth/session");
+        const payload = await response.json();
+        if (response.ok && payload.ok) {
+          this.userSession = payload;
+          return payload;
+        }
+      } catch {
+        // Backend unavailable in static mode.
+      }
+
+      this.userSession = { ok: true, authenticated: false };
+      return this.userSession;
     },
 
     async getAnydeskInfo() {
@@ -109,6 +133,275 @@
       }
     },
 
+    async initSiteHelper() {
+      if (this.helperMounted) {
+        return;
+      }
+      if (!document.body || window.location.pathname.startsWith("/admin")) {
+        return;
+      }
+
+      this.helperMounted = true;
+      try {
+        await this.mountSiteHelper();
+      } catch {
+        // Helper should never break the page.
+      }
+    },
+
+    async mountSiteHelper() {
+      if (document.querySelector("[data-site-helper]")) {
+        return;
+      }
+
+      const [config, session] = await Promise.all([
+        this.fetchPublicConfig().catch(() => ({ brand: { name: "Slendy Stuff" }, products: [] })),
+        this.getUserSession()
+      ]);
+
+      const helper = document.createElement("aside");
+      helper.className = "site-helper";
+      helper.dataset.siteHelper = "true";
+      helper.innerHTML = `
+        <button class="helper-toggle" type="button" aria-expanded="false" aria-controls="site-helper-panel" data-helper-toggle>
+          <span class="helper-face" aria-hidden="true">CLP</span>
+          <span class="helper-toggle-label">Need help fast?</span>
+        </button>
+        <section class="helper-panel hidden" id="site-helper-panel" data-helper-panel aria-live="polite">
+          <header class="helper-head">
+            <p class="eyebrow">Slendy Assistant</p>
+            <button class="helper-close" type="button" aria-label="Close assistant" data-helper-close>x</button>
+          </header>
+          <p class="helper-message" data-helper-message></p>
+          <div class="helper-intents" data-helper-intents>
+            <button class="helper-chip" type="button" data-intent="explore">Explore</button>
+            <button class="helper-chip" type="button" data-intent="bots">Bots</button>
+            <button class="helper-chip" type="button" data-intent="programs">Programs</button>
+            <button class="helper-chip" type="button" data-intent="support">Support</button>
+            <button class="helper-chip" type="button" data-intent="account">Account</button>
+          </div>
+          <div class="helper-actions" data-helper-actions></div>
+        </section>
+      `;
+      document.body.appendChild(helper);
+
+      const toggleButton = helper.querySelector("[data-helper-toggle]");
+      const closeButton = helper.querySelector("[data-helper-close]");
+      const panel = helper.querySelector("[data-helper-panel]");
+      const messageNode = helper.querySelector("[data-helper-message]");
+      const actionNode = helper.querySelector("[data-helper-actions]");
+      const intentButtons = Array.from(helper.querySelectorAll("[data-intent]"));
+
+      const context = {
+        config,
+        session,
+        path: window.location.pathname.toLowerCase(),
+        query: new URLSearchParams(window.location.search)
+      };
+
+      let currentIntent = "explore";
+      const setOpen = (open) => {
+        panel.classList.toggle("hidden", !open);
+        toggleButton.setAttribute("aria-expanded", open ? "true" : "false");
+      };
+
+      const render = () => {
+        const plan = this.buildHelperPlan(currentIntent, context);
+        messageNode.textContent = plan.message;
+        this.renderHelperActions(actionNode, plan.actions, currentIntent);
+
+        intentButtons.forEach((button) => {
+          button.classList.toggle("active", button.dataset.intent === currentIntent);
+        });
+      };
+
+      toggleButton.addEventListener("click", () => {
+        const next = panel.classList.contains("hidden");
+        setOpen(next);
+        if (next) {
+          this.track("helper_opened", { page: context.path });
+          localStorage.setItem(SLENDY_HELPER_SEEN_KEY, "yes");
+        } else {
+          this.track("helper_closed", { page: context.path });
+        }
+      });
+
+      closeButton.addEventListener("click", () => {
+        setOpen(false);
+        this.track("helper_closed", { page: context.path });
+      });
+
+      intentButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          currentIntent = button.dataset.intent || "explore";
+          this.track("helper_intent_selected", { intent: currentIntent, page: context.path });
+          render();
+        });
+      });
+
+      render();
+
+      if (localStorage.getItem(SLENDY_HELPER_SEEN_KEY) !== "yes" && window.matchMedia("(min-width: 781px)").matches) {
+        setOpen(true);
+        this.track("helper_auto_opened", { page: context.path });
+        localStorage.setItem(SLENDY_HELPER_SEEN_KEY, "yes");
+      }
+    },
+
+    buildHelperPlan(intent, context) {
+      const products = Array.isArray(context.config && context.config.products) ? context.config.products : [];
+      const session = context.session || { authenticated: false };
+      const eligibility = session.eligibility || {};
+      const signedEmail = session.user && session.user.email ? session.user.email : "your account";
+      const path = context.path || "/";
+      const query = context.query || new URLSearchParams();
+
+      const productAction = (product, variant = "btn") => ({
+        label: `View ${product.title}`,
+        href: `/product.html?id=${encodeURIComponent(product.id)}`,
+        variant,
+        eventName: "helper_product_click",
+        meta: { productId: product.id }
+      });
+
+      if (intent === "account") {
+        if (session.authenticated) {
+          return {
+            message: eligibility.eligible
+              ? `You are signed in as ${signedEmail}. Your support status is currently free within the active window.`
+              : `You are signed in as ${signedEmail}. I can help route you to paid support or product setup now.`,
+            actions: [
+              { label: "Open Account Center", href: "/account.html", eventName: "helper_account_center" },
+              { label: "Open Tech Support", href: "/support.html", variant: "ghost", eventName: "helper_support" }
+            ]
+          };
+        }
+
+        return {
+          message: "Create an account to save purchase history and auto-check free support eligibility for future sessions.",
+          actions: [
+            { label: "Create Account", href: "/account.html", eventName: "helper_account_create" },
+            { label: "Browse Products", href: "/#products", variant: "ghost", eventName: "helper_browse_products" }
+          ]
+        };
+      }
+
+      if (intent === "bots") {
+        const picks = this.pickProducts(products, (item) => {
+          const text = `${item.title} ${item.category}`.toLowerCase();
+          return text.includes("bot") || text.includes("discord") || text.includes("automation");
+        });
+
+        return {
+          message: "Need automation? Start with these bot-focused options and I can point you to custom tailoring next.",
+          actions: [
+            ...picks.map((item, index) => productAction(item, index === 0 ? "btn" : "ghost")),
+            ...(!session.authenticated ? [{ label: "Create Account First", href: "/account.html", variant: "ghost", eventName: "helper_account_create" }] : [])
+          ]
+        };
+      }
+
+      if (intent === "programs") {
+        const picks = this.pickProducts(products, (item) => {
+          const text = `${item.title} ${item.category}`.toLowerCase();
+          return text.includes("program") || text.includes("optimizer") || text.includes("pos") || text.includes("suite");
+        });
+
+        return {
+          message: "Need software-focused tools? These are program-centric offers that fit optimization and operations.",
+          actions: picks.map((item, index) => productAction(item, index === 0 ? "btn" : "ghost"))
+        };
+      }
+
+      if (intent === "support") {
+        return {
+          message: session.authenticated
+            ? "I can route you to support with your account context attached for faster handling."
+            : "For best support routing, sign in first so purchase-based free support can be checked automatically.",
+          actions: [
+            { label: "Open Tech Support", href: "/support.html", eventName: "helper_support" },
+            { label: "Request Custom Tool", href: "/custom-tool.html", variant: "ghost", eventName: "helper_custom_tool" },
+            ...(!session.authenticated ? [{ label: "Sign In / Create Account", href: "/account.html", variant: "ghost", eventName: "helper_account_create" }] : [])
+          ]
+        };
+      }
+
+      if (path === "/product.html") {
+        const productId = query.get("id");
+        const current = products.find((item) => item.id === productId);
+        const related = current
+          ? this.pickProducts(products, (item) => item.category === current.category && item.id !== current.id)
+          : [];
+
+        return {
+          message: current
+            ? `Reading ${current.title}. Want alternatives in the same lane or direct support for setup?`
+            : "I can point you to products fast. Tell me if you want bots, programs, or direct support.",
+          actions: [
+            ...(related.length ? related.map((item, index) => productAction(item, index === 0 ? "btn" : "ghost")) : []),
+            { label: "Get Setup Help", href: "/support.html", variant: "ghost", eventName: "helper_support" }
+          ]
+        };
+      }
+
+      if (path === "/support.html") {
+        return {
+          message: session.authenticated
+            ? "Since you are signed in, your support request can be matched against purchase history automatically."
+            : "Sign in first if you want the system to auto-check whether your support should be free.",
+          actions: [
+            { label: "Open Account", href: "/account.html", eventName: "helper_account_open" },
+            { label: "Request Support", href: "/support.html#main", variant: "ghost", eventName: "helper_support" }
+          ]
+        };
+      }
+
+      const starter = this.pickProducts(products, () => true);
+      return {
+        message: session.authenticated
+          ? "Welcome back. Pick a lane and I will guide you to the right product or support flow."
+          : "I can help you find the right product quickly, then you can create an account to track support and purchases.",
+        actions: [
+          ...starter.map((item, index) => productAction(item, index === 0 ? "btn" : "ghost")),
+          ...(!session.authenticated ? [{ label: "Create Account", href: "/account.html", variant: "ghost", eventName: "helper_account_create" }] : [])
+        ]
+      };
+    },
+
+    pickProducts(products, matcher, count = 2) {
+      const list = Array.isArray(products) ? products : [];
+      const matched = list.filter((item) => item && matcher(item));
+      if (matched.length >= 1) {
+        return matched.slice(0, count);
+      }
+      return list.slice(0, count);
+    },
+
+    renderHelperActions(container, actions, intent) {
+      if (!container) {
+        return;
+      }
+
+      container.innerHTML = "";
+      const safeActions = Array.isArray(actions) ? actions.filter((item) => item && item.href && item.label).slice(0, 3) : [];
+
+      safeActions.forEach((action, index) => {
+        const anchor = document.createElement("a");
+        const useGhost = action.variant === "ghost" || index > 0;
+        anchor.className = useGhost ? "btn btn-ghost helper-action" : "btn helper-action";
+        anchor.href = action.href;
+        anchor.textContent = action.label;
+        anchor.addEventListener("click", () => {
+          this.track(action.eventName || "helper_action_click", {
+            intent,
+            href: action.href,
+            ...(action.meta || {})
+          });
+        });
+        container.appendChild(anchor);
+      });
+    },
+
     async promptAgeGate(pageKey) {
       const storageKey = `age-verified-${pageKey}`;
       const existing = localStorage.getItem(storageKey);
@@ -184,4 +477,7 @@
   };
 
   window.SlendyApp = SlendyApp;
+  window.addEventListener("DOMContentLoaded", () => {
+    SlendyApp.initSiteHelper();
+  });
 })();
