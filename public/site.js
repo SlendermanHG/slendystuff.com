@@ -22,7 +22,6 @@
     if (heroSubtitle) heroSubtitle.textContent = config.brand.heroSubtitle;
 
     renderProducts(config.products || []);
-    renderStripeLinks(config.stripeLinks || {});
 
     app.track("page_view", { page: "home" });
   } catch (error) {
@@ -30,16 +29,6 @@
     if (mount) {
       mount.innerHTML = `<p class="status error">${error.message}</p>`;
     }
-  }
-
-  function renderStripeLinks(links) {
-    const starter = document.querySelector("[data-stripe='starter']");
-    const pro = document.querySelector("[data-stripe='pro']");
-    const reset = document.querySelector("[data-stripe='reset']");
-
-    if (starter) starter.href = links.starter || "#";
-    if (pro) pro.href = links.pro || "#";
-    if (reset) reset.href = links.reset || "#";
   }
 
   function renderProducts(products) {

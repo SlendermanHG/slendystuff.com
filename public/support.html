@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tech Support | Slendy Stuff</title>
-  <meta name="description" content="Request a remote support session and download the latest AnyDesk installer in minimal steps.">
+  <meta name="description" content="Request remote support, cleanup, and tailored remote management options.">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -21,28 +21,30 @@
 
       <nav class="site-nav" data-nav aria-label="Primary">
         <a href="/">Home</a>
+        <a href="/custom-tool.html">Custom Tool Request</a>
         <a href="/support.html">Tech Support</a>
-        <a href="/admin/">Admin</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/about.html">About</a>
       </nav>
     </div>
   </header>
 
   <main id="main">
-    <section class="section shell">
+    <section class="section shell chaos-burst">
       <div class="section-head">
         <p class="eyebrow">Tech Support</p>
-        <h1>Remote cleanup and support session request</h1>
+        <h1>Remote cleanup, help, and management setup</h1>
         <p class="muted" data-support-intro>Request a remote cleanup/support session through AnyDesk with minimal steps.</p>
       </div>
 
       <div class="grid two">
-        <article class="card">
+        <article class="card sticker-panel">
           <h2>Fastest Path</h2>
           <ol class="list">
             <li>Download AnyDesk from the button below.</li>
-            <li>Run the installer and open AnyDesk.</li>
-            <li>Submit the request form with your issue details.</li>
-            <li>I will contact you to schedule and connect.</li>
+            <li>Run it and keep the code ready.</li>
+            <li>Submit your request with service options.</li>
+            <li>I confirm schedule and service scope by email.</li>
           </ol>
           <div class="inline-actions">
             <a class="btn" data-anydesk-link href="https://download.anydesk.com/AnyDesk.exe" target="_blank" rel="noopener">Download Latest AnyDesk</a>
@@ -68,10 +70,29 @@
                 <label for="preferredTime">Preferred Time Window</label>
                 <input id="preferredTime" name="preferredTime" placeholder="Example: Weeknights after 7PM ET">
               </div>
+              <div class="field">
+                <label for="serviceLevel">Service Level</label>
+                <select id="serviceLevel" name="serviceLevel">
+                  <option value="one-time-fix">One-time fix</option>
+                  <option value="weekly-management">Weekly management</option>
+                  <option value="monthly-management">Monthly management</option>
+                  <option value="custom">Custom arrangement</option>
+                </select>
+              </div>
             </div>
+
+            <fieldset class="fieldset-box">
+              <legend>Remote Management Options</legend>
+              <label><input type="checkbox" name="managementOptions" value="system-health"> System health and cleanup</label>
+              <label><input type="checkbox" name="managementOptions" value="bot-management"> Bot uptime and tuning</label>
+              <label><input type="checkbox" name="managementOptions" value="security-hardening"> Security hardening</label>
+              <label><input type="checkbox" name="managementOptions" value="process-automation"> Process automation tuning</label>
+              <label><input type="checkbox" name="managementOptions" value="other"> Other (describe below)</label>
+            </fieldset>
+
             <div class="field">
-              <label for="issue">Issue Details</label>
-              <textarea id="issue" name="issue" placeholder="What needs to be fixed/cleaned?" required></textarea>
+              <label for="issue">Project Overview / Issue Details</label>
+              <textarea id="issue" name="issue" placeholder="What do you need fixed, managed, or improved?" required></textarea>
             </div>
             <div class="inline-actions">
               <button class="btn" type="submit">Send Support Request</button>
@@ -84,8 +105,8 @@
   </main>
 
   <footer class="footer">
-    <div class="shell">
-      <p class="muted">Support requests and analytics are logged to your configured Proton Drive path.</p>
+    <div class="shell footer-grid">
+      <p class="muted">Support requests route to <a href="mailto:Help@slendystuff.com">Help@slendystuff.com</a> in fallback mode.</p>
     </div>
   </footer>
 

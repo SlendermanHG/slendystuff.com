@@ -42,7 +42,7 @@ const defaultSettings = {
     reset: "https://buy.stripe.com/test_6oU8wRcsZc6K9jO3K00gw07"
   },
   support: {
-    supportEmail: "admin@slendystuff.com",
+    supportEmail: "Help@slendystuff.com",
     anydeskSourceUrl: "https://download.anydesk.com/AnyDesk.exe",
     anydeskDownloadUrl: "https://download.anydesk.com/AnyDesk.exe",
     anydeskLastCheckedAt: null,
@@ -481,6 +481,10 @@ app.post("/api/support/request", async (req, res) => {
       email: safeString(req.body.email, ""),
       issue: safeString(req.body.issue, ""),
       preferredTime: safeString(req.body.preferredTime, ""),
+      serviceLevel: safeString(req.body.serviceLevel, ""),
+      managementOptions: Array.isArray(req.body.managementOptions)
+        ? req.body.managementOptions.map((item) => safeString(item, "")).filter(Boolean)
+        : [],
       clientTimezone: safeString(req.body.clientTimezone, "")
     };
 
@@ -489,6 +493,47 @@ app.post("/api/support/request", async (req, res) => {
     res.json({ ok: true, message: "Support request captured." });
   } catch (error) {
     res.status(500).json({ ok: false, error: safeString(error.message, "Support request failure") });
+  }
+});
+
+app.post("/api/tool-request", async (req, res) => {
+  try {
+    const requestDetails = {
+      name: safeString(req.body.name, "Anonymous"),
+      email: safeString(req.body.email, ""),
+      toolType: safeString(req.body.toolType, ""),
+      timeline: safeString(req.body.timeline, ""),
+      whatWant: safeString(req.body.whatWant, ""),
+      howUsed: safeString(req.body.howUsed, ""),
+      remoteOptions: Array.isArray(req.body.remoteOptions)
+        ? req.body.remoteOptions.map((item) => safeString(item, "")).filter(Boolean)
+        : [],
+      budget: safeString(req.body.budget, ""),
+      notes: safeString(req.body.notes, ""),
+      clientTimezone: safeString(req.body.clientTimezone, "")
+    };
+
+    await appendLog("custom-tool-request", requestDetails, req);
+    res.json({ ok: true, message: "Custom tool request captured." });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: safeString(error.message, "Custom tool request failure") });
+  }
+});
+
+app.post("/api/contact-message", async (req, res) => {
+  try {
+    const requestDetails = {
+      name: safeString(req.body.name, "Anonymous"),
+      email: safeString(req.body.email, ""),
+      subject: safeString(req.body.subject, ""),
+      message: safeString(req.body.message, ""),
+      clientTimezone: safeString(req.body.clientTimezone, "")
+    };
+
+    await appendLog("contact-message", requestDetails, req);
+    res.json({ ok: true, message: "Contact message captured." });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: safeString(error.message, "Contact message failure") });
   }
 });
 

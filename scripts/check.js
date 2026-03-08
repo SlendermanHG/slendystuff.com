@@ -17,6 +17,8 @@ const jsFiles = [
   "public/site.js",
   "public/support.js",
   "public/product.js",
+  "public/custom-tool.js",
+  "public/contact.js",
   "public/admin/admin.js"
 ];
 

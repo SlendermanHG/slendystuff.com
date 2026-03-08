@@ -6,7 +6,7 @@
   const anydeskMeta = document.querySelector("[data-anydesk-meta]");
   const supportForm = document.querySelector("[data-support-form]");
   const status = document.querySelector("[data-support-status]");
-  let supportEmail = "admin@slendystuff.com";
+  let supportEmail = "Help@slendystuff.com";
 
   try {
     const config = await app.fetchPublicConfig();
@@ -44,10 +44,13 @@
       event.preventDefault();
 
       const formData = new FormData(supportForm);
+      const managementOptions = formData.getAll("managementOptions").map(String);
       const payload = {
         name: String(formData.get("name") || ""),
         email: String(formData.get("email") || ""),
         preferredTime: String(formData.get("preferredTime") || ""),
+        serviceLevel: String(formData.get("serviceLevel") || ""),
+        managementOptions,
         issue: String(formData.get("issue") || ""),
         clientTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       };
@@ -69,11 +72,15 @@
           status.textContent = "Request sent. I logged it and will follow up at your email.";
           status.className = "status ok";
         }
-        app.track("support_request_submitted", { emailProvided: Boolean(payload.email) });
+        app.track("support_request_submitted", {
+          emailProvided: Boolean(payload.email),
+          serviceLevel: payload.serviceLevel,
+          managementOptions: payload.managementOptions
+        });
       } catch (error) {
-        const subject = encodeURIComponent("Support Request");
+        const subject = encodeURIComponent("Tech Support Request");
         const body = encodeURIComponent(
-          `Name: ${payload.name}\nEmail: ${payload.email}\nPreferred Time: ${payload.preferredTime}\nTimezone: ${payload.clientTimezone}\n\nIssue:\n${payload.issue}`
+          `Name: ${payload.name}\nEmail: ${payload.email}\nPreferred Time: ${payload.preferredTime}\nService Level: ${payload.serviceLevel}\nManagement Options: ${payload.managementOptions.join(", ") || "None selected"}\nTimezone: ${payload.clientTimezone}\n\nProject Overview / Issue:\n${payload.issue}`
         );
         window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
         if (status) {

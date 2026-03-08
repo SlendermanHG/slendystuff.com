@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Custom Tool Request | Slendy Stuff</title>
+  <meta name="description" content="Request a custom program, bot, or tailored remote management setup.">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="shell nav-wrap">
+      <a class="brand" href="/">
+        <span class="brand-mark">SS</span>
+        <span data-brand-name>Slendy Stuff</span>
+      </a>
+
+      <button class="nav-toggle" data-nav-toggle aria-label="Toggle navigation">Menu</button>
+
+      <nav class="site-nav" data-nav aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/custom-tool.html">Custom Tool Request</a>
+        <a href="/support.html">Tech Support</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/about.html">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section shell chaos-burst">
+      <div class="section-head">
+        <p class="eyebrow">Custom Build Intake</p>
+        <h1>Request a custom tool, bot, or management workflow</h1>
+        <p class="muted">This form drafts an email to <strong>Operations@slendystuff.com</strong> with your project details.</p>
+      </div>
+
+      <div class="grid two">
+        <article class="card sticker-panel">
+          <h2>Base Questions</h2>
+          <ul class="list">
+            <li>What exactly do you want built?</li>
+            <li>How will it be used in your workflow?</li>
+            <li>Do you need remote management included?</li>
+            <li>What timeline and budget range are you targeting?</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Request Form</h2>
+          <form data-custom-tool-form>
+            <div class="form-grid">
+              <div class="field">
+                <label for="requestName">Name</label>
+                <input id="requestName" name="name" required>
+              </div>
+              <div class="field">
+                <label for="requestEmail">Email</label>
+                <input id="requestEmail" name="email" type="email" required>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="field">
+                <label for="toolType">What are you requesting?</label>
+                <select id="toolType" name="toolType">
+                  <option value="program">Program / Desktop Tool</option>
+                  <option value="discord-bot">Discord Bot</option>
+                  <option value="automation">Automation Script/System</option>
+                  <option value="remote-management">Remote Management Service</option>
+                  <option value="hybrid">Hybrid / Multi-part Project</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="timeline">Timeline</label>
+                <input id="timeline" name="timeline" placeholder="Example: ASAP, 2-4 weeks, flexible">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="whatWant">What do you want built?</label>
+              <textarea id="whatWant" name="whatWant" required placeholder="Describe features, behavior, and expected outcome."></textarea>
+            </div>
+
+            <div class="field">
+              <label for="howUsed">What is it for / how will it be used?</label>
+              <textarea id="howUsed" name="howUsed" required placeholder="Describe use case, users, and business context."></textarea>
+            </div>
+
+            <fieldset class="fieldset-box">
+              <legend>Remote Management Tailoring</legend>
+              <label><input type="checkbox" name="remoteOptions" value="monitoring"> Monitoring and alerts</label>
+              <label><input type="checkbox" name="remoteOptions" value="maintenance"> Scheduled maintenance</label>
+              <label><input type="checkbox" name="remoteOptions" value="incident-response"> Incident response support</label>
+              <label><input type="checkbox" name="remoteOptions" value="performance-tuning"> Performance tuning</label>
+              <label><input type="checkbox" name="remoteOptions" value="none"> No remote management needed</label>
+            </fieldset>
+
+            <div class="field">
+              <label for="budget">Budget or Range (optional)</label>
+              <input id="budget" name="budget" placeholder="Example: <$500, $1k-$3k, TBD">
+            </div>
+
+            <div class="field">
+              <label for="notes">Project Overview / Notes / Comments</label>
+              <textarea id="notes" name="notes" placeholder="Anything else that helps scope the project."></textarea>
+            </div>
+
+            <div class="inline-actions">
+              <button class="btn" type="submit">Open Email Draft</button>
+            </div>
+            <p class="status" data-custom-tool-status></p>
+          </form>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-grid">
+      <p class="muted">Operations requests are sent to <a href="mailto:Operations@slendystuff.com">Operations@slendystuff.com</a>.</p>
+    </div>
+  </footer>
+
+  <script src="/shared.js"></script>
+  <script src="/custom-tool.js"></script>
+</body>
+</html>

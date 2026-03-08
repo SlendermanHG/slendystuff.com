@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact | Slendy Stuff</title>
+  <meta name="description" content="Contact form for general help and questions.">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="shell nav-wrap">
+      <a class="brand" href="/">
+        <span class="brand-mark">SS</span>
+        <span data-brand-name>Slendy Stuff</span>
+      </a>
+
+      <button class="nav-toggle" data-nav-toggle aria-label="Toggle navigation">Menu</button>
+
+      <nav class="site-nav" data-nav aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/custom-tool.html">Custom Tool Request</a>
+        <a href="/support.html">Tech Support</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/about.html">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section shell chaos-burst">
+      <div class="section-head">
+        <p class="eyebrow">Contact</p>
+        <h1>Send a message</h1>
+        <p class="muted">This form opens an email draft to <strong>Help@slendystuff.com</strong>.</p>
+      </div>
+
+      <article class="card">
+        <form data-contact-form>
+          <div class="form-grid">
+            <div class="field">
+              <label for="contactName">Name</label>
+              <input id="contactName" name="name" required>
+            </div>
+            <div class="field">
+              <label for="contactEmail">Email</label>
+              <input id="contactEmail" name="email" type="email" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="contactSubject">Subject</label>
+            <input id="contactSubject" name="subject" required>
+          </div>
+          <div class="field">
+            <label for="contactMessage">Message</label>
+            <textarea id="contactMessage" name="message" required placeholder="How can I help?"></textarea>
+          </div>
+          <div class="inline-actions">
+            <button class="btn" type="submit">Open Email Draft</button>
+          </div>
+          <p class="status" data-contact-status></p>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell footer-grid">
+      <p class="muted">Direct help mailbox: <a href="mailto:Help@slendystuff.com">Help@slendystuff.com</a></p>
+    </div>
+  </footer>
+
+  <script src="/shared.js"></script>
+  <script src="/contact.js"></script>
+</body>
+</html>
