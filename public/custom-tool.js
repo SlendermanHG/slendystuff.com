@@ -106,7 +106,7 @@
       return;
     }
 
-    setStatus(ideaStatus, "Generating ideas...", "");
+    setStatus(ideaStatus, "Generating detailed concept options...", "");
     const history = savedIdeaLogs.map((entry) => ({
       createdAt: entry.createdAt,
       prompt: entry.prompt,
@@ -264,11 +264,45 @@
   }
 
   function buildBrowserFallback(prompt, rules) {
+    const offerTypes = [
+      "core build + premium managed operations",
+      "modular product with expansion packs",
+      "implementation service with recurring optimization plan",
+      "niche-targeted launch package with analytics layer"
+    ];
+    const technicalTracks = [
+      "web dashboard + automation service + logging pipeline",
+      "desktop tooling + control API + admin configuration panel",
+      "bot workflow engine + queue processing + moderation safeguards",
+      "orchestrated service stack + reporting + remote management hooks"
+    ];
+    const launchPlans = [
+      "Discovery -> MVP in 2-4 weeks -> staged rollout by priority.",
+      "Scope lock -> pilot deployment -> production hardening and scale.",
+      "Core workflow release -> feedback cycle -> expansion module drops.",
+      "Critical feature launch -> stability sprint -> managed optimization phase."
+    ];
+
+    const offer = offerTypes[Math.floor(Math.random() * offerTypes.length)];
+    const track = technicalTracks[Math.floor(Math.random() * technicalTracks.length)];
+    const launch = launchPlans[Math.floor(Math.random() * launchPlans.length)];
+
     return [
-      "Local fallback ideation mode:",
-      "1. Define one clear paid outcome and ship a narrow MVP around it.",
-      "2. Add a premium management tier for recurring revenue.",
-      "3. Build one niche-specific variant page with targeted copy and offer framing.",
+      "Fallback Strategy Output:",
+      "Offer Structure:",
+      `- ${offer}`,
+      "",
+      "Technical Shape:",
+      `- ${track}`,
+      "",
+      "Launch Sequence:",
+      `- ${launch}`,
+      "",
+      "Pricing Direction:",
+      "- Implementation fee + recurring support/management tier + optional priority add-ons.",
+      "",
+      "Risks to Control:",
+      "- Scope drift, integration complexity, and unclear ownership boundaries.",
       "",
       `Prompt: ${prompt}`,
       `Hardwired rules: ${String(rules || "").slice(0, 180)}`

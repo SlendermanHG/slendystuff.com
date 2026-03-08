@@ -115,86 +115,86 @@
     const byId = {
       "pos-suite": {
         includes: [
-          "Checkout flow and transaction handling tuned for practical day-to-day usage.",
-          "Configurable item/price structure with workflow-oriented controls.",
-          "Performance tuning guidance for stable operation under active usage."
+          "Role-based checkout workflows, shift controls, and transaction-path safeguards.",
+          "Inventory-aware pricing and item management with multi-location operation support.",
+          "Operational dashboard layer for daily totals, trends, and reconciliation accuracy."
         ],
         deliverables: [
-          "Configured POS deployment package.",
-          "Initial setup guidance and baseline optimization pass.",
-          "Operational recommendations tailored to your environment."
+          "Configured deployment package with baseline workflows and permissions.",
+          "Setup and migration guidance for catalog, tax rules, and sales operations.",
+          "Optimization and performance handoff documentation for repeatable operations."
         ],
         flow: [
-          "Scope your operation model and constraints.",
-          "Configure POS logic and test critical transaction paths.",
-          "Deploy and run with support follow-up for adjustments."
+          "Map current sales flow and required controls.",
+          "Configure operational modules and validate high-risk paths.",
+          "Deploy, monitor, and iterate with measured improvement cycles."
         ],
         bestFit: [
-          "Operators who need clean POS workflows instead of bloated complexity.",
-          "Teams wanting fast setup with room for future tailoring."
+          "Businesses that need dependable POS behavior without operational drag.",
+          "Teams planning phased growth with modular feature expansion."
         ]
       },
       "system-optimizer": {
         includes: [
-          "System cleanup and startup/process optimization.",
-          "Resource usage tuning recommendations for smoother performance.",
-          "Repeatable optimization profile for ongoing maintenance."
+          "Deep startup/service/process optimization with repeatable system baselining.",
+          "Automated cleanup and maintenance routines for sustained performance.",
+          "Bottleneck mapping for CPU, memory, storage, and workload contention."
         ],
         deliverables: [
-          "Optimizer configuration package.",
-          "Before/after optimization notes and focus areas.",
-          "Maintenance checklist for sustained performance."
+          "Optimization profile package with documented tuning policy.",
+          "Before/after diagnostics and prioritized action set.",
+          "Long-term maintenance cadence and monitoring checklist."
         ],
         flow: [
-          "Assess current bottlenecks and workload pattern.",
-          "Apply optimization profile and validate impact.",
-          "Refine settings based on observed behavior."
+          "Profile system behavior under your real workload pattern.",
+          "Apply targeted optimization passes and benchmark each stage.",
+          "Lock stable settings and define maintenance schedule."
         ],
         bestFit: [
-          "Windows users with performance drag or workflow lag.",
-          "People who want predictable maintenance without deep manual tuning."
+          "Operators who need consistent speed across production workloads.",
+          "Users replacing ad-hoc tweaks with controlled optimization strategy."
         ]
       },
       "discord-bot-kit": {
         includes: [
-          "Core bot utility features and command structure.",
-          "Moderation/automation workflow customization.",
-          "Role and channel integration guidance."
+          "Command architecture with utility, moderation, and operations modules.",
+          "Workflow automation for tickets, moderation routing, and community events.",
+          "Role/channel permission strategy designed for scale and abuse resistance."
         ],
         deliverables: [
-          "Bot feature set configured to your server goals.",
-          "Command map with usage notes.",
-          "Recommended guardrails for moderation and abuse prevention."
+          "Configured bot package aligned to your server outcomes.",
+          "Command map, usage documentation, and moderator control guide.",
+          "Reliability and safety guardrails with escalation-handling patterns."
         ],
         flow: [
-          "Define server outcomes and command priorities.",
-          "Configure and test command behavior.",
-          "Deploy with adjustment cycle after real usage."
+          "Define outcome targets: moderation, utility, growth, support.",
+          "Implement command modules and run controlled test rounds.",
+          "Deploy and tune response behavior against live usage data."
         ],
         bestFit: [
-          "Communities that want automation without generic template bots.",
-          "Owners who need practical moderation and utility balance."
+          "Communities requiring robust automation without copy-paste templates.",
+          "Owners needing fast moderation response and clean utility UX."
         ]
       },
       "remote-control-limited": {
         includes: [
-          "Bounded remote-control automation with scoped command authority.",
-          "Operational limits designed to reduce misuse risk.",
-          "Session-level control and behavior constraints."
+          "Bounded remote automation commands with explicit permission boundaries.",
+          "Session-level auditing and control restrictions for operational safety.",
+          "Deployment safeguards designed for controlled remote workflows."
         ],
         deliverables: [
-          "Configured limited-control bot profile.",
-          "Permission and boundary documentation.",
-          "Risk-aware operating recommendations."
+          "Configured limited-control profile with approved command surface.",
+          "Permissions and boundaries documentation with operator runbook.",
+          "Risk-aware deployment and monitoring recommendations."
         ],
         flow: [
-          "Define allowed actions and explicit restrictions.",
-          "Configure permission model and fail-safe behavior.",
-          "Validate controls before live operation."
+          "Define approved remote actions and hard limits.",
+          "Implement permissions, failsafes, and operational controls.",
+          "Validate auditability and behavior before production launch."
         ],
         bestFit: [
-          "Use cases requiring controlled automation, not unrestricted remote control.",
-          "Operators who prioritize boundaries and auditability."
+          "Use cases requiring controlled remote execution with strict oversight.",
+          "Teams prioritizing auditability, scope boundaries, and safety."
         ],
         guardrails: [
           "Feature scope is intentionally limited by design.",
@@ -209,20 +209,30 @@
       return known;
     }
 
-    // No generic templates: unknown products intentionally show a neutral placeholder
-    // until a specific scope is defined.
+    const category = String(product.category || "").toLowerCase();
+    const isBot = category.includes("bot");
+
     return {
       includes: [
-        "Public service scope for this product has not been published yet."
+        isBot
+          ? "Custom command surface and automation logic tailored to your server/workflow."
+          : "Tailored software modules aligned to your operating process and outcome targets.",
+        "Operational controls, reliability safeguards, and guided deployment strategy.",
+        "Scalable architecture path for future feature growth."
       ],
       deliverables: [
-        "Deliverables are provided during direct inquiry."
+        "Scope document with milestones, constraints, and delivery targets.",
+        "Configurable release package with implementation notes.",
+        "Follow-up optimization pass based on live usage."
       ],
       flow: [
-        "Use the request/contact flow to receive a product-specific breakdown."
+        "Discovery and requirement mapping.",
+        "Build and validation sprint.",
+        "Deployment, monitoring, and iterative tuning."
       ],
       bestFit: [
-        "Best-fit guidance will be added once this product has a finalized offer structure."
+        "Teams that need outcome-focused builds instead of template tooling.",
+        "Operators who want practical delivery with upgrade paths."
       ]
     };
   }

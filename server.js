@@ -66,14 +66,14 @@ const defaultSettings = {
   aiAssistant: {
     enabled: true,
     hardwiredRules:
-      "You are Slendy Stuff Idea Assistant. Generate practical product and automation concepts with clear scope, audience, and monetization direction. Avoid illegal or abusive use-cases."
+      "You are Slendy Stuff Idea Assistant. Produce high-detail, implementation-ready concepts with sections for offer, audience, feature scope, technical plan, delivery phases, pricing model, launch plan, and operational risks. Keep suggestions practical, legal, and ethically safe."
   },
   products: [
     {
       id: "pos-suite",
       title: "POS Suite",
       category: "Programs",
-      summary: "Point-of-sale workflow with practical controls and cleaner daily operations.",
+      summary: "High-control point-of-sale platform with role permissions, inventory sync, reporting pipelines, and workflow tuning for real-world operations.",
       priceLabel: "Custom Pricing",
       ctaLabel: "Request Details",
       ctaUrl: "mailto:admin@slendystuff.com?subject=POS%20Suite%20Inquiry",
@@ -83,7 +83,7 @@ const defaultSettings = {
       id: "system-optimizer",
       title: "System Optimizer",
       category: "Programs",
-      summary: "Performance-focused optimization toolkit for Windows machines.",
+      summary: "Deep system optimization stack with startup/process tuning, maintenance automation, and performance baselines for repeatable speed gains.",
       priceLabel: "Custom Pricing",
       ctaLabel: "Request Details",
       ctaUrl: "mailto:admin@slendystuff.com?subject=System%20Optimizer%20Inquiry",
@@ -93,7 +93,7 @@ const defaultSettings = {
       id: "discord-bot-kit",
       title: "Discord Bot Kit",
       category: "Bots",
-      summary: "Automations and utility features for Discord communities.",
+      summary: "Production-ready Discord automation with moderation workflows, utility command systems, ticketing hooks, and growth-focused engagement tooling.",
       priceLabel: "From $19.99",
       ctaLabel: "View Options",
       ctaUrl: "mailto:admin@slendystuff.com?subject=Discord%20Bot%20Inquiry",
@@ -103,7 +103,7 @@ const defaultSettings = {
       id: "remote-control-limited",
       title: "Remote Control Bot (Limited)",
       category: "Bots",
-      summary: "Limited-control remote automation with strict bounds and safeguards.",
+      summary: "Bounded remote automation service with strict permission layers, auditability controls, and deployment guardrails for managed operations.",
       priceLabel: "Custom Pricing",
       ctaLabel: "View Details",
       ctaUrl: "mailto:admin@slendystuff.com?subject=Remote%20Control%20Bot%20Inquiry",
@@ -719,19 +719,19 @@ function extractResponseText(payload) {
 function buildFallbackIdeaResponse(prompt, rules) {
   const cleanedPrompt = safeString(prompt, "").trim();
   const ideas = [
-    "Offer a tiered starter/pro package with optional monthly management add-on.",
-    "Ship a narrow MVP first, then upsell integrations, dashboards, and automations.",
-    "Bundle setup service + support plan so implementation is easy for non-technical buyers.",
-    "Create an industry-specific variant page with copy tuned to one niche audience.",
-    "Add a recurring maintenance bot service to stabilize monthly revenue."
+    "Create a three-phase offer: discovery sprint, implementation package, and managed optimization retainer.",
+    "Design a core product plus two paid expansion modules so buyers can scale features over time.",
+    "Bundle deployment, training, and maintenance SLA into one conversion-ready service stack.",
+    "Build one niche-targeted variant with custom integrations, then clone framework for additional markets.",
+    "Pair automation tooling with reporting dashboards to create clear ROI visibility for clients."
   ];
 
   const shuffled = ideas.sort(() => Math.random() - 0.5).slice(0, 3);
   return [
-    "Here are fast scoped idea directions you can build from right now:",
+    "Here are scoped, execution-ready idea directions:",
     ...shuffled.map((idea, index) => `${index + 1}. ${idea}`),
     "",
-    `Prompt focus: ${cleanedPrompt || "General idea generation"}`,
+    `Prompt focus: ${cleanedPrompt || "General product strategy"}`,
     `Hardwired rules in effect: ${safeString(rules, "").slice(0, 180)}`
   ].join("\n");
 }

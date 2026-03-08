@@ -120,11 +120,19 @@
     }
 
     const newest = products[products.length - 1] || products[0];
+    const outcomeLines = {
+      "pos-suite": "Operational outcome: cleaner transaction flow, faster staff onboarding, and better reporting confidence.",
+      "system-optimizer": "Operational outcome: faster systems, lower performance drag, and repeatable maintenance cadence.",
+      "discord-bot-kit": "Operational outcome: stronger community workflows, faster moderation, and better member experience.",
+      "remote-control-limited": "Operational outcome: controlled remote automation with explicit boundaries and clear auditability."
+    };
+    const outcome = outcomeLines[newest.id] || "Operational outcome: purpose-built delivery aligned to real workflow goals.";
     mount.innerHTML = `
       <article class="card">
         <p class="eyebrow">Newest Product</p>
         <h3>${escapeHtml(newest.title)}</h3>
         <p class="muted">${escapeHtml(newest.summary || "New listing just published.")}</p>
+        <p class="muted">${escapeHtml(outcome)}</p>
         <div class="kicker-row">
           <span class="kicker">${escapeHtml(newest.category || "Product")}</span>
           <span class="kicker">${escapeHtml(newest.priceLabel || "Custom Pricing")}</span>
@@ -147,15 +155,32 @@
       rollIdeaButton.addEventListener("click", () => {
         const categories = [...new Set((products || []).map((item) => item.category).filter(Boolean))];
         const category = categories[Math.floor(Math.random() * categories.length)] || "Automation";
-        const hooks = [
-          "starter setup + paid monthly management",
-          "one-time install + annual support renewal",
-          "niche-specific dashboard + premium analytics add-on",
-          "done-for-you deployment + optional training package",
-          "low-ticket entry tool + upsell to managed service"
+        const audiences = [
+          "small operations teams",
+          "creators and community owners",
+          "managed service clients",
+          "high-volume support teams",
+          "multi-location operators"
         ];
-        const hook = hooks[Math.floor(Math.random() * hooks.length)];
-        const message = `Build a ${category} offer with ${hook}.`;
+        const coreOffers = [
+          "phase-based implementation package + optimization retainer",
+          "core product deployment + paid expansion modules",
+          "workflow automation stack + reporting dashboard add-on",
+          "done-for-you launch + managed maintenance cycle",
+          "foundation build + premium support SLA"
+        ];
+        const deliveryModes = [
+          "two-week discovery and architecture sprint",
+          "measured MVP release followed by phased feature drops",
+          "pilot rollout with usage analytics feedback loop",
+          "high-priority launch path with post-launch hardening",
+          "modular rollout matched to business-critical workflows"
+        ];
+
+        const audience = audiences[Math.floor(Math.random() * audiences.length)];
+        const offer = coreOffers[Math.floor(Math.random() * coreOffers.length)];
+        const delivery = deliveryModes[Math.floor(Math.random() * deliveryModes.length)];
+        const message = `Offer Concept: ${category} solution for ${audience}.\nMonetization: ${offer}.\nExecution Path: ${delivery}.`;
         ideaResult.textContent = message;
         app.track("fun_zone_roll_idea", { category });
       });
@@ -164,11 +189,11 @@
     if (rollPricingButton && pricingResult) {
       rollPricingButton.addEventListener("click", () => {
         const patterns = [
-          "3-tier stack: Lite / Pro / Managed",
-          "One-time setup fee + recurring optimization plan",
-          "Monthly base + performance bonus tier",
-          "Starter bundle + feature packs",
-          "Per-seat plan + enterprise support retainer"
+          "3-tier structure: Foundation / Scale / Managed Ops with response-time guarantees.",
+          "Implementation fee + monthly optimization retainer + optional emergency support block.",
+          "Base plan + usage-triggered expansion modules tied to measurable ROI milestones.",
+          "Starter package + premium integration bundle + quarterly tuning cycle.",
+          "Per-team plan + enterprise governance add-on + dedicated launch concierge."
         ];
         const pick = patterns[Math.floor(Math.random() * patterns.length)];
         pricingResult.textContent = pick;
