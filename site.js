@@ -16,15 +16,24 @@
     const tagline = document.querySelector("[data-tagline]");
     const heroTitle = document.querySelector("[data-hero-title]");
     const heroSubtitle = document.querySelector("[data-hero-subtitle]");
+    const productsMount = document.querySelector("[data-products-mount]");
+    const newestMount = document.querySelector("[data-newest-product]");
 
     if (tagline) tagline.textContent = config.brand.tagline;
     if (heroTitle) heroTitle.textContent = config.brand.heroTitle;
     if (heroSubtitle) heroSubtitle.textContent = config.brand.heroSubtitle;
 
-    renderProducts(config.products || []);
+    if (productsMount) {
+      renderProducts(config.products || []);
+    }
+    if (newestMount) {
+      renderNewestProduct(config.products || []);
+    }
     initFunZone(config.products || []);
 
-    app.track("page_view", { page: "home" });
+    app.track("page_view", {
+      page: productsMount ? "products" : "home"
+    });
   } catch (error) {
     const mount = document.querySelector("[data-products-mount]");
     if (mount) {
@@ -97,6 +106,35 @@
         });
       });
     });
+  }
+
+  function renderNewestProduct(products) {
+    const mount = document.querySelector("[data-newest-product]");
+    if (!mount) {
+      return;
+    }
+
+    if (!Array.isArray(products) || products.length === 0) {
+      mount.innerHTML = "<p class='muted'>No products published yet.</p>";
+      return;
+    }
+
+    const newest = products[products.length - 1] || products[0];
+    mount.innerHTML = `
+      <article class="card">
+        <p class="eyebrow">Newest Product</p>
+        <h3>${escapeHtml(newest.title)}</h3>
+        <p class="muted">${escapeHtml(newest.summary || "New listing just published.")}</p>
+        <div class="kicker-row">
+          <span class="kicker">${escapeHtml(newest.category || "Product")}</span>
+          <span class="kicker">${escapeHtml(newest.priceLabel || "Custom Pricing")}</span>
+        </div>
+        <div class="inline-actions">
+          <a class="btn" href="/product.html?id=${encodeURIComponent(newest.id)}">View Details</a>
+          <a class="btn btn-ghost" href="/products.html">Browse All Products</a>
+        </div>
+      </article>
+    `;
   }
 
   function initFunZone(products) {

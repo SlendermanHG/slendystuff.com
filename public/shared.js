@@ -133,6 +133,35 @@
       }
     },
 
+    initTopNote() {
+      if (!document.body || window.location.pathname.startsWith("/admin")) {
+        return;
+      }
+      if (document.querySelector("[data-top-note]")) {
+        return;
+      }
+
+      const header = document.querySelector(".site-header");
+      if (!header) {
+        return;
+      }
+
+      const note = document.createElement("section");
+      note.className = "site-top-note";
+      note.dataset.topNote = "true";
+      note.innerHTML = `
+        <div class="shell top-note-grid">
+          <p><strong>Why this site is dense:</strong> I maintain many versions and niches at once. Home explains direction, Products page shows active offers, and Custom Intake captures new builds fast.</p>
+          <div class="top-note-actions">
+            <a href="/products.html">Open Products</a>
+            <a href="/custom-tool.html">Open Intake</a>
+            <a href="/support.html">Open Support</a>
+          </div>
+        </div>
+      `;
+      header.insertAdjacentElement("afterend", note);
+    },
+
     async initSiteHelper() {
       if (this.helperMounted) {
         return;
@@ -281,7 +310,7 @@
           message: "Create an account to save purchase history and auto-check free support eligibility for future sessions.",
           actions: [
             { label: "Create Account", href: "/account.html", eventName: "helper_account_create" },
-            { label: "Browse Products", href: "/#products", variant: "ghost", eventName: "helper_browse_products" }
+            { label: "Browse Products", href: "/products.html", variant: "ghost", eventName: "helper_browse_products" }
           ]
         };
       }
@@ -478,6 +507,7 @@
 
   window.SlendyApp = SlendyApp;
   window.addEventListener("DOMContentLoaded", () => {
+    SlendyApp.initTopNote();
     SlendyApp.initSiteHelper();
   });
 })();

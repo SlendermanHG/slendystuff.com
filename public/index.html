@@ -22,7 +22,7 @@
 
             <nav class="site-nav" data-nav aria-label="Primary">
         <a href="/">Home</a>
-        <a href="/#products">Products</a>
+        <a href="/products.html">Products</a>
         <a href="/#remote-management">Remote Management</a>
         <a href="/custom-tool.html">Custom Tool Request</a>
         <a href="/support.html">Tech Support</a>
@@ -41,7 +41,7 @@
           <h1 data-hero-title>Welcome To The Product Chaos Lab</h1>
           <p data-hero-subtitle>I build across a huge spread of ideas because that is how my brain works. If it solves real problems, it belongs here.</p>
           <div class="hero-ctas">
-            <a class="btn" href="#products">Browse Live Tools</a>
+            <a class="btn" href="/products.html">Browse Live Tools</a>
             <a class="btn btn-ghost" href="/custom-tool.html">Request a Custom Build</a>
           </div>
           <div class="kicker-row">
@@ -53,15 +53,27 @@
           </div>
         </div>
 
-        <aside class="hero-aside sticker-panel">
-          <h2>Why This Site Is Messy On Purpose</h2>
-          <ul>
-            <li>Different niches need different tools.</li>
-            <li>Fast pivots beat over-polished dead ideas.</li>
-            <li>I can tailor services to exactly what your setup needs.</li>
-            <li>If you do not see it listed, request it.</li>
-          </ul>
-        </aside>
+        <div class="hero-side-stack">
+          <aside class="hero-aside sticker-panel">
+            <h2>Why This Looks Packed</h2>
+            <p class="muted">This is a live lab, not a static brochure. I ship across multiple niches, so the layout is intentionally dense to keep everything one click away.</p>
+            <ul class="list compact-list">
+              <li>Browse current products and bots.</li>
+              <li>Use idea generation to pressure-test new concepts.</li>
+              <li>Submit custom requests with context-rich notes.</li>
+              <li>Use support flow for setup, cleanup, and management.</li>
+            </ul>
+          </aside>
+          <article class="hero-aside">
+            <h3>Fast Path In 4 Steps</h3>
+            <ol class="list compact-list">
+              <li>Pick a lane: product, support, or custom build.</li>
+              <li>Use Idea Lab to sharpen scope quickly.</li>
+              <li>Send request with logs/context attached.</li>
+              <li>Get a direct build + management plan.</li>
+            </ol>
+          </article>
+        </div>
       </div>
     </section>
 
@@ -83,6 +95,35 @@
         <article class="card splash-card">
           <h3>Hands-On Support</h3>
           <p class="muted">Remote cleanup, optimization, and managed workflows based on your exact requirements.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell">
+      <div class="section-head">
+        <p class="eyebrow">Quick Lanes</p>
+        <h2>Jump into your exact workflow faster.</h2>
+      </div>
+      <div class="lane-grid">
+        <article class="card">
+          <h3>Need a Bot?</h3>
+          <p class="muted">See active bot offers or request a tailored bot stack.</p>
+          <a class="btn" href="/products.html">Open Bot/Product List</a>
+        </article>
+        <article class="card">
+          <h3>Need a Program?</h3>
+          <p class="muted">Get productivity, POS, and optimization software paths.</p>
+          <a class="btn" href="/products.html">Open Program List</a>
+        </article>
+        <article class="card">
+          <h3>Need Direct Help?</h3>
+          <p class="muted">Request cleanup, remote support, and management sessions.</p>
+          <a class="btn" href="/support.html">Open Tech Support</a>
+        </article>
+        <article class="card">
+          <h3>Need Something New?</h3>
+          <p class="muted">Use custom intake with idea logs and project context.</p>
+          <a class="btn" href="/custom-tool.html">Open Custom Intake</a>
         </article>
       </div>
     </section>
@@ -113,13 +154,13 @@
       </div>
     </section>
 
-    <section class="section shell" id="products">
+    <section class="section shell" id="newest-product">
       <div class="section-head">
-        <p class="eyebrow">Catalog</p>
-        <h2>Current products and bots.</h2>
-        <p class="muted">This list is update-friendly so I can keep shipping new things fast.</p>
+        <p class="eyebrow">Newest Drop</p>
+        <h2>Latest product spotlight</h2>
+        <p class="muted">Current newest launch pulled from the active catalog.</p>
       </div>
-      <div data-products-mount></div>
+      <div data-newest-product></div>
     </section>
 
     <section class="section shell" id="remote-management">

@@ -109,8 +109,13 @@ a {
 }
 
 .shell {
-  width: min(1400px, calc(100% - 2rem));
+  width: min(1880px, calc(100% - 1rem));
   margin: 0 auto;
+}
+
+main {
+  display: grid;
+  gap: 0.35rem;
 }
 
 .skip-link {
@@ -146,6 +151,41 @@ a {
   justify-content: space-between;
   gap: 0.95rem;
   flex-wrap: wrap;
+}
+
+.site-top-note {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(95deg, rgba(255, 231, 79, 0.12), rgba(255, 46, 166, 0.12), rgba(45, 247, 255, 0.12));
+}
+
+.top-note-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.46rem 0;
+}
+
+.top-note-grid p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #f8fbff;
+}
+
+.top-note-actions {
+  display: flex;
+  gap: 0.42rem;
+  flex-wrap: wrap;
+}
+
+.top-note-actions a {
+  text-decoration: none;
+  color: #120014;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 800;
 }
 
 .brand {
@@ -247,7 +287,7 @@ button.btn {
 }
 
 .hero {
-  padding: 3.6rem 0 2.8rem;
+  padding: 2.1rem 0 1.35rem;
 }
 
 .hero-grid {
@@ -339,12 +379,17 @@ h3 {
   box-shadow: var(--shadow);
 }
 
+.hero-side-stack {
+  display: grid;
+  gap: 0.9rem;
+}
+
 .sticker-panel {
   position: relative;
 }
 
 .sticker-panel::before {
-  content: "NOTE";
+  content: "CHAOS EXPLAINED";
   position: absolute;
   right: 0.7rem;
   top: -0.7rem;
@@ -359,7 +404,7 @@ h3 {
 }
 
 .section {
-  padding: 3.2rem 0;
+  padding: 1.75rem 0;
 }
 
 .section-head {
@@ -480,6 +525,10 @@ h3 {
   color: var(--muted);
 }
 
+.compact-list li {
+  margin-top: 0.32rem;
+}
+
 .field {
   display: grid;
   gap: 0.42rem;
@@ -595,6 +644,12 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.lane-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.9rem;
 }
 
 .footer {
@@ -778,6 +833,10 @@ h3 {
   .fun-zone-grid {
     grid-template-columns: 1fr;
   }
+
+  .lane-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 780px) {
@@ -809,6 +868,12 @@ h3 {
     text-align: center;
     font-size: 0.92rem;
     padding: 0.3rem 0.5rem;
+  }
+
+  .top-note-grid {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
   }
 
   .site-helper {
@@ -850,6 +915,10 @@ h3 {
     padding: 0.32rem 0.36rem;
     white-space: normal;
     text-align: center;
+  }
+
+  .lane-grid {
+    grid-template-columns: 1fr;
   }
 }
 
