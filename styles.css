@@ -271,6 +271,9 @@ button.btn {
   box-shadow: 0 12px 28px rgba(255, 46, 166, 0.32);
   cursor: pointer;
   transition: transform 120ms ease, filter 120ms ease;
+  line-height: 1.25;
+  white-space: normal;
+  text-align: center;
 }
 
 .btn:hover,
@@ -341,6 +344,7 @@ h3 {
   margin: 0;
   line-height: 1.08;
   text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 h1 {
@@ -425,6 +429,14 @@ h3 {
   gap: 1.15rem;
 }
 
+.grid > *,
+.hero-grid > *,
+.form-grid > *,
+.fun-zone-grid > *,
+.lane-grid > * {
+  min-width: 0;
+}
+
 .grid.two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -439,6 +451,9 @@ h3 {
   background: linear-gradient(170deg, rgba(35, 20, 60, 0.95), rgba(12, 8, 27, 0.95));
   box-shadow: var(--shadow);
   padding: 1.2rem;
+  display: grid;
+  align-content: start;
+  gap: 0.72rem;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
@@ -493,6 +508,12 @@ h3 {
   gap: 0.72rem;
   flex-wrap: wrap;
   margin-top: 0.95rem;
+}
+
+.product-actions > *,
+.inline-actions > * {
+  flex: 1 1 180px;
+  min-width: 0;
 }
 
 .kicker-row {
@@ -919,6 +940,11 @@ h3 {
 
   .lane-grid {
     grid-template-columns: 1fr;
+  }
+
+  .product-actions > *,
+  .inline-actions > * {
+    flex-basis: 100%;
   }
 }
 

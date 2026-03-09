@@ -199,27 +199,27 @@
       },
       "remote-control-limited": {
         includes: [
-          "Bounded remote automation commands with explicit permission boundaries.",
-          "Session-level auditing and control restrictions for operational safety.",
-          "Deployment safeguards designed for controlled remote workflows."
+          "Endpoint-focused automation for computer/device management tasks, not a Discord community bot.",
+          "Approved action set for maintenance jobs, health checks, restarts, patch tasks, and scripted cleanup routines.",
+          "Session-level auditing, permission boundaries, and command restrictions for operational safety."
         ],
         deliverables: [
-          "Configured limited-control profile with approved command surface.",
-          "Permissions and boundaries documentation with operator runbook.",
-          "Risk-aware deployment and monitoring recommendations."
+          "Configured limited-control profile with approved endpoint command surface.",
+          "Operator runbook covering permissions, approval flow, and response procedures.",
+          "Risk-aware deployment guidance with monitoring and alert recommendations."
         ],
         flow: [
-          "Define approved remote actions and hard limits.",
-          "Implement permissions, failsafes, and operational controls.",
-          "Validate auditability and behavior before production launch."
+          "Define the exact computer-management actions allowed (and explicitly blocked).",
+          "Implement permissions, failsafes, and escalation controls.",
+          "Validate audit logs, run simulations, and launch in controlled phases."
         ],
         bestFit: [
-          "Use cases requiring controlled remote execution with strict oversight.",
-          "Teams prioritizing auditability, scope boundaries, and safety."
+          "Teams that need controlled endpoint operations with strong oversight and traceability.",
+          "Businesses that want repeatable remote maintenance without granting unrestricted control."
         ],
         guardrails: [
-          "Feature scope is intentionally limited by design.",
-          "Unsafe or unrestricted control patterns are excluded.",
+          "This offer is for endpoint/computer management workflows only, not general network takeover tooling.",
+          "Unsafe or unrestricted remote-control patterns are intentionally excluded.",
           "18+ verification may be required depending on deployment context."
         ]
       }

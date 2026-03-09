@@ -111,12 +111,12 @@ const defaultSettings = {
     },
     {
       id: "remote-control-limited",
-      title: "Remote Control Bot (Limited)",
-      category: "Bots",
-      summary: "Bounded remote automation service with strict permission layers, auditability controls, and deployment guardrails for managed operations.",
+      title: "Endpoint Remote Management (Limited)",
+      category: "Remote Management",
+      summary: "Limited computer and endpoint management automation (device health checks, maintenance tasks, and approved remote actions) with strict permission controls.",
       priceLabel: "Custom Pricing",
       ctaLabel: "View Details",
-      ctaUrl: "mailto:admin@slendystuff.com?subject=Remote%20Control%20Bot%20Inquiry",
+      ctaUrl: "mailto:admin@slendystuff.com?subject=Endpoint%20Remote%20Management%20Inquiry",
       requires18Plus: true
     }
   ]
