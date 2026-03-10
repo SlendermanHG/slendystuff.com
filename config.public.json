@@ -1,9 +1,9 @@
 {
   "brand": {
     "name": "Slendy Stuff",
-    "tagline": "Programs and bots built for real tasks",
-    "heroTitle": "Tools, Bots, and Support That Scale With Your Next Idea",
-    "heroSubtitle": "Launch different niche products fast with one versatile storefront and support flow."
+    "tagline": "Human-built software for messy, fast-moving workflows",
+    "heroTitle": "Bring the scattered idea. Leave with a working plan.",
+    "heroSubtitle": "Direct support, practical builds, and clear next steps for teams that think in multiple directions."
   },
   "theme": {
     "accentHex": "#ff2ea6"
@@ -21,7 +21,7 @@
     "anydeskLastModified": "Fri, 13 Feb 2026 09:44:04 GMT",
     "anydeskContentLength": "8044472",
     "refreshIntervalHours": 12,
-    "intro": "Request a remote cleanup/support session through AnyDesk with minimal steps.",
+    "intro": "Request remote cleanup or troubleshooting and get a direct first response within 24 hours.",
     "anydeskLastError": null
   },
   "analytics": {

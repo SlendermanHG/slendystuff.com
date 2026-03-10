@@ -98,7 +98,7 @@
         });
       } catch (error) {
         const subject = encodeURIComponent("Tech Support Request");
-    const body = encodeURIComponent(
+        const body = encodeURIComponent(
           `Name: ${payload.name}\nEmail: ${payload.email}\nPreferred Contact: ${payload.preferredContact}\nDiscord Username: ${payload.discordUsername || "Not provided"}\nPreferred Time: ${payload.preferredTime}\nService Level: ${payload.serviceLevel}\nManagement Options: ${payload.managementOptions.join(", ") || "None selected"}\nTimezone: ${payload.clientTimezone}\n\nProject Overview / Issue:\n${payload.issue}`
         );
         window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;

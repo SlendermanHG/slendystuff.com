@@ -36,15 +36,15 @@
     <section class="section shell chaos-burst">
       <div class="section-head">
         <p class="eyebrow">Custom Build Intake</p>
-        <h1>Turn fast-moving ideas into a controlled build specification</h1>
-        <p class="muted">Use the AI lab to shape requirements, then submit one structured intake with context and priority details.</p>
+        <h1>Turn fast-moving ideas into a grounded build plan</h1>
+        <p class="muted">Use this workspace to unpack the idea, shape direction, and submit one clean intake with context and priorities.</p>
       </div>
 
       <article class="card idea-lab">
-        <h2>Idea Jump Pad</h2>
-        <p class="muted">Generate draft concepts quickly, save the strongest ones, and attach them directly to your request.</p>
+        <h2>Brainstorm Workbench</h2>
+        <p class="muted">Generate practical concepts quickly, save what feels right, and attach the best notes directly to your request.</p>
         <div class="field">
-          <label for="ideaPrompt">What are you trying to build or fix?</label>
+          <label for="ideaPrompt">What are you trying to build, fix, or simplify?</label>
           <textarea id="ideaPrompt" data-idea-prompt placeholder="Example: I need an automation flow for onboarding, support triage, and recurring follow-up tasks."></textarea>
         </div>
         <div class="inline-actions">
@@ -58,7 +58,7 @@
           <p class="muted">Generated idea output will appear here.</p>
         </article>
         <div class="idea-log-wrap">
-          <h3>Saved Idea Logs</h3>
+          <h3>Saved workbench notes</h3>
           <div class="idea-log" data-idea-log>
             <p class="muted">No saved idea logs yet.</p>
           </div>
@@ -67,7 +67,7 @@
 
       <div class="grid two">
         <article class="card sticker-panel">
-          <h2>Required Clarity Signals</h2>
+          <h2>Clarity anchors</h2>
           <ul class="list">
             <li>What outcome should this system create?</li>
             <li>Who uses it and how often?</li>
@@ -77,7 +77,7 @@
         </article>
 
         <article class="card">
-          <h2>Submit Intake</h2>
+          <h2>Submit intake</h2>
           <form data-custom-tool-form>
             <div class="form-grid">
               <div class="field">
@@ -109,12 +109,12 @@
 
             <div class="field">
               <label for="whatWant">What should be built?</label>
-              <textarea id="whatWant" name="whatWant" required placeholder="List core features and expected result."></textarea>
+              <textarea id="whatWant" name="whatWant" required placeholder="List core features and the result you need to feel this was a win."></textarea>
             </div>
 
             <div class="field">
               <label for="howUsed">How will it be used?</label>
-              <textarea id="howUsed" name="howUsed" required placeholder="Describe users, frequency, and workflow context."></textarea>
+              <textarea id="howUsed" name="howUsed" required placeholder="Describe users, frequency, and where this sits in your real workflow."></textarea>
             </div>
 
             <fieldset class="fieldset-box">
@@ -133,7 +133,7 @@
 
             <div class="field">
               <label for="notes">Additional Notes</label>
-              <textarea id="notes" name="notes" placeholder="Dependencies, compliance needs, preferred stack, or anything that reduces ambiguity."></textarea>
+              <textarea id="notes" name="notes" placeholder="Dependencies, compliance needs, preferred stack, or any details that reduce ambiguity."></textarea>
             </div>
 
             <div class="field">

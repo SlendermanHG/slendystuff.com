@@ -1,4 +1,4 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500;700&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500;700&family=Caveat:wght@600;700&display=swap");
 
 :root {
   --bg: #070d18;
@@ -355,6 +355,99 @@ main {
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5);
 }
 
+.journal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.journal-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.journal-card::after {
+  content: "";
+  position: absolute;
+  right: -26px;
+  top: -26px;
+  width: 90px;
+  height: 90px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 158, 26, 0.3), transparent 68%);
+}
+
+.human-note {
+  border: 1px dashed rgba(141, 255, 82, 0.46);
+  background: linear-gradient(160deg, rgba(14, 31, 56, 0.9), rgba(9, 22, 41, 0.92));
+}
+
+.human-note p,
+.human-note li,
+.human-note h2,
+.human-note h3 {
+  color: #dcedff;
+}
+
+.human-quote {
+  font-family: "Caveat", "Segoe Script", cursive;
+  font-size: 1.4rem;
+  line-height: 1.25;
+  color: #f8ffb6;
+  margin: 0;
+}
+
+.signature {
+  margin-top: 0.65rem;
+  font-family: "Caveat", "Segoe Script", cursive;
+  font-size: 1.26rem;
+  color: #9ce3ff;
+}
+
+.story-deck {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.95rem;
+}
+
+.story-card {
+  position: relative;
+  border: 1px solid rgba(124, 188, 255, 0.34);
+  background: linear-gradient(165deg, rgba(12, 29, 52, 0.92), rgba(8, 20, 38, 0.95));
+}
+
+.story-card:nth-child(2) {
+  transform: rotate(-0.7deg);
+}
+
+.story-card:nth-child(3) {
+  transform: rotate(0.6deg);
+}
+
+.story-card:hover {
+  transform: translateY(-2px) rotate(0deg);
+}
+
+.note-tag {
+  display: inline-flex;
+  font-family: "IBM Plex Mono", "Consolas", monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #c3defe;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px dashed rgba(142, 255, 82, 0.48);
+  background: rgba(8, 24, 44, 0.82);
+}
+
+.micro-note {
+  margin: 0.5rem 0 0;
+  font-family: "IBM Plex Mono", "Consolas", monospace;
+  color: #b7d2f3;
+  font-size: 0.78rem;
+}
+
 .splash-card {
   background: linear-gradient(155deg, rgba(13, 27, 50, 0.9), rgba(8, 20, 38, 0.9));
 }
@@ -655,7 +748,7 @@ button.btn {
 .stat-card {
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.78);
+  background: linear-gradient(165deg, rgba(10, 24, 44, 0.92), rgba(8, 18, 34, 0.95));
   padding: 0.65rem;
 }
 
@@ -802,6 +895,8 @@ button.btn {
   .hero-grid,
   .grid.two,
   .grid.three,
+  .journal-grid,
+  .story-deck,
   .lane-grid,
   .fun-zone-grid,
   .form-grid,
@@ -892,3 +987,5 @@ button.btn {
     transform: rotate(360deg) scale(1);
   }
 }
+
+

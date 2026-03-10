@@ -36,49 +36,62 @@
     <section class="section shell chaos-burst">
       <div class="section-head">
         <p class="eyebrow">Contact</p>
-        <h1>Send a direct message</h1>
-        <p class="muted">Use this for general questions, planning, or clarification. First reply is within 24 hours.</p>
+        <h1>Send a direct message to the builder</h1>
+        <p class="muted">Use this for questions, project planning, or clarification. First reply is within 24 hours.</p>
       </div>
 
-      <article class="card">
-        <form data-contact-form>
-          <div class="form-grid">
-            <div class="field">
-              <label for="contactName">Name</label>
-              <input id="contactName" name="name" required>
+      <div class="grid two">
+        <article class="card human-note">
+          <h2>What to send for the fastest reply</h2>
+          <ul class="list">
+            <li>Your current blocker in one sentence.</li>
+            <li>The outcome you want by the end of this week.</li>
+            <li>Any tools/platforms that must stay in the stack.</li>
+            <li>Your Discord username if you want active chat support.</li>
+          </ul>
+          <p class="human-quote">"You can send a rough thought. I can help shape the rest."</p>
+        </article>
+
+        <article class="card">
+          <form data-contact-form>
+            <div class="form-grid">
+              <div class="field">
+                <label for="contactName">Name</label>
+                <input id="contactName" name="name" required>
+              </div>
+              <div class="field">
+                <label for="contactEmail">Email</label>
+                <input id="contactEmail" name="email" type="email" required>
+              </div>
             </div>
             <div class="field">
-              <label for="contactEmail">Email</label>
-              <input id="contactEmail" name="email" type="email" required>
+              <label for="contactSubject">Subject</label>
+              <input id="contactSubject" name="subject" required>
             </div>
-          </div>
-          <div class="field">
-            <label for="contactSubject">Subject</label>
-            <input id="contactSubject" name="subject" required>
-          </div>
-          <div class="form-grid">
+            <div class="form-grid">
+              <div class="field">
+                <label for="contactPreferredContact">Preferred Contact</label>
+                <select id="contactPreferredContact" name="preferredContact">
+                  <option value="discord">Discord (preferred)</option>
+                  <option value="email">Email</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="contactDiscordUsername">Discord Username</label>
+                <input id="contactDiscordUsername" name="discordUsername" placeholder="example: username or user#1234">
+              </div>
+            </div>
             <div class="field">
-              <label for="contactPreferredContact">Preferred Contact</label>
-              <select id="contactPreferredContact" name="preferredContact">
-                <option value="discord">Discord (preferred)</option>
-                <option value="email">Email</option>
-              </select>
+              <label for="contactMessage">Message</label>
+              <textarea id="contactMessage" name="message" required placeholder="What do you need and what outcome are you aiming for?"></textarea>
             </div>
-            <div class="field">
-              <label for="contactDiscordUsername">Discord Username</label>
-              <input id="contactDiscordUsername" name="discordUsername" placeholder="example: username or user#1234">
+            <div class="inline-actions">
+              <button class="btn" type="submit">Open Email Draft</button>
             </div>
-          </div>
-          <div class="field">
-            <label for="contactMessage">Message</label>
-            <textarea id="contactMessage" name="message" required placeholder="What do you need and what outcome are you aiming for?"></textarea>
-          </div>
-          <div class="inline-actions">
-            <button class="btn" type="submit">Open Email Draft</button>
-          </div>
-          <p class="status" data-contact-status></p>
-        </form>
-      </article>
+            <p class="status" data-contact-status></p>
+          </form>
+        </article>
+      </div>
     </section>
   </main>
 
