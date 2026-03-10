@@ -14,7 +14,9 @@
     });
 
     const params = new URLSearchParams(window.location.search);
-    const productId = params.get("id");
+    const productIdFromQuery = params.get("id");
+    const productIdFromPage = document.body.getAttribute("data-product-id");
+    const productId = productIdFromQuery || productIdFromPage;
 
     const product = (config.products || []).find((item) => item.id === productId);
     if (!product) {
@@ -23,6 +25,8 @@
       app.track("product_not_found", { productId: productId || "empty" });
       return;
     }
+
+    document.title = `${product.title} | ${config.brand.name || "slendystuff"}`;
 
     const allow = !product.requires18Plus || (await app.promptAgeGate(product.id));
     if (!allow) {
@@ -53,8 +57,10 @@
             }
           </div>
           <div class="inline-actions">
-            <a class="btn" href="${escapeHtml(product.ctaUrl || "#")}" target="_blank" rel="noopener" data-track="product_cta">${escapeHtml(product.ctaLabel || "Get Started")}</a>
-            <a class="btn btn-ghost" href="/support.html">Need setup help?</a>
+            <a class="btn" href="${escapeHtml(app.getCheckoutPageUrl(product.id))}" data-track="product_checkout">Checkout</a>
+            <button class="btn btn-ghost" type="button" data-track="add_to_cart">Add To Cart</button>
+            <a class="btn btn-ghost" href="/cart.html">Open Cart</a>
+            <a class="btn btn-ghost" href="${escapeHtml(product.ctaUrl || "/support.html")}" target="_blank" rel="noopener" data-track="product_cta">${escapeHtml(product.ctaLabel || "Need setup help?")}</a>
           </div>
         </article>
       `;
@@ -64,6 +70,25 @@
           app.track("product_cta", { productId: product.id });
         });
       });
+
+      const checkoutButton = contentNode.querySelector("[data-track='product_checkout']");
+      if (checkoutButton) {
+        checkoutButton.addEventListener("click", () => {
+          app.track("product_checkout", { productId: product.id });
+        });
+      }
+
+      const addToCartButton = contentNode.querySelector("[data-track='add_to_cart']");
+      if (addToCartButton) {
+        addToCartButton.addEventListener("click", () => {
+          app.addToCart(product.id, 1);
+          app.track("product_add_to_cart", { productId: product.id });
+          addToCartButton.textContent = "Added";
+          setTimeout(() => {
+            addToCartButton.textContent = "Add To Cart";
+          }, 1400);
+        });
+      }
     }
 
     app.track("product_view", { productId: product.id, requires18Plus: product.requires18Plus });

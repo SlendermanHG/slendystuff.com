@@ -17,6 +17,7 @@ const LOG_DIR_FALLBACK = process.env.LOG_DIR || path.join(PERSIST_ROOT, "logs");
 const SETTINGS_PATH = process.env.SETTINGS_PATH || path.join(DATA_DIR, "settings.json");
 const SECRETS_PATH = process.env.SECRETS_PATH || path.join(DATA_DIR, "secrets.json");
 const SUPPORT_REQUESTS_PATH = process.env.SUPPORT_REQUESTS_PATH || path.join(DATA_DIR, "support-requests.json");
+const ACCOUNTS_PATH = process.env.ACCOUNTS_PATH || path.join(DATA_DIR, "accounts.json");
 
 const SESSION_COOKIE = "slendy_admin_session";
 const OWNER_BROWSER_COOKIE = "slendy_owner_browser";
@@ -35,17 +36,22 @@ const CSRF_HEADER_NAME = "x-csrf-token";
 const LOGIN_RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 10 };
 const SUPPORT_RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 8 };
 const TRACK_RATE_LIMIT = { windowMs: 60 * 1000, max: 120 };
+const ACCOUNT_RATE_LIMIT = { windowMs: 15 * 60 * 1000, max: 15 };
 const PORT = Number(process.env.PORT || 4173);
+const RW_COV_BASE_URL = "https://rwcov.org";
+const RW_COV_CACHE_TTL_MS = 30 * 60 * 1000;
 
 let settingsCache = null;
 let secretsCache = null;
 let supportRequestsCache = [];
+let accountsCache = [];
 let writeQueue = Promise.resolve();
 let anydeskRefreshTimer = null;
+let rwcovInfoCache = null;
 
 const defaultSettings = {
   brand: {
-    name: "Slendy Stuff",
+    name: "slendystuff",
     tagline: "Software help you can use right away",
     heroTitle: "Simple Tools, Smart Automation, and Real Support",
     heroSubtitle: "Pick what you need, get clear options, and get help quickly when you want it."
@@ -77,9 +83,9 @@ const defaultSettings = {
       title: "POS Suite",
       category: "Programs",
       summary: "Speed up checkout and daily operations with a cleaner point-of-sale experience.",
-      priceLabel: "Custom Pricing",
-      ctaLabel: "Request Details",
-      ctaUrl: "mailto:admin@slendystuff.com?subject=POS%20Suite%20Inquiry",
+      priceLabel: "$29/mo launch price",
+      ctaLabel: "Start POS Build",
+      ctaUrl: "/support.html?plan=pos-suite",
       requires18Plus: false
     },
     {
@@ -87,9 +93,9 @@ const defaultSettings = {
       title: "System Optimizer",
       category: "Programs",
       summary: "Improve speed and stability on your Windows system with focused optimization tools.",
-      priceLabel: "Custom Pricing",
-      ctaLabel: "Request Details",
-      ctaUrl: "mailto:admin@slendystuff.com?subject=System%20Optimizer%20Inquiry",
+      priceLabel: "$49 one-time reset",
+      ctaLabel: "Book Optimizer",
+      ctaUrl: "/support.html?plan=system-optimizer",
       requires18Plus: false
     },
     {
@@ -97,9 +103,9 @@ const defaultSettings = {
       title: "Discord Bot Kit",
       category: "Bots",
       summary: "Automate moderation, alerts, and routine tasks so your community runs smoothly.",
-      priceLabel: "From $19.99",
-      ctaLabel: "View Options",
-      ctaUrl: "mailto:admin@slendystuff.com?subject=Discord%20Bot%20Inquiry",
+      priceLabel: "$7/mo starter",
+      ctaLabel: "Launch Bot Kit",
+      ctaUrl: "/support.html?plan=discord-bot-kit",
       requires18Plus: false
     },
     {
@@ -107,9 +113,9 @@ const defaultSettings = {
       title: "Remote Control Bot (Limited)",
       category: "Bots",
       summary: "Managed remote automation for approved use cases with defined safeguards.",
-      priceLabel: "Custom Pricing",
-      ctaLabel: "View Details",
-      ctaUrl: "mailto:admin@slendystuff.com?subject=Remote%20Control%20Bot%20Inquiry",
+      priceLabel: "$59/mo managed",
+      ctaLabel: "Apply for Access",
+      ctaUrl: "/support.html?plan=remote-control-limited",
       requires18Plus: true
     }
   ]
@@ -129,6 +135,7 @@ const defaultSecrets = {
 };
 
 const defaultSupportRequests = [];
+const defaultAccounts = [];
 
 function nowIso() {
   return new Date().toISOString();
@@ -287,6 +294,120 @@ function normalizeSupportRequests(payload) {
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
+function normalizeAccountRole(value) {
+  const role = safeString(value, "").toLowerCase();
+  if (role === "admin") {
+    return "admin";
+  }
+  return "customer";
+}
+
+function hashPassword(password, saltHex = crypto.randomBytes(16).toString("hex")) {
+  const saltBuffer = Buffer.from(saltHex, "hex");
+  const hash = crypto.scryptSync(String(password || ""), saltBuffer, 64).toString("hex");
+  return { passwordSalt: saltHex, passwordHash: hash };
+}
+
+function verifyPassword(inputPassword, account) {
+  const expected = Buffer.from(safeString(account.passwordHash, ""), "hex");
+  const computed = Buffer.from(hashPassword(inputPassword, safeString(account.passwordSalt, "")).passwordHash, "hex");
+  if (expected.length === 0 || expected.length !== computed.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(expected, computed);
+}
+
+function normalizeAccount(item) {
+  const now = nowIso();
+  const email = normalizeEmail(item.email);
+  const name = truncate(safeString(item.name, "").trim(), 120);
+  const createdAt = safeString(item.createdAt, now);
+  const updatedAt = safeString(item.updatedAt, createdAt);
+  const id = truncate(safeString(item.id, crypto.randomBytes(8).toString("hex")), 24);
+  const role = normalizeAccountRole(item.role);
+  const disabled = Boolean(item.disabled);
+
+  let passwordHash = safeString(item.passwordHash, "");
+  let passwordSalt = safeString(item.passwordSalt, "");
+  if (!passwordHash || !passwordSalt) {
+    const seeded = hashPassword(String(item.password || ""));
+    passwordHash = seeded.passwordHash;
+    passwordSalt = seeded.passwordSalt;
+  }
+
+  return {
+    id,
+    email,
+    name,
+    role,
+    disabled,
+    createdAt,
+    updatedAt,
+    lastLoginAt: safeString(item.lastLoginAt, ""),
+    passwordHash: truncate(passwordHash, 200),
+    passwordSalt: truncate(passwordSalt, 200)
+  };
+}
+
+function normalizeAccounts(payload) {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  const seen = new Set();
+  return payload
+    .filter((item) => item && typeof item === "object")
+    .map((item) => normalizeAccount(item))
+    .filter((item) => {
+      if (!item.email || seen.has(item.email)) {
+        return false;
+      }
+      seen.add(item.email);
+      return true;
+    })
+    .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+}
+
+function sanitizeAccountForAdmin(account) {
+  return {
+    id: account.id,
+    email: account.email,
+    name: account.name,
+    role: account.role,
+    disabled: account.disabled,
+    createdAt: account.createdAt,
+    updatedAt: account.updatedAt,
+    lastLoginAt: account.lastLoginAt || null
+  };
+}
+
+function buildAccountStats(accounts) {
+  const now = Date.now();
+  const since7d = now - 7 * 24 * 60 * 60 * 1000;
+  const since30d = now - 30 * 24 * 60 * 60 * 1000;
+
+  const createdLast7d = accounts.filter((account) => {
+    const ts = Date.parse(account.createdAt || "");
+    return Number.isFinite(ts) && ts >= since7d;
+  }).length;
+
+  const activeLast30d = accounts.filter((account) => {
+    const ts = Date.parse(account.lastLoginAt || "");
+    return Number.isFinite(ts) && ts >= since30d;
+  }).length;
+
+  const adminCount = accounts.filter((account) => account.role === "admin").length;
+  const customerCount = accounts.filter((account) => account.role !== "admin").length;
+
+  return {
+    total: accounts.length,
+    createdLast7d,
+    activeLast30d,
+    adminCount,
+    customerCount
+  };
+}
+
 async function initData() {
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.mkdir(LOG_DIR_FALLBACK, { recursive: true });
@@ -294,6 +415,29 @@ async function initData() {
   settingsCache = normalizeSettings(await readJson(SETTINGS_PATH, defaultSettings));
   secretsCache = normalizeSecrets(await readJson(SECRETS_PATH, defaultSecrets));
   supportRequestsCache = normalizeSupportRequests(await readJson(SUPPORT_REQUESTS_PATH, defaultSupportRequests));
+  accountsCache = normalizeAccounts(await readJson(ACCOUNTS_PATH, defaultAccounts));
+
+  const ownerEmail = normalizeEmail(process.env.ADMIN_EMAIL || "slender@slendystuff.com");
+  if (ownerEmail) {
+    const existingOwner = accountsCache.find((account) => account.email === ownerEmail);
+    if (!existingOwner) {
+      const hashed = hashPassword(ADMIN_PASSWORD);
+      accountsCache.unshift(
+        normalizeAccount({
+          id: crypto.randomBytes(8).toString("hex"),
+          email: ownerEmail,
+          name: "Owner",
+          role: "admin",
+          passwordHash: hashed.passwordHash,
+          passwordSalt: hashed.passwordSalt,
+          createdAt: nowIso(),
+          updatedAt: nowIso(),
+          lastLoginAt: ""
+        })
+      );
+      await saveJson(ACCOUNTS_PATH, accountsCache);
+    }
+  }
 }
 
 function resolveLogDir() {
@@ -1040,9 +1184,250 @@ function scheduleAnydeskRefresh() {
   }, intervalMs);
 }
 
+function decodeHtmlEntities(value) {
+  return safeString(value, "")
+    .replace(/&#(\d+);/g, (_match, code) => String.fromCodePoint(Number(code) || 32))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_match, hex) => String.fromCodePoint(parseInt(hex, 16) || 32))
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#039;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function normalizeText(value) {
+  return decodeHtmlEntities(safeString(value, ""))
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+function pickMatch(source, pattern, index = 1) {
+  const match = safeString(source, "").match(pattern);
+  if (!match || typeof match[index] !== "string") {
+    return "";
+  }
+  return normalizeText(match[index]);
+}
+
+function firstPopulated(...values) {
+  for (const value of values) {
+    const normalized = normalizeText(value);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return "";
+}
+
+function defaultRwcovInfo() {
+  return {
+    source: RW_COV_BASE_URL,
+    churchName: "Relevant Worship Center",
+    mission:
+      "A multigenerational church family devoted to loving God, loving people, and sharing the hope of Jesus throughout the Ohio Valley.",
+    address: "52901 National Road East, St. Clairsville, OH 43950",
+    mailingAddress: "PO Box 241, St. Clairsville, OH 43950",
+    phone: "740-695-7099",
+    email: "info@relevantworshipcenter.org",
+    sundayWorship: "Sunday worship at 10:30 am",
+    serviceTimes: "Sundays: 10:30 am | Bible Study: 9:30 am | Kids Zone (ages 5-12) and Teens Group: 9:30 am",
+    links: {
+      home: `${RW_COV_BASE_URL}/`,
+      about: `${RW_COV_BASE_URL}/about/`,
+      worshipEvents: `${RW_COV_BASE_URL}/worship-events/`,
+      contact: `${RW_COV_BASE_URL}/contact/`,
+      prayerRequests: `${RW_COV_BASE_URL}/prayer-requests/`,
+      giving: `${RW_COV_BASE_URL}/giving/`,
+      youtube: "https://www.youtube.com/@rwcministries",
+      facebook: "https://www.facebook.com/relevantworshipcenter",
+      instagram: "https://www.instagram.com/explore/locations/709312128/relevant-worship-center/",
+      radio: "https://wwovfm.com/",
+      zeffyEmbed: "https://www.zeffy.com/embed/donation-form/donate-to-change-lives-3160"
+    }
+  };
+}
+
+async function fetchRemoteText(url) {
+  const timeoutMs = 12000;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      redirect: "follow",
+      cache: "no-store",
+      signal: controller.signal,
+      headers: {
+        "user-agent": "slendystuff-site/1.0 (+https://slendystuff.com)"
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`Request failed (${response.status}) for ${url}`);
+    }
+    return await response.text();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function parseRwcovInfo({ homeHtml, contactHtml, givingHtml }) {
+  const fallback = defaultRwcovInfo();
+
+  const churchName = firstPopulated(
+    pickMatch(homeHtml, /<meta property="og:site_name" content="([^"]+)"/i),
+    pickMatch(homeHtml, /<title>\s*([^<]+?)\s*<\/title>/i),
+    fallback.churchName
+  );
+
+  const mission = firstPopulated(
+    pickMatch(homeHtml, /Relevant Worship Center is ([\s\S]*?)<\/div>/i),
+    fallback.mission
+  );
+
+  const address = firstPopulated(
+    pickMatch(contactHtml, /Address:\s*<\/h6>\s*<p>([\s\S]*?)<\/p>/i),
+    fallback.address
+  );
+
+  const mailingAddress = firstPopulated(
+    pickMatch(contactHtml, /Mailing Address:\s*<\/h6>\s*<p>([\s\S]*?)<\/p>/i),
+    fallback.mailingAddress
+  );
+
+  const phone = firstPopulated(
+    pickMatch(contactHtml, /href=["']tel:([^"']+)["']/i),
+    fallback.phone
+  );
+
+  const email = firstPopulated(
+    pickMatch(contactHtml, /Email:\s*<\/h6>\s*<p>([\s\S]*?)<\/p>/i),
+    pickMatch(contactHtml, /([A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/i),
+    fallback.email
+  );
+
+  const serviceTimes = firstPopulated(
+    pickMatch(contactHtml, /service times:\s*<\/h6>\s*<p>([\s\S]*?)<\/p>/i),
+    fallback.serviceTimes
+  );
+
+  const sundayWorship = firstPopulated(
+    pickMatch(homeHtml, /Join Us Every Sunday\s*<br[^>]*>\s*Worship at\s*([^<]+)/i),
+    pickMatch(contactHtml, /Sundays:\s*([0-9:\sapm]+)/i),
+    fallback.sundayWorship
+  );
+
+  const zeffyEmbed = firstPopulated(
+    pickMatch(givingHtml, /<iframe[^>]+src=['"]([^'"]*zeffy[^'"]+)['"]/i),
+    fallback.links.zeffyEmbed
+  );
+
+  const links = {
+    home: firstPopulated(pickMatch(homeHtml, /href=["'](https:\/\/rwcov\.org\/)["']/i), fallback.links.home),
+    about: firstPopulated(pickMatch(homeHtml, /href=["'](https:\/\/rwcov\.org\/about\/)["']/i), fallback.links.about),
+    worshipEvents: firstPopulated(
+      pickMatch(homeHtml, /href=["'](https:\/\/rwcov\.org\/worship-events\/)["']/i),
+      fallback.links.worshipEvents
+    ),
+    contact: firstPopulated(
+      pickMatch(homeHtml, /href=["'](https:\/\/rwcov\.org\/contact\/)["']/i),
+      fallback.links.contact
+    ),
+    prayerRequests: firstPopulated(
+      pickMatch(homeHtml, /href=["'](https:\/\/rwcov\.org\/prayer-requests\/)["']/i),
+      fallback.links.prayerRequests
+    ),
+    giving: firstPopulated(
+      pickMatch(givingHtml, /<link rel="canonical" href="([^"]*\/giving\/)"/i),
+      fallback.links.giving
+    ),
+    youtube: firstPopulated(
+      pickMatch(homeHtml, /href=["'](https:\/\/www\.youtube\.com\/@rwcministries[^"']*)["']/i),
+      fallback.links.youtube
+    ),
+    facebook: firstPopulated(
+      pickMatch(homeHtml, /href=["'](https:\/\/www\.facebook\.com\/relevantworshipcenter[^"']*)["']/i),
+      fallback.links.facebook
+    ),
+    instagram: firstPopulated(
+      pickMatch(homeHtml, /href=["'](https:\/\/www\.instagram\.com\/explore\/locations\/709312128\/relevant-worship-center\/[^"']*)["']/i),
+      fallback.links.instagram
+    ),
+    radio: firstPopulated(
+      pickMatch(homeHtml, /href=["'](https:\/\/wwovfm\.com\/[^"']*)["']/i),
+      fallback.links.radio
+    ),
+    zeffyEmbed
+  };
+
+  return {
+    source: RW_COV_BASE_URL,
+    churchName: truncate(churchName, 120),
+    mission: truncate(mission, 420),
+    address: truncate(address, 180),
+    mailingAddress: truncate(mailingAddress, 180),
+    phone: truncate(phone.replace(/[^\d-]/g, ""), 40),
+    email: truncate(email.replace(/^mailto:/i, ""), 120),
+    sundayWorship: truncate(sundayWorship, 120),
+    serviceTimes: truncate(serviceTimes, 320),
+    links
+  };
+}
+
+async function getRwcovInfo(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && rwcovInfoCache && now < rwcovInfoCache.expiresAt) {
+    return rwcovInfoCache;
+  }
+
+  try {
+    const [homeHtml, contactHtml, givingHtml] = await Promise.all([
+      fetchRemoteText(`${RW_COV_BASE_URL}/`),
+      fetchRemoteText(`${RW_COV_BASE_URL}/contact/`),
+      fetchRemoteText(`${RW_COV_BASE_URL}/giving/`)
+    ]);
+
+    const data = parseRwcovInfo({ homeHtml, contactHtml, givingHtml });
+    rwcovInfoCache = {
+      data,
+      fetchedAt: nowIso(),
+      expiresAt: now + RW_COV_CACHE_TTL_MS,
+      stale: false,
+      warning: null
+    };
+    return rwcovInfoCache;
+  } catch (error) {
+    const warning = safeString(error.message, "Could not refresh rwcov.org data.");
+    if (rwcovInfoCache && rwcovInfoCache.data) {
+      rwcovInfoCache = {
+        ...rwcovInfoCache,
+        stale: true,
+        warning
+      };
+      return rwcovInfoCache;
+    }
+
+    rwcovInfoCache = {
+      data: defaultRwcovInfo(),
+      fetchedAt: nowIso(),
+      expiresAt: now + 5 * 60 * 1000,
+      stale: true,
+      warning
+    };
+    return rwcovInfoCache;
+  }
+}
+
 const loginRateLimiter = createRateLimiter({ ...LOGIN_RATE_LIMIT, keyPrefix: "admin-login" });
 const supportRateLimiter = createRateLimiter({ ...SUPPORT_RATE_LIMIT, keyPrefix: "support-request" });
 const trackRateLimiter = createRateLimiter({ ...TRACK_RATE_LIMIT, keyPrefix: "track" });
+const accountRateLimiter = createRateLimiter({ ...ACCOUNT_RATE_LIMIT, keyPrefix: "account-auth" });
 
 app.use(applySecurityHeaders);
 app.use(cookieParser());
@@ -1074,6 +1459,22 @@ app.get("/api/support/anydesk", (_req, res) => {
       lastError: settingsCache.support.anydeskLastError || null
     }
   });
+});
+
+app.get("/api/church/rwcov", async (req, res) => {
+  try {
+    const forceRefresh = safeString(req.query.refresh, "") === "1";
+    const church = await getRwcovInfo(forceRefresh);
+    res.json({
+      ok: true,
+      church: church.data,
+      fetchedAt: church.fetchedAt,
+      stale: Boolean(church.stale),
+      warning: church.warning || null
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: safeString(error.message, "Failed to load church profile") });
+  }
 });
 
 app.post("/api/track", trackRateLimiter, async (req, res) => {
@@ -1166,10 +1567,86 @@ app.post("/api/support/request", supportRateLimiter, async (req, res) => {
   }
 });
 
+app.post("/api/account/register", accountRateLimiter, async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const name = truncate(safeString(req.body.name, "").trim(), 120);
+    const password = safeString(req.body.password, "");
+
+    if (!email) {
+      return res.status(400).json({ ok: false, error: "A valid email is required." });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ ok: false, error: "Password must be at least 8 characters." });
+    }
+
+    if (accountsCache.some((account) => account.email === email)) {
+      return res.status(409).json({ ok: false, error: "An account with this email already exists." });
+    }
+
+    const hashed = hashPassword(password);
+    const account = normalizeAccount({
+      id: crypto.randomBytes(8).toString("hex"),
+      email,
+      name,
+      role: "customer",
+      passwordHash: hashed.passwordHash,
+      passwordSalt: hashed.passwordSalt,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      lastLoginAt: ""
+    });
+
+    accountsCache = [account, ...accountsCache].slice(0, 20000);
+    await saveJson(ACCOUNTS_PATH, accountsCache);
+    await appendLog("account-register", sanitizeAccountForAdmin(account), req);
+
+    return res.json({ ok: true, account: sanitizeAccountForAdmin(account) });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: safeString(error.message, "Registration failed") });
+  }
+});
+
+app.post("/api/account/login", accountRateLimiter, async (req, res) => {
+  try {
+    const email = normalizeEmail(req.body.email);
+    const password = safeString(req.body.password, "");
+    const account = accountsCache.find((entry) => entry.email === email);
+
+    if (!account || account.disabled) {
+      return res.status(401).json({ ok: false, error: "Invalid account credentials." });
+    }
+
+    if (!verifyPassword(password, account)) {
+      return res.status(401).json({ ok: false, error: "Invalid account credentials." });
+    }
+
+    account.lastLoginAt = nowIso();
+    account.updatedAt = nowIso();
+    await saveJson(ACCOUNTS_PATH, accountsCache);
+    await appendLog("account-login", { accountId: account.id, email: account.email, role: account.role }, req);
+
+    return res.json({ ok: true, account: sanitizeAccountForAdmin(account) });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: safeString(error.message, "Login failed") });
+  }
+});
+
 app.post("/api/admin/login", loginRateLimiter, async (req, res) => {
   try {
     if (!isPasswordValid(req.body.password)) {
       return res.status(401).json({ ok: false, error: "Invalid password" });
+    }
+
+    const ownerEmail = normalizeEmail(process.env.ADMIN_EMAIL || "slender@slendystuff.com");
+    if (ownerEmail) {
+      const ownerAccount = accountsCache.find((account) => account.email === ownerEmail);
+      if (ownerAccount) {
+        ownerAccount.lastLoginAt = nowIso();
+        ownerAccount.updatedAt = nowIso();
+        await saveJson(ACCOUNTS_PATH, accountsCache);
+      }
     }
 
     const session = createAdminSession(req, res);
@@ -1231,6 +1708,12 @@ app.get("/api/admin/settings", requireAdmin, (_req, res) => {
     settings: settingsCache,
     secrets: secretsCache
   });
+});
+
+app.get("/api/admin/accounts", requireAdmin, (_req, res) => {
+  const accounts = accountsCache.map((account) => sanitizeAccountForAdmin(account));
+  const stats = buildAccountStats(accounts);
+  res.json({ ok: true, stats, accounts });
 });
 
 app.get("/api/admin/stats", requireAdmin, async (_req, res) => {

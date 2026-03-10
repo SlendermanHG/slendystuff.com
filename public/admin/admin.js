@@ -8,9 +8,11 @@
   const logoutButton = document.querySelector("[data-logout]");
   const refreshAnydeskButton = document.querySelector("[data-refresh-anydesk]");
   const refreshStatsButton = document.querySelector("[data-refresh-stats]");
+  const refreshAccountsButton = document.querySelector("[data-refresh-accounts]");
   const claimOwnerBrowserButton = document.querySelector("[data-claim-owner-browser]");
   const refreshSupportRequestsButton = document.querySelector("[data-refresh-support-requests]");
   const statsStatus = document.querySelector("[data-stats-status]");
+  const accountsStatus = document.querySelector("[data-accounts-status]");
   const ownerClaimStatus = document.querySelector("[data-owner-claim-status]");
   const dashboardTabButton = document.querySelector("[data-admin-tab='dashboard']");
   const settingsTabButton = document.querySelector("[data-admin-tab='settings']");
@@ -24,12 +26,16 @@
   const topIpsList = document.querySelector("[data-top-ips]");
   const visitorConnectionsBody = document.querySelector("[data-visitor-connections-body]");
   const sessionActivityBody = document.querySelector("[data-session-activity-body]");
+  const accountsBody = document.querySelector("[data-accounts-body]");
   const statVisitors24h = document.querySelector("[data-stat='visitors24h']");
   const statEvents7d = document.querySelector("[data-stat='events7d']");
   const statQueueOpen = document.querySelector("[data-stat='queueOpen']");
   const statIps24h = document.querySelector("[data-stat='ips24h']");
   const statActiveSessions15m = document.querySelector("[data-stat='activeSessions15m']");
   const statAvgSessionMinutes24h = document.querySelector("[data-stat='avgSessionMinutes24h']");
+  const accountStatTotal = document.querySelector("[data-account-stat='total']");
+  const accountStatNew7d = document.querySelector("[data-account-stat='new7d']");
+  const accountStatActive30d = document.querySelector("[data-account-stat='active30d']");
 
   const productTableBody = document.querySelector("[data-products-body]");
   const addProductButton = document.querySelector("[data-add-product]");
@@ -61,6 +67,7 @@
   let currentSecrets = null;
   let csrfToken = "";
   let supportRequests = [];
+  let accounts = [];
 
   init().catch((error) => {
     setStatus(loginStatus, error.message, "error");
@@ -68,7 +75,7 @@
 
   async function init() {
     document.querySelectorAll("[data-brand-name]").forEach((node) => {
-      node.textContent = "Slendy Stuff";
+      node.textContent = "slendystuff";
     });
 
     loginForm.addEventListener("submit", onLogin);
@@ -79,6 +86,10 @@
 
     if (refreshStatsButton) {
       refreshStatsButton.addEventListener("click", loadDashboardStats);
+    }
+
+    if (refreshAccountsButton) {
+      refreshAccountsButton.addEventListener("click", loadAccounts);
     }
 
     if (claimOwnerBrowserButton) {
@@ -159,6 +170,7 @@
     });
     csrfToken = "";
     supportRequests = [];
+    accounts = [];
     showLogin();
   }
 
@@ -179,7 +191,7 @@
   }
 
   async function loadDashboardData() {
-    await Promise.all([loadDashboardStats(), loadSupportRequests()]);
+    await Promise.all([loadDashboardStats(), loadSupportRequests(), loadAccounts()]);
   }
 
   async function loadDashboardStats() {
@@ -332,6 +344,64 @@
 
     supportRequests = Array.isArray(payload.requests) ? payload.requests : [];
     renderSupportRequests();
+  }
+
+  async function loadAccounts() {
+    if (!accountsBody) {
+      return;
+    }
+
+    setStatus(accountsStatus, "Refreshing accounts...", "");
+    accountsBody.innerHTML = "<tr><td colspan='6' class='muted'>Loading accounts...</td></tr>";
+
+    const response = await fetch("/api/admin/accounts", { credentials: "include" });
+    const payload = await response.json();
+
+    if (!response.ok || !payload.ok) {
+      accountsBody.innerHTML = `<tr><td colspan='6' class='status error'>${escapeHtml(payload.error || "Failed to load accounts.")}</td></tr>`;
+      setStatus(accountsStatus, payload.error || "Failed to load accounts.", "error");
+      return;
+    }
+
+    accounts = Array.isArray(payload.accounts) ? payload.accounts : [];
+    renderAccounts(accounts, payload.stats || {});
+    setStatus(accountsStatus, "Accounts updated.", "ok");
+  }
+
+  function renderAccounts(list, stats) {
+    if (accountStatTotal) {
+      accountStatTotal.textContent = String(stats.total || 0);
+    }
+    if (accountStatNew7d) {
+      accountStatNew7d.textContent = String(stats.createdLast7d || 0);
+    }
+    if (accountStatActive30d) {
+      accountStatActive30d.textContent = String(stats.activeLast30d || 0);
+    }
+
+    if (!accountsBody) {
+      return;
+    }
+
+    if (!Array.isArray(list) || list.length === 0) {
+      accountsBody.innerHTML = "<tr><td colspan='6' class='muted'>No accounts created yet.</td></tr>";
+      return;
+    }
+
+    accountsBody.innerHTML = list
+      .map((account) => {
+        return `
+          <tr>
+            <td>${escapeHtml(account.email || "-")}</td>
+            <td>${escapeHtml(account.name || "-")}</td>
+            <td>${escapeHtml(account.role || "customer")}</td>
+            <td>${escapeHtml(formatDate(account.createdAt))}</td>
+            <td>${escapeHtml(formatDate(account.lastLoginAt))}</td>
+            <td>${account.disabled ? "Disabled" : "Active"}</td>
+          </tr>
+        `;
+      })
+      .join("");
   }
 
   function renderSupportRequests() {

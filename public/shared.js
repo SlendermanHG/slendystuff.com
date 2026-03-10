@@ -3,6 +3,13 @@
   const SESSION_ID_KEY = "slendy_session_id";
   const SESSION_STARTED_AT_KEY = "slendy_session_started_at";
   const SESSION_START_SENT_PREFIX = "slendy_session_start_sent_";
+  const CART_STORAGE_KEY = "slendy_cart_items";
+  const PRODUCT_PAGE_PATHS = {
+    "pos-suite": "/products/pos-suite.html",
+    "system-optimizer": "/products/system-optimizer.html",
+    "discord-bot-kit": "/products/discord-bot-kit.html",
+    "remote-control-limited": "/products/remote-control-limited.html"
+  };
 
   function generateId(prefix) {
     try {
@@ -91,6 +98,116 @@
         touchPoints: Number(navigator.maxTouchPoints || 0),
         cookiesEnabled: Boolean(navigator.cookieEnabled)
       };
+    },
+
+    getProductPageUrl(productId) {
+      const key = String(productId || "").trim();
+      return PRODUCT_PAGE_PATHS[key] || `/product.html?id=${encodeURIComponent(key)}`;
+    },
+
+    getCheckoutPageUrl(productId) {
+      const key = String(productId || "").trim();
+      return `/checkout.html?id=${encodeURIComponent(key)}`;
+    },
+
+    getCheckoutUrl(product, stripeLinks = {}) {
+      const productId = String((product && product.id) || "").trim();
+      const map = {
+        "pos-suite": stripeLinks.starter,
+        "system-optimizer": stripeLinks.reset,
+        "discord-bot-kit": stripeLinks.pro,
+        "remote-control-limited": stripeLinks.pro
+      };
+
+      const preferred = String(map[productId] || "").trim();
+      if (preferred) {
+        return preferred;
+      }
+
+      const ctaUrl = String((product && product.ctaUrl) || "").trim();
+      if (ctaUrl) {
+        return ctaUrl;
+      }
+
+      return "/support.html";
+    },
+
+    getCart() {
+      const raw = this.safeStorageGet(window.localStorage, CART_STORAGE_KEY);
+      if (!raw) {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          return [];
+        }
+
+        return parsed
+          .filter((item) => item && typeof item === "object")
+          .map((item) => ({
+            id: String(item.id || "").trim(),
+            qty: Math.max(1, Math.min(99, Number(item.qty || 1)))
+          }))
+          .filter((item) => item.id);
+      } catch {
+        return [];
+      }
+    },
+
+    saveCart(items) {
+      const normalized = Array.isArray(items)
+        ? items
+            .filter((item) => item && typeof item === "object")
+            .map((item) => ({
+              id: String(item.id || "").trim(),
+              qty: Math.max(1, Math.min(99, Number(item.qty || 1)))
+            }))
+            .filter((item) => item.id)
+        : [];
+
+      this.safeStorageSet(window.localStorage, CART_STORAGE_KEY, JSON.stringify(normalized));
+      return normalized;
+    },
+
+    addToCart(productId, qty = 1) {
+      const id = String(productId || "").trim();
+      if (!id) {
+        return this.getCart();
+      }
+
+      const amount = Math.max(1, Math.min(99, Number(qty || 1)));
+      const cart = this.getCart();
+      const index = cart.findIndex((item) => item.id === id);
+      if (index >= 0) {
+        cart[index].qty = Math.max(1, Math.min(99, cart[index].qty + amount));
+      } else {
+        cart.push({ id, qty: amount });
+      }
+      return this.saveCart(cart);
+    },
+
+    updateCartQty(productId, qty) {
+      const id = String(productId || "").trim();
+      const amount = Math.max(0, Math.min(99, Number(qty || 0)));
+      const cart = this.getCart();
+      const index = cart.findIndex((item) => item.id === id);
+      if (index < 0) {
+        return this.saveCart(cart);
+      }
+
+      if (amount <= 0) {
+        cart.splice(index, 1);
+      } else {
+        cart[index].qty = amount;
+      }
+      return this.saveCart(cart);
+    },
+
+    clearCart() {
+      this.safeStorageSet(window.localStorage, CART_STORAGE_KEY, JSON.stringify([]));
+      return [];
     },
 
     buildTrackPayload(eventName, meta = {}) {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin Settings | Slendy Stuff</title>
+  <title>Admin Settings | slendystuff</title>
   <meta name="robots" content="noindex,nofollow">
   <link rel="stylesheet" href="/styles.css">
 </head>
@@ -12,7 +12,7 @@
     <div class="shell nav-wrap">
       <a class="brand" href="/">
         <span class="brand-mark">SS</span>
-        <span data-brand-name>Slendy Stuff</span>
+        <span data-brand-name>slendystuff</span>
       </a>
       <nav class="site-nav" aria-label="Admin navigation">
         <a href="/">Public Site</a>
@@ -107,6 +107,48 @@
             </div>
             <p class="status" data-owner-claim-status></p>
             <p class="status" data-stats-status></p>
+          </article>
+
+          <article class="card">
+            <h2>Accounts</h2>
+            <div class="grid three">
+              <div class="card">
+                <p class="eyebrow">Total Accounts</p>
+                <h3 data-account-stat="total">0</h3>
+                <p class="muted">All accounts created</p>
+              </div>
+              <div class="card">
+                <p class="eyebrow">New (7 Days)</p>
+                <h3 data-account-stat="new7d">0</h3>
+                <p class="muted">Signups created in the last 7 days</p>
+              </div>
+              <div class="card">
+                <p class="eyebrow">Active (30 Days)</p>
+                <h3 data-account-stat="active30d">0</h3>
+                <p class="muted">Accounts that logged in during the last 30 days</p>
+              </div>
+            </div>
+            <div class="inline-actions">
+              <button class="btn btn-ghost" type="button" data-refresh-accounts>Refresh Accounts</button>
+            </div>
+            <p class="status" data-accounts-status></p>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Created</th>
+                    <th>Last Login</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody data-accounts-body>
+                  <tr><td colspan="6" class="muted">No accounts loaded yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
           </article>
 
           <article class="card">

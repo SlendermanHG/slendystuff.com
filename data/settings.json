@@ -1,6 +1,6 @@
 {
   "brand": {
-    "name": "Slendy Stuff",
+    "name": "slendystuff",
     "tagline": "ADHD-fueled, hyper-focused software building",
     "heroTitle": "This is a workshop, not a template.",
     "heroSubtitle": "I build niche tools, system optimizations, and practical support for real people with real friction."
@@ -17,7 +17,7 @@
     "supportEmail": "admin@slendystuff.com",
     "anydeskSourceUrl": "https://download.anydesk.com/AnyDesk.exe",
     "anydeskDownloadUrl": "https://download.anydesk.com/AnyDesk.exe",
-    "anydeskLastCheckedAt": "2026-03-10T16:01:17.139Z",
+    "anydeskLastCheckedAt": "2026-03-10T19:54:14.609Z",
     "anydeskLastModified": "Fri, 13 Feb 2026 09:44:10 GMT",
     "anydeskContentLength": "8044472",
     "refreshIntervalHours": 12,
@@ -33,9 +33,9 @@
       "title": "POS Suite",
       "category": "Programs",
       "summary": "Speed up checkout and daily operations with a cleaner point-of-sale experience.",
-      "priceLabel": "Custom Pricing",
-      "ctaLabel": "Request Details",
-      "ctaUrl": "mailto:admin@slendystuff.com?subject=POS%20Suite%20Inquiry",
+      "priceLabel": "$29/mo launch price",
+      "ctaLabel": "Start POS Build",
+      "ctaUrl": "/support.html?plan=pos-suite",
       "requires18Plus": false
     },
     {
@@ -43,9 +43,9 @@
       "title": "System Optimizer",
       "category": "Programs",
       "summary": "Improve speed and stability on your Windows system with focused optimization tools.",
-      "priceLabel": "Custom Pricing",
-      "ctaLabel": "Request Details",
-      "ctaUrl": "mailto:admin@slendystuff.com?subject=System%20Optimizer%20Inquiry",
+      "priceLabel": "$49 one-time reset",
+      "ctaLabel": "Book Optimizer",
+      "ctaUrl": "/support.html?plan=system-optimizer",
       "requires18Plus": false
     },
     {
@@ -53,9 +53,9 @@
       "title": "Discord Bot Kit",
       "category": "Bots",
       "summary": "Automate moderation, alerts, and routine tasks so your community runs smoothly.",
-      "priceLabel": "From $19.99",
-      "ctaLabel": "View Options",
-      "ctaUrl": "mailto:admin@slendystuff.com?subject=Discord%20Bot%20Inquiry",
+      "priceLabel": "$7/mo starter",
+      "ctaLabel": "Launch Bot Kit",
+      "ctaUrl": "/support.html?plan=discord-bot-kit",
       "requires18Plus": false
     },
     {
@@ -63,9 +63,9 @@
       "title": "Remote Control Bot (Limited)",
       "category": "Bots",
       "summary": "Managed remote automation for approved use cases with defined safeguards.",
-      "priceLabel": "Custom Pricing",
-      "ctaLabel": "View Details",
-      "ctaUrl": "mailto:admin@slendystuff.com?subject=Remote%20Control%20Bot%20Inquiry",
+      "priceLabel": "$59/mo managed",
+      "ctaLabel": "Apply for Access",
+      "ctaUrl": "/support.html?plan=remote-control-limited",
       "requires18Plus": true
     }
   ]

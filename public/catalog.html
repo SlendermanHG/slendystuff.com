@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catalog | slendystuff</title>
+  <meta name="description" content="Browse the slendystuff catalog by product type and use-case, then add items to cart or go straight to checkout.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://slendystuff.com/catalog.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Catalog | slendystuff">
+  <meta property="og:description" content="Dedicated product pages, category views, use-case views, and quick checkout options.">
+  <meta property="og:url" content="https://slendystuff.com/catalog.html">
+  <meta property="og:site_name" content="slendystuff">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="human-site chaos-mode">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="shell nav-wrap">
+      <a class="brand" href="/">
+        <span class="brand-mark">SS</span>
+        <span data-brand-name>slendystuff</span>
+      </a>
+
+      <button class="nav-toggle" data-nav-toggle aria-label="Toggle navigation">Menu</button>
+
+      <nav class="site-nav" data-nav aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/catalog.html">Catalog</a>
+        <a href="/cart.html">Cart <span data-cart-count>0</span></a>
+        <a href="/support.html">Support</a>
+        <a href="/about.html">About Me</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section shell">
+      <div class="section-head">
+        <p class="eyebrow">Catalog</p>
+        <h1>Find the right build fast.</h1>
+        <p class="muted">Compare by type or by what problem you are solving. Every product has its own dedicated page.</p>
+      </div>
+      <div class="inline-actions">
+        <a class="btn" href="/cart.html">Open Cart</a>
+        <a class="btn btn-ghost" href="/support.html">Need Help Choosing?</a>
+      </div>
+      <p class="status" data-catalog-status></p>
+    </section>
+
+    <section class="section shell">
+      <div class="section-head">
+        <p class="eyebrow">By Type</p>
+        <h2>Programs, bots, and focused tools.</h2>
+      </div>
+      <div data-catalog-by-type></div>
+    </section>
+
+    <section class="section shell">
+      <div class="section-head">
+        <p class="eyebrow">By Use Case</p>
+        <h2>Pick by outcome, not just feature list.</h2>
+      </div>
+      <div data-catalog-by-use></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell">
+      <p class="muted">&copy; 2026 <span data-brand-name>slendystuff</span>. Browse, add to cart, or checkout directly.</p>
+    </div>
+  </footer>
+
+  <script src="/shared.js"></script>
+  <script src="/chaos.js"></script>
+  <script src="/catalog.js"></script>
+</body>
+</html>

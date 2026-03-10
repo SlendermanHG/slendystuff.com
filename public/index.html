@@ -3,8 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Slendy Stuff | Controlled Chaos Software Studio</title>
-  <meta name="description" content="Custom software, niche automation, and hands-on support built by SlendermanHG for real workflows.">
+  <title>slendystuff | Custom Software, Automation, and Support</title>
+  <meta name="description" content="slendystuff builds custom software, workflow automation, and real human support with fast response times.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://slendystuff.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="slendystuff | Custom Software, Automation, and Support">
+  <meta property="og:description" content="Owner-built software, direct support, and practical automation for real workflows.">
+  <meta property="og:url" content="https://slendystuff.com/">
+  <meta property="og:site_name" content="slendystuff">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="slendystuff | Custom Software and Support">
+  <meta name="twitter:description" content="Built by SlendermanHG with direct communication and practical results.">
   <meta name="theme-color" content="#090612">
   <link rel="stylesheet" href="/styles.css">
 </head>
@@ -15,7 +25,7 @@
     <div class="shell nav-wrap">
       <a class="brand" href="/">
         <span class="brand-mark">SS</span>
-        <span data-brand-name>Slendy Stuff</span>
+        <span data-brand-name>slendystuff</span>
       </a>
 
       <button class="nav-toggle" data-nav-toggle aria-label="Toggle navigation">Menu</button>
@@ -23,9 +33,11 @@
       <nav class="site-nav" data-nav aria-label="Primary">
         <a href="/">Home</a>
         <a href="#chaos-map">Chaos Map</a>
-        <a href="#products">Products</a>
+        <a href="/catalog.html">Catalog</a>
+        <a href="/cart.html">Cart</a>
         <a href="/support.html">Support</a>
         <a href="/about.html">About Me</a>
+        <a href="/church.html">My Church</a>
       </nav>
     </div>
   </header>
@@ -43,7 +55,7 @@
           <h1 data-hero-title>This is a workshop, not a template.</h1>
           <p data-hero-subtitle>I build niche solutions, tune systems, and support real people who need less friction and more momentum.</p>
           <div class="hero-ctas">
-            <a class="btn" href="#products">Enter Product Grid</a>
+            <a class="btn" href="/catalog.html">Open Catalog</a>
             <a class="btn btn-ghost" href="/support.html">Get Help Fast</a>
           </div>
           <div class="kicker-row">
@@ -58,9 +70,10 @@
           <h2>How To Navigate This Place</h2>
           <ul>
             <li>Start at <strong>Chaos Map</strong> if your idea is messy.</li>
-            <li>Jump to <strong>Products</strong> if you want a fast launch point.</li>
+            <li>Jump to <strong>Catalog</strong> if you want a fast launch point.</li>
             <li>Use <strong>Support</strong> when something is broken now.</li>
             <li>Read <strong>About Me</strong> if you want the real story.</li>
+            <li>Visit <strong>My Church</strong> to support Relevant Worship Center.</li>
           </ul>
           <p class="ink-quote">"I'm learning, just as you are. Ask questions."</p>
         </aside>
@@ -89,14 +102,14 @@
     <section class="section shell" id="chaos-map">
       <div class="section-head">
         <p class="eyebrow">Chaos Map</p>
-        <h2>Pick your path in any order.</h2>
+        <h2>Choose what you need help with.</h2>
       </div>
 
       <div class="maze-layout">
         <article class="card maze-block tilt-card">
           <h3>I Need Something Built</h3>
-          <p class="muted">Start with existing products, then push into custom if your edge-case needs it.</p>
-          <a class="btn btn-ghost" href="#products">Go To Product Grid</a>
+          <p class="muted">Start with catalog options, then push into custom if your edge-case needs it.</p>
+          <a class="btn btn-ghost" href="/catalog.html">Go To Catalog</a>
         </article>
         <article class="card maze-block note-card tilt-card">
           <h3>I Need Fixes Fast</h3>
@@ -119,14 +132,14 @@
     <section class="section shell" id="idea-lab">
       <div class="section-head">
         <p class="eyebrow">Adventure Engine</p>
-        <h2>Not a form. A launch trigger.</h2>
-        <p class="muted">Answer quickly, roll instantly, move forward.</p>
+        <h2>Tell us your goal, get product options.</h2>
+        <p class="muted">Choose your audience, goal, and timeline. We return matching product options with next steps.</p>
       </div>
 
       <div class="grid two">
         <article class="card tilt-card">
-          <h3>Idea Adventure Starter</h3>
-          <p class="muted">Generates 3 action-first paths for your audience and goal.</p>
+          <h3>Product Match Starter</h3>
+          <p class="muted">Generates 3 recommended product options based on your audience and outcome.</p>
           <div class="form-grid">
             <div class="field">
               <label for="ideaAudience">Who are you helping?</label>
@@ -141,7 +154,7 @@
             <div class="field">
               <label for="ideaStage">Current stage</label>
               <select id="ideaStage" data-idea-stage>
-                <option value="">Select one</option>
+                <option value="">Choose your current stage</option>
                 <option value="new">Just starting</option>
                 <option value="active">Active but stuck</option>
                 <option value="stalled">Need a reset</option>
@@ -150,7 +163,7 @@
             <div class="field">
               <label for="ideaTimeline">Time target</label>
               <select id="ideaTimeline" data-idea-timeline>
-                <option value="">Select one</option>
+                <option value="">Choose your time target</option>
                 <option value="48h">48 hours</option>
                 <option value="7d">7 days</option>
                 <option value="30d">30 days</option>
@@ -158,16 +171,16 @@
             </div>
           </div>
           <div class="inline-actions">
-            <button class="btn" type="button" data-idea-generate>Roll Idea Adventure</button>
+            <button class="btn" type="button" data-idea-generate>Show Product Options</button>
           </div>
           <div class="idea-results" data-idea-results>
-            <p class="muted">Hit the button to generate 3 launch paths.</p>
+            <p class="muted">Click to generate 3 product options with clear next actions.</p>
           </div>
         </article>
 
         <article class="card note-card tilt-card">
-          <h3>Pricing Adventure Starter</h3>
-          <p class="muted">Generates practical pricing lanes with launch actions.</p>
+          <h3>Pricing Option Starter</h3>
+          <p class="muted">Generates 3 practical price options with launch actions.</p>
           <div class="form-grid">
             <div class="field">
               <label for="priceBudget">Starting budget ($)</label>
@@ -182,7 +195,7 @@
             <div class="field">
               <label for="priceGoal">Main pricing goal</label>
               <select id="priceGoal" data-price-goal>
-                <option value="">Select one</option>
+                <option value="">Choose your pricing goal</option>
                 <option value="conversion">Conversion</option>
                 <option value="margin">Margin</option>
                 <option value="retention">Retention</option>
@@ -191,7 +204,7 @@
             <div class="field">
               <label for="priceRisk">Launch style</label>
               <select id="priceRisk" data-price-risk>
-                <option value="">Select one</option>
+                <option value="">Choose your launch style</option>
                 <option value="safe">Safe</option>
                 <option value="balanced">Balanced</option>
                 <option value="aggressive">Aggressive</option>
@@ -199,43 +212,31 @@
             </div>
           </div>
           <div class="inline-actions">
-            <button class="btn" type="button" data-pricing-generate>Roll Pricing Adventure</button>
+            <button class="btn" type="button" data-pricing-generate>Show Pricing Options</button>
           </div>
           <div class="idea-results" data-pricing-results>
-            <p class="muted">Hit the button to generate a pricing launch map.</p>
+            <p class="muted">Click to generate starter, growth, and scale pricing options.</p>
           </div>
         </article>
       </div>
     </section>
 
-    <section class="section shell" id="products">
+    <section class="section shell" id="catalog-next">
       <div class="section-head">
-        <p class="eyebrow">Product Grid</p>
-        <h2>Current builds and launch points.</h2>
+        <p class="eyebrow">Catalog Next</p>
+        <h2>Browse products on their own dedicated pages.</h2>
+        <p class="muted">The main page is now focused on direction. Use the catalog to compare by type and use-case.</p>
       </div>
-      <div data-products-mount></div>
-    </section>
-
-    <section class="section shell" id="checkout-links">
-      <div class="section-head">
-        <p class="eyebrow">Quick Checkout</p>
-        <h2>Pick your lane and move.</h2>
-      </div>
-      <div class="grid three">
+      <div class="grid two">
         <article class="card tilt-card">
-          <h3>Starter</h3>
-          <p class="muted">Lean entry point for immediate momentum.</p>
-          <a class="btn" data-stripe="starter" href="#" target="_blank" rel="noopener">Open Starter Checkout</a>
+          <h3>View Full Catalog</h3>
+          <p class="muted">See every current product grouped by type and by what it helps you do.</p>
+          <a class="btn" href="/catalog.html">Open Catalog</a>
         </article>
-        <article class="card tilt-card">
-          <h3>Pro</h3>
-          <p class="muted">Expanded capability and depth.</p>
-          <a class="btn" data-stripe="pro" href="#" target="_blank" rel="noopener">Open Pro Checkout</a>
-        </article>
-        <article class="card tilt-card">
-          <h3>Reset</h3>
-          <p class="muted">Stabilize and re-align an existing setup.</p>
-          <a class="btn" data-stripe="reset" href="#" target="_blank" rel="noopener">Open Reset Checkout</a>
+        <article class="card tilt-card note-card">
+          <h3>Need help choosing?</h3>
+          <p class="muted">If you are between options, send your context and I will point you to the fastest fit.</p>
+          <a class="btn btn-ghost" href="/support.html">Ask For Recommendation</a>
         </article>
       </div>
     </section>
@@ -243,7 +244,7 @@
 
   <footer class="footer">
     <div class="shell">
-      <p class="muted">&copy; 2026 <span data-brand-name>Slendy Stuff</span>. Owner-built software for niche real-world problems.</p>
+      <p class="muted">&copy; 2026 <span data-brand-name>slendystuff</span>. Owner-built software for niche real-world problems.</p>
     </div>
   </footer>
 
