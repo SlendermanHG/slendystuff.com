@@ -1125,6 +1125,8 @@ function applySecurityHeaders(req, res, next) {
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'none'",
+    "frame-src 'self' https://www.zeffy.com https://zeffy.com",
+    "child-src 'self' https://www.zeffy.com https://zeffy.com",
     "form-action 'self'",
     "script-src 'self' https://www.googletagmanager.com",
     "style-src 'self' https://fonts.googleapis.com",
