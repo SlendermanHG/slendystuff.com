@@ -1,21 +1,21 @@
 ﻿@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500;700&display=swap");
 
 :root {
-  --bg: #f4f8ff;
-  --bg-soft: #eaf3ff;
-  --ink: #0e1933;
-  --ink-soft: #3d4f74;
-  --line: rgba(13, 39, 92, 0.16);
-  --line-strong: rgba(13, 39, 92, 0.3);
-  --card-bg: rgba(255, 255, 255, 0.84);
-  --card-deep: linear-gradient(140deg, rgba(12, 30, 74, 0.95), rgba(8, 18, 46, 0.92));
-  --accent-a: #22d7ff;
-  --accent-b: #2fff8f;
-  --accent-c: #ffd141;
-  --accent-d: #ff7f4a;
-  --danger: #c92342;
-  --ok: #0e9f5c;
-  --shadow: 0 18px 44px rgba(17, 46, 102, 0.17);
+  --bg: #070d18;
+  --bg-soft: #0d1526;
+  --ink: #e8f1ff;
+  --ink-soft: #9cb0cf;
+  --line: rgba(130, 169, 225, 0.2);
+  --line-strong: rgba(131, 200, 255, 0.42);
+  --card-bg: rgba(11, 21, 40, 0.78);
+  --card-deep: linear-gradient(140deg, rgba(10, 29, 59, 0.95), rgba(10, 21, 37, 0.96));
+  --accent-a: #26d7ff;
+  --accent-b: #8dff52;
+  --accent-c: #ff9e1a;
+  --accent-d: #ff5765;
+  --danger: #ff6584;
+  --ok: #59df95;
+  --shadow: 0 22px 52px rgba(0, 0, 0, 0.42);
   --radius: 18px;
 }
 
@@ -31,10 +31,10 @@ body {
   margin: 0;
   color: var(--ink);
   background:
-    radial-gradient(circle at 8% 8%, rgba(34, 215, 255, 0.28), transparent 34%),
-    radial-gradient(circle at 88% 12%, rgba(255, 209, 65, 0.23), transparent 36%),
-    radial-gradient(circle at 75% 78%, rgba(47, 255, 143, 0.2), transparent 38%),
-    linear-gradient(180deg, #f7fbff 0%, #edf4ff 44%, #f8fbff 100%);
+    radial-gradient(circle at 10% 8%, rgba(38, 215, 255, 0.18), transparent 36%),
+    radial-gradient(circle at 86% 10%, rgba(255, 158, 26, 0.15), transparent 38%),
+    radial-gradient(circle at 80% 80%, rgba(141, 255, 82, 0.12), transparent 42%),
+    linear-gradient(180deg, #050913 0%, #090f1d 42%, #070d18 100%);
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
   line-height: 1.5;
 }
@@ -45,15 +45,33 @@ body::before {
   inset: 0;
   z-index: -1;
   background-image:
-    linear-gradient(rgba(23, 68, 146, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 68, 146, 0.06) 1px, transparent 1px);
-  background-size: 30px 30px;
-  opacity: 0.45;
+    linear-gradient(rgba(67, 104, 168, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(67, 104, 168, 0.11) 1px, transparent 1px);
+  background-size: 34px 34px;
+  opacity: 0.24;
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -2;
+  background: conic-gradient(
+    from 0deg,
+    rgba(38, 215, 255, 0.1),
+    rgba(141, 255, 82, 0.08),
+    rgba(255, 158, 26, 0.09),
+    rgba(255, 87, 101, 0.08),
+    rgba(38, 215, 255, 0.1)
+  );
+  filter: blur(80px);
+  animation: drift 22s linear infinite;
   pointer-events: none;
 }
 
 a {
-  color: #0f4ec7;
+  color: #76c9ff;
   text-decoration: none;
 }
 
@@ -65,7 +83,7 @@ a:hover {
   position: absolute;
   left: -999px;
   top: 0;
-  background: #102859;
+  background: #113066;
   color: #fff;
   padding: 0.55rem 0.75rem;
   border-radius: 0 0 10px 10px;
@@ -86,7 +104,7 @@ a:hover {
   top: 0;
   z-index: 150;
   backdrop-filter: blur(12px);
-  background: rgba(244, 250, 255, 0.86);
+  background: rgba(6, 12, 24, 0.82);
   border-bottom: 1px solid var(--line);
 }
 
@@ -117,17 +135,17 @@ a:hover {
   display: grid;
   place-items: center;
   border-radius: 12px;
-  color: #011026;
+  color: #051322;
   font-weight: 800;
   font-size: 0.92rem;
   background: linear-gradient(135deg, var(--accent-a), var(--accent-b), var(--accent-c));
-  box-shadow: 0 10px 24px rgba(14, 88, 178, 0.22);
+  box-shadow: 0 14px 28px rgba(2, 7, 16, 0.5);
 }
 
 .nav-toggle {
   display: none;
   border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(11, 22, 42, 0.86);
   color: var(--ink);
   border-radius: 10px;
   padding: 0.45rem 0.7rem;
@@ -154,14 +172,14 @@ a:hover {
 
 .site-nav a:hover {
   border-color: rgba(34, 215, 255, 0.45);
-  color: #0b2c69;
+  color: #dbedff;
   text-decoration: none;
-  background: rgba(34, 215, 255, 0.14);
+  background: rgba(34, 215, 255, 0.18);
 }
 
 .site-top-note {
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(90deg, rgba(34, 215, 255, 0.15), rgba(255, 209, 65, 0.2));
+  background: linear-gradient(90deg, rgba(34, 215, 255, 0.13), rgba(255, 158, 26, 0.16));
 }
 
 .top-note-grid {
@@ -174,7 +192,7 @@ a:hover {
 
 .top-note-grid p {
   margin: 0;
-  color: #123059;
+  color: #c0d4f2;
   font-size: 0.9rem;
 }
 
@@ -185,18 +203,18 @@ a:hover {
 }
 
 .top-note-actions a {
-  border: 1px solid rgba(11, 44, 105, 0.2);
+  border: 1px solid rgba(108, 177, 255, 0.28);
   border-radius: 999px;
   padding: 0.26rem 0.62rem;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #0f376f;
-  background: rgba(255, 255, 255, 0.55);
+  color: #d8eaff;
+  background: rgba(10, 24, 47, 0.78);
 }
 
 .top-note-actions a:hover {
   text-decoration: none;
-  border-color: rgba(15, 55, 111, 0.42);
+  border-color: rgba(129, 196, 255, 0.58);
 }
 
 main {
@@ -261,7 +279,7 @@ main {
   position: absolute;
   inset: 0;
   border-radius: 20px;
-  background: linear-gradient(120deg, rgba(34, 215, 255, 0.08), rgba(47, 255, 143, 0.08), rgba(255, 127, 74, 0.06));
+  background: linear-gradient(120deg, rgba(34, 215, 255, 0.1), rgba(141, 255, 82, 0.08), rgba(255, 87, 101, 0.08));
   pointer-events: none;
 }
 
@@ -283,7 +301,7 @@ main {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #0f4f9d;
+  color: #58bbff;
   font-size: 0.73rem;
   font-weight: 800;
 }
@@ -323,6 +341,7 @@ main {
   background: var(--card-bg);
   box-shadow: var(--shadow);
   padding: 1rem;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
 .card h2,
@@ -331,11 +350,13 @@ main {
 }
 
 .card:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  border-color: rgba(104, 198, 255, 0.44);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5);
 }
 
 .splash-card {
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.92), rgba(234, 246, 255, 0.9));
+  background: linear-gradient(155deg, rgba(13, 27, 50, 0.9), rgba(8, 20, 38, 0.9));
 }
 
 .sticker-panel {
@@ -348,7 +369,7 @@ main {
 .sticker-panel .list li,
 .sticker-panel h2,
 .sticker-panel h3 {
-  color: #d7e8ff;
+  color: #d4e9ff;
 }
 
 .badge {
@@ -357,14 +378,14 @@ main {
   border-radius: 999px;
   font-size: 0.72rem;
   font-weight: 800;
-  color: #0f2f6f;
-  background: rgba(34, 215, 255, 0.2);
+  color: #d9f2ff;
+  background: rgba(34, 215, 255, 0.16);
   padding: 0.2rem 0.5rem;
 }
 
 .badge.warning {
-  color: #5b1a00;
-  background: rgba(255, 127, 74, 0.24);
+  color: #ffd2ba;
+  background: rgba(255, 87, 101, 0.24);
 }
 
 .product-meta {
@@ -394,9 +415,9 @@ button.btn {
   font-size: 0.92rem;
   font-weight: 800;
   cursor: pointer;
-  color: #041029;
+  color: #04101f;
   background: linear-gradient(110deg, var(--accent-a), #67efff, var(--accent-b), var(--accent-c));
-  box-shadow: 0 12px 26px rgba(11, 76, 156, 0.16);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.42);
   text-decoration: none;
 }
 
@@ -407,9 +428,9 @@ button.btn {
 }
 
 .btn-ghost {
-  color: #113870;
-  background: rgba(255, 255, 255, 0.75);
-  border-color: rgba(17, 56, 112, 0.28);
+  color: #c7dcf8;
+  background: rgba(10, 23, 44, 0.84);
+  border-color: rgba(111, 176, 255, 0.28);
   box-shadow: none;
 }
 
@@ -436,13 +457,13 @@ button.btn {
   padding: 0.22rem 0.56rem;
   font-size: 0.76rem;
   font-weight: 800;
-  color: #082048;
-  background: linear-gradient(130deg, rgba(34, 215, 255, 0.34), rgba(47, 255, 143, 0.32));
-  border: 1px solid rgba(10, 51, 109, 0.18);
+  color: #d9efff;
+  background: linear-gradient(130deg, rgba(34, 215, 255, 0.22), rgba(141, 255, 82, 0.2));
+  border: 1px solid rgba(88, 157, 240, 0.28);
 }
 
 .kicker:nth-child(2n) {
-  background: linear-gradient(130deg, rgba(255, 209, 65, 0.3), rgba(255, 127, 74, 0.28));
+  background: linear-gradient(130deg, rgba(255, 158, 26, 0.23), rgba(255, 87, 101, 0.2));
 }
 
 .list {
@@ -465,7 +486,7 @@ button.btn {
 }
 
 .field label {
-  color: #133c7a;
+  color: #a8c1e6;
   font-size: 0.86rem;
   font-weight: 700;
 }
@@ -485,7 +506,7 @@ button.btn {
   width: 100%;
   border-radius: 12px;
   border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(7, 17, 34, 0.86);
   color: var(--ink);
   font-family: inherit;
   padding: 0.58rem 0.7rem;
@@ -499,18 +520,18 @@ button.btn {
 }
 
 .fieldset-box {
-  border: 1px dashed rgba(15, 92, 183, 0.5);
+  border: 1px dashed rgba(105, 183, 255, 0.5);
   border-radius: 14px;
   margin: 0.7rem 0 0;
   padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.52);
+  background: rgba(10, 21, 40, 0.5);
   display: grid;
   gap: 0.34rem;
 }
 
 .fieldset-box legend {
   padding: 0 0.4rem;
-  color: #0b458f;
+  color: #64beff;
   font-weight: 800;
   font-size: 0.78rem;
 }
@@ -545,7 +566,7 @@ button.btn {
   white-space: pre-wrap;
   font-family: "IBM Plex Mono", "Consolas", monospace;
   font-size: 0.82rem;
-  background: rgba(8, 28, 70, 0.95);
+  background: rgba(4, 14, 30, 0.96);
   color: #e4f1ff;
   border-radius: 14px;
   border: 1px solid rgba(54, 202, 255, 0.44);
@@ -565,7 +586,7 @@ button.btn {
 .idea-entry {
   border-radius: 12px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(9, 20, 38, 0.86);
   padding: 0.7rem;
 }
 
@@ -593,7 +614,7 @@ button.btn {
 .footer {
   margin-top: 1.2rem;
   border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(6, 13, 25, 0.85);
   padding: 1rem 0 2rem;
 }
 
@@ -659,7 +680,7 @@ button.btn {
 }
 
 .admin-table th {
-  color: #113f80;
+  color: #86c5ff;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -687,10 +708,10 @@ button.btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  border: 1px solid rgba(16, 57, 116, 0.3);
+  border: 1px solid rgba(103, 174, 255, 0.34);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #103972;
+  background: rgba(8, 20, 39, 0.92);
+  color: #c9e2ff;
   padding: 0.34rem 0.58rem;
   font-weight: 800;
   cursor: pointer;
@@ -704,7 +725,7 @@ button.btn {
   display: grid;
   place-items: center;
   background: linear-gradient(120deg, var(--accent-a), var(--accent-b));
-  color: #032039;
+  color: #061627;
   font-size: 0.66rem;
   font-weight: 900;
 }
@@ -716,8 +737,8 @@ button.btn {
 .helper-panel {
   width: min(360px, calc(100vw - 1.2rem));
   border-radius: 16px;
-  border: 1px solid rgba(16, 57, 116, 0.24);
-  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(101, 173, 255, 0.25);
+  background: rgba(8, 19, 36, 0.96);
   box-shadow: var(--shadow);
   padding: 0.78rem;
 }
@@ -731,8 +752,8 @@ button.btn {
 .helper-close {
   border: 1px solid var(--line-strong);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.7);
-  color: #103972;
+  background: rgba(8, 20, 39, 0.82);
+  color: #c3dcf8;
   font-weight: 800;
   width: 26px;
   height: 26px;
@@ -755,8 +776,8 @@ button.btn {
 .helper-chip {
   border: 1px solid var(--line-strong);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  color: #143f79;
+  background: rgba(7, 18, 35, 0.82);
+  color: #c3dbf7;
   font-size: 0.74rem;
   padding: 0.24rem 0.5rem;
   cursor: pointer;
@@ -764,7 +785,8 @@ button.btn {
 }
 
 .helper-chip.active {
-  background: linear-gradient(120deg, rgba(34, 215, 255, 0.34), rgba(47, 255, 143, 0.35));
+  background: linear-gradient(120deg, rgba(34, 215, 255, 0.28), rgba(141, 255, 82, 0.26));
+  color: #e8f5ff;
 }
 
 .helper-actions {
@@ -802,7 +824,7 @@ button.btn {
     padding: 0.7rem;
     border-radius: 12px;
     border: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.98);
+    background: rgba(8, 18, 35, 0.98);
     box-shadow: var(--shadow);
     flex-direction: column;
     align-items: stretch;
@@ -817,7 +839,7 @@ button.btn {
     width: 100%;
     border-radius: 10px;
     border: 1px solid var(--line);
-    background: rgba(245, 251, 255, 0.88);
+    background: rgba(8, 20, 38, 0.88);
     padding: 0.46rem 0.6rem;
   }
 
@@ -856,5 +878,17 @@ button.btn {
   * {
     transition: none !important;
     animation: none !important;
+  }
+}
+
+@keyframes drift {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.06);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
   }
 }
