@@ -1,13 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Support | Slendy Stuff</title>
-  <meta name="description" content="Request remote support, optimization, and managed operations assistance.">
+  <title>Customer Support | Slendy Stuff</title>
+  <meta name="description" content="Get remote support for cleanup, troubleshooting, and optimization in a few simple steps.">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body class="human-site">
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header">
@@ -21,125 +21,77 @@
 
       <nav class="site-nav" data-nav aria-label="Primary">
         <a href="/">Home</a>
-        <a href="/products.html">Products</a>
-        <a href="/#remote-management">Managed Ops</a>
-        <a href="/custom-tool.html">Custom Build</a>
-        <a href="/support.html">Support</a>
-        <a href="/contact.html">Contact</a>
-        <a href="/account.html">Account</a>
-        <a href="/about.html">About</a>
+        <a href="/support.html">Tech Support</a>
+        <a href="/about.html">About Me</a>
       </nav>
     </div>
   </header>
 
   <main id="main">
-    <section class="section shell chaos-burst">
+    <section class="section shell">
       <div class="section-head">
-        <p class="eyebrow">Support</p>
-        <h1>When something breaks, you get a real person</h1>
-        <p class="muted" data-support-intro>Request a remote cleanup/support session through AnyDesk with minimal steps.</p>
-        <p class="muted">First reply is within 24 hours. Discord is preferred for faster back-and-forth during active fixes.</p>
-        <p class="muted" data-support-account-hint></p>
+        <p class="eyebrow">Tech Support</p>
+        <h1>Need help? You get a real person.</h1>
+        <p class="muted" data-support-intro>Request remote support in a few quick steps. First response is within 24 hours.</p>
       </div>
 
       <div class="grid two">
-        <article class="card sticker-panel">
-          <h2>How support starts</h2>
+        <article class="card note-card">
+          <h2>Fastest path</h2>
           <ol class="list">
-            <li>Download the latest AnyDesk build.</li>
-            <li>Keep your access code ready.</li>
-            <li>Send issue details with preferred contact (Discord recommended).</li>
-            <li>Receive first response within 24 hours.</li>
+            <li>Download AnyDesk from the button below.</li>
+            <li>Run the installer and open AnyDesk.</li>
+            <li>Submit the request form with your issue details.</li>
+            <li>I follow up with timing and next steps.</li>
           </ol>
           <div class="inline-actions">
             <a class="btn" data-anydesk-link href="https://download.anydesk.com/AnyDesk.exe" target="_blank" rel="noopener">Download Latest AnyDesk</a>
           </div>
-          <p class="muted" data-anydesk-meta>Checking latest AnyDesk installer status...</p>
+          <p class="muted" data-anydesk-meta>Checking secure download link...</p>
+          <p class="ink-quote">"No runaround. No scripts. Just practical help."</p>
         </article>
 
-        <article class="card human-note">
-          <h2>Support promise</h2>
-          <p class="muted">I treat support like a build phase, not an afterthought. You get direct troubleshooting, honest answers, and next steps you can follow.</p>
-          <ul class="list">
-            <li>No scripted responses or outsourced handoff loops.</li>
-            <li>Clear status updates when investigation takes time.</li>
-            <li>Action plan included with every resolved issue.</li>
-          </ul>
-          <p class="human-quote">"You should never feel abandoned by your own tools."</p>
+        <article class="card">
+          <h2>Request session</h2>
+          <form data-support-form>
+            <div class="form-grid">
+              <div class="field">
+                <label for="name">Name</label>
+                <input id="name" name="name" required>
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" required>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="preferredTime">Preferred Time Window</label>
+                <input id="preferredTime" name="preferredTime" placeholder="Example: Weeknights after 7PM ET">
+              </div>
+            </div>
+            <div class="field">
+              <label for="issue">Issue details</label>
+              <textarea id="issue" name="issue" placeholder="Tell me what is happening, what you've already tried, and what you need fixed first." required></textarea>
+            </div>
+            <div class="inline-actions">
+              <button class="btn" type="submit">Send Support Request</button>
+            </div>
+            <p class="status" data-support-status></p>
+          </form>
         </article>
       </div>
-
-      <article class="card">
-        <h2>Open support ticket</h2>
-        <form data-support-form>
-          <div class="form-grid">
-            <div class="field">
-              <label for="name">Name</label>
-              <input id="name" name="name" required>
-            </div>
-            <div class="field">
-              <label for="email">Email</label>
-              <input id="email" name="email" type="email" required>
-            </div>
-          </div>
-          <div class="form-grid">
-            <div class="field">
-              <label for="preferredContact">Preferred Contact</label>
-              <select id="preferredContact" name="preferredContact">
-                <option value="discord">Discord (preferred)</option>
-                <option value="email">Email</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="discordUsername">Discord Username</label>
-              <input id="discordUsername" name="discordUsername" placeholder="example: username or user#1234">
-            </div>
-          </div>
-          <div class="form-grid">
-            <div class="field">
-              <label for="preferredTime">Preferred Time Window</label>
-              <input id="preferredTime" name="preferredTime" placeholder="Example: Weeknights after 7PM ET">
-            </div>
-            <div class="field">
-              <label for="serviceLevel">Service Level</label>
-              <select id="serviceLevel" name="serviceLevel">
-                <option value="one-time-fix">One-time fix</option>
-                <option value="weekly-management">Weekly management</option>
-                <option value="monthly-management">Monthly management</option>
-                <option value="custom">Custom arrangement</option>
-              </select>
-            </div>
-          </div>
-
-          <fieldset class="fieldset-box">
-            <legend>Management options</legend>
-            <label><input type="checkbox" name="managementOptions" value="system-health"> System health and cleanup</label>
-            <label><input type="checkbox" name="managementOptions" value="bot-management"> Bot uptime and tuning</label>
-            <label><input type="checkbox" name="managementOptions" value="security-hardening"> Security hardening</label>
-            <label><input type="checkbox" name="managementOptions" value="process-automation"> Workflow optimization</label>
-            <label><input type="checkbox" name="managementOptions" value="other"> Other (describe below)</label>
-          </fieldset>
-
-          <div class="field">
-            <label for="issue">Issue Summary / Scope</label>
-            <textarea id="issue" name="issue" placeholder="Describe what is failing, what outcome you need, and urgency." required></textarea>
-          </div>
-          <div class="inline-actions">
-            <button class="btn" type="submit">Submit Support Ticket</button>
-          </div>
-          <p class="status" data-support-status></p>
-        </form>
-      </article>
     </section>
   </main>
 
   <footer class="footer">
-    <div class="shell footer-grid">
-      <p class="muted">Support email: <a href="mailto:Help@slendystuff.com">Help@slendystuff.com</a> | Preferred: include your Discord username in the ticket.</p>
+    <div class="shell">
+      <p class="muted">Your details are used only to schedule and deliver support.</p>
     </div>
   </footer>
 
   <script src="/shared.js"></script>
+  <script src="/chaos.js"></script>
   <script src="/support.js"></script>
 </body>
 </html>

@@ -25,13 +25,8 @@
     <section class="admin-panel">
       <article class="card admin-auth" data-admin-auth>
         <h1>Admin Login</h1>
-        <p class="muted">Use your admin account email + password. Bootstrap values come from `ADMIN_EMAIL` and `ADMIN_PASSWORD` on first run.</p>
-        <p class="muted">If this domain is running static GitHub Pages only, `/api/admin/*` does not exist and login will not work until backend hosting is enabled.</p>
+        <p class="muted">Use a strong `ADMIN_PASSWORD` (upper/lower/digit/symbol, 12+ chars by default).</p>
         <form data-login-form>
-          <div class="field">
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" value="Slender@slendystuff.com" required>
-          </div>
           <div class="field">
             <label for="password">Password</label>
             <input id="password" name="password" type="password" required>
@@ -45,113 +40,151 @@
 
       <section class="admin-content hidden" data-admin-content>
         <article class="card">
-          <h2>Admin Control Center</h2>
-          <p class="muted">Dashboard and inbox are live data. Site settings are saved to backend config.</p>
-          <div class="inline-actions admin-tabs" data-admin-tabs>
-            <button class="btn btn-ghost" type="button" data-admin-tab="dashboard">Dashboard</button>
-            <button class="btn btn-ghost" type="button" data-admin-tab="inbox">Request Inbox</button>
+          <div class="admin-tabs">
+            <button class="btn btn-ghost" type="button" data-admin-tab="dashboard">Dashboard <span data-queue-pill>0</span></button>
             <button class="btn btn-ghost" type="button" data-admin-tab="settings">Site Settings</button>
-            <button class="btn btn-ghost" type="button" data-admin-tab="security">Security</button>
           </div>
         </article>
 
-        <section data-admin-view="dashboard">
+        <section class="admin-view" data-admin-view="dashboard">
           <article class="card">
             <h2>Site Statistics</h2>
-            <p class="muted">Traffic and support stats from the backend logs and support queue.</p>
-            <div class="inline-actions">
-              <button class="btn btn-ghost" type="button" data-admin-stats-refresh>Refresh Stats</button>
-            </div>
-            <p class="muted">Generated: <span data-stats-generated>--</span></p>
-            <div class="stats-grid">
-              <div class="stat-card">
-                <p class="muted">Visitors (24h)</p>
-                <p class="stat-value" data-stat="visitors24h">0</p>
+            <div class="grid three">
+              <div class="card">
+                <p class="eyebrow">Visitors</p>
+                <h3 data-stat="visitors24h">0</h3>
+                <p class="muted">Unique visitors in the last 24 hours</p>
               </div>
-              <div class="stat-card">
-                <p class="muted">Visitors (7d)</p>
-                <p class="stat-value" data-stat="visitors7d">0</p>
+              <div class="card">
+                <p class="eyebrow">Activity</p>
+                <h3 data-stat="events7d">0</h3>
+                <p class="muted">Tracked events in the last 7 days</p>
               </div>
-              <div class="stat-card">
-                <p class="muted">Events (24h)</p>
-                <p class="stat-value" data-stat="events24h">0</p>
+              <div class="card">
+                <p class="eyebrow">Support Queue</p>
+                <h3 data-stat="queueOpen">0</h3>
+                <p class="muted">Requests that still need action</p>
               </div>
-              <div class="stat-card">
-                <p class="muted">Events (7d)</p>
-                <p class="stat-value" data-stat="events7d">0</p>
+              <div class="card">
+                <p class="eyebrow">Unique IPs</p>
+                <h3 data-stat="ips24h">0</h3>
+                <p class="muted">Unique IP addresses in the last 24 hours</p>
               </div>
-              <div class="stat-card">
-                <p class="muted">Support Requests (24h)</p>
-                <p class="stat-value" data-stat="support24h">0</p>
+              <div class="card">
+                <p class="eyebrow">Active Sessions</p>
+                <h3 data-stat="activeSessions15m">0</h3>
+                <p class="muted">Sessions active in the last 15 minutes</p>
               </div>
-              <div class="stat-card">
-                <p class="muted">Support Requests (7d)</p>
-                <p class="stat-value" data-stat="support7d">0</p>
-              </div>
-              <div class="stat-card">
-                <p class="muted">Inbox Total</p>
-                <p class="stat-value" data-stat="queueTotal">0</p>
-              </div>
-              <div class="stat-card">
-                <p class="muted">Inbox New</p>
-                <p class="stat-value" data-stat="queueNew">0</p>
-              </div>
-              <div class="stat-card">
-                <p class="muted">Inbox In Progress</p>
-                <p class="stat-value" data-stat="queueInProgress">0</p>
-              </div>
-              <div class="stat-card">
-                <p class="muted">Inbox Closed</p>
-                <p class="stat-value" data-stat="queueClosed">0</p>
+              <div class="card">
+                <p class="eyebrow">Avg Session</p>
+                <h3 data-stat="avgSessionMinutes24h">0.0m</h3>
+                <p class="muted">Average connected time per session (24h)</p>
               </div>
             </div>
-            <p class="status" data-admin-stats-status></p>
-          </article>
-
-          <article class="card">
-            <h2>Top Activity</h2>
-            <div class="form-grid">
-              <div>
+            <div class="grid two">
+              <div class="card">
                 <h3>Top Events</h3>
-                <ul class="list compact-list" data-top-events></ul>
+                <ul class="list" data-top-events>
+                  <li class="muted">No data yet.</li>
+                </ul>
               </div>
-              <div>
-                <h3>Top Products</h3>
-                <ul class="list compact-list" data-top-products></ul>
+              <div class="card">
+                <h3>Top Product Interest</h3>
+                <ul class="list" data-top-products>
+                  <li class="muted">No data yet.</li>
+                </ul>
+              </div>
+              <div class="card">
+                <h3>Top IP Addresses</h3>
+                <ul class="list" data-top-ips>
+                  <li class="muted">No IP data yet.</li>
+                </ul>
               </div>
             </div>
-          </article>
-        </section>
-
-        <section class="hidden" data-admin-view="inbox">
-          <article class="card">
-            <h2>Support Request Inbox</h2>
-            <p class="muted">Review support requests, update status, and store internal notes.</p>
             <div class="inline-actions">
-              <button class="btn btn-ghost" type="button" data-admin-inbox-refresh>Refresh Inbox</button>
+              <button class="btn" type="button" data-claim-owner-browser>Label This Browser As Me</button>
+              <button class="btn btn-ghost" type="button" data-refresh-stats>Refresh Stats</button>
             </div>
+            <p class="status" data-owner-claim-status></p>
+            <p class="status" data-stats-status></p>
+          </article>
+
+          <article class="card">
+            <h2>Visitor Connections</h2>
+            <p class="muted">IP addresses, first seen, last seen, sessions, and total connected time.</p>
             <div class="table-wrap">
-              <table class="admin-table admin-inbox-table">
+              <table class="admin-table">
                 <thead>
                   <tr>
-                    <th>Received</th>
-                    <th>Customer</th>
+                    <th>Label</th>
+                    <th>Visitor ID</th>
+                    <th>IPs</th>
+                    <th>First Seen</th>
+                    <th>Last Seen</th>
+                    <th>Connected Time</th>
+                    <th>Events</th>
+                    <th>Sessions</th>
+                    <th>Latest Path</th>
+                  </tr>
+                </thead>
+                <tbody data-visitor-connections-body>
+                  <tr><td colspan="9" class="muted">No visitor data yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card">
+            <h2>Session Activity</h2>
+            <p class="muted">Per-session timeline with active duration and source IP.</p>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Label</th>
+                    <th>Session ID</th>
+                    <th>IP</th>
+                    <th>Started</th>
+                    <th>Last Seen</th>
+                    <th>Duration</th>
+                    <th>Events</th>
+                    <th>Latest Path</th>
+                  </tr>
+                </thead>
+                <tbody data-session-activity-body>
+                  <tr><td colspan="8" class="muted">No session data yet.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card">
+            <h2>Support Inbox</h2>
+            <p class="muted">Review customer requests, add notes, and update status.</p>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Created</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Preferred Time</th>
                     <th>Issue</th>
-                    <th>Service Level</th>
-                    <th>Billing</th>
                     <th>Status</th>
                     <th>Admin Notes</th>
-                    <th>Save</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody data-support-requests-body></tbody>
               </table>
             </div>
-            <p class="status" data-admin-inbox-status></p>
+            <div class="inline-actions">
+              <button class="btn btn-ghost" type="button" data-refresh-support-requests>Refresh Inbox</button>
+            </div>
           </article>
         </section>
 
-        <section class="hidden" data-admin-view="settings">
+        <section class="admin-view hidden" data-admin-view="settings">
           <article class="card">
             <h2>Brand + Hero</h2>
             <div class="form-grid">
@@ -225,18 +258,6 @@
           </article>
 
           <article class="card">
-            <h2>Idea Assistant Rules</h2>
-            <p class="muted">Hardwired rules are always applied to AI idea generation on the custom request page.</p>
-            <div class="field">
-              <label><input name="ideaAssistantEnabled" type="checkbox"> Enable AI idea assistant</label>
-            </div>
-            <div class="field">
-              <label>Hardwired Rules</label>
-              <textarea name="ideaHardwiredRules" placeholder="Rules that must always be enforced for idea generation."></textarea>
-            </div>
-          </article>
-
-          <article class="card">
             <h2>Logging + Tracking Keys</h2>
             <div class="field">
               <label>Proton Drive Log Path</label>
@@ -306,43 +327,9 @@
             <div class="inline-actions">
               <button class="btn" type="button" data-save-settings>Save All Settings</button>
               <button class="btn btn-ghost" type="button" data-refresh-anydesk>Refresh AnyDesk Now</button>
-            </div>
-            <p class="status" data-save-status></p>
-          </article>
-        </section>
-
-        <section class="hidden" data-admin-view="security">
-          <article class="card">
-            <h2>Admin Security</h2>
-            <p class="muted">Rotate your admin password here without editing server files.</p>
-            <form data-admin-password-form>
-              <div class="form-grid">
-                <div class="field">
-                  <label for="admin-current-password">Current Password</label>
-                  <input id="admin-current-password" name="currentPassword" type="password" required>
-                </div>
-                <div class="field">
-                  <label for="admin-new-password">New Password</label>
-                  <input id="admin-new-password" name="newPassword" type="password" minlength="10" required>
-                </div>
-              </div>
-              <div class="field">
-                <label for="admin-confirm-password">Confirm New Password</label>
-                <input id="admin-confirm-password" name="confirmPassword" type="password" minlength="10" required>
-              </div>
-              <div class="inline-actions">
-                <button class="btn btn-ghost" type="submit">Update Admin Password</button>
-              </div>
-              <p class="status" data-admin-password-status></p>
-            </form>
-          </article>
-
-          <article class="card">
-            <h2>Session</h2>
-            <p class="muted">Use logout to close the current admin session.</p>
-            <div class="inline-actions">
               <button class="btn btn-ghost" type="button" data-logout>Logout</button>
             </div>
+            <p class="status" data-save-status></p>
           </article>
         </section>
       </section>

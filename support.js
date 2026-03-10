@@ -6,8 +6,6 @@
   const anydeskMeta = document.querySelector("[data-anydesk-meta]");
   const supportForm = document.querySelector("[data-support-form]");
   const status = document.querySelector("[data-support-status]");
-  const accountHint = document.querySelector("[data-support-account-hint]");
-  let supportEmail = "Help@slendystuff.com";
 
   try {
     const config = await app.fetchPublicConfig();
@@ -16,14 +14,11 @@
     document.querySelectorAll("[data-brand-name]").forEach((node) => {
       node.textContent = config.brand.name;
     });
-    supportEmail = config.support.supportEmail || supportEmail;
 
     const supportIntro = document.querySelector("[data-support-intro]");
     if (supportIntro) {
       supportIntro.textContent = config.support.intro;
     }
-
-    await hydrateAccountHint();
 
     const anydesk = await app.getAnydeskInfo();
     if (anydeskLink) {
@@ -31,7 +26,7 @@
     }
 
     if (anydeskMeta) {
-      anydeskMeta.textContent = `Last auto-check: ${formatDate(anydesk.lastCheckedAt)} | Source: ${anydesk.sourceUrl}`;
+      anydeskMeta.textContent = `Last verified download check: ${formatDate(anydesk.lastCheckedAt)}`;
     }
 
     app.track("page_view", { page: "support" });
@@ -47,26 +42,13 @@
       event.preventDefault();
 
       const formData = new FormData(supportForm);
-      const managementOptions = formData.getAll("managementOptions").map(String);
       const payload = {
         name: String(formData.get("name") || ""),
         email: String(formData.get("email") || ""),
-        preferredContact: String(formData.get("preferredContact") || "discord"),
-        discordUsername: String(formData.get("discordUsername") || ""),
         preferredTime: String(formData.get("preferredTime") || ""),
-        serviceLevel: String(formData.get("serviceLevel") || ""),
-        managementOptions,
         issue: String(formData.get("issue") || ""),
         clientTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       };
-
-      if (payload.preferredContact === "discord" && !payload.discordUsername.trim()) {
-        if (status) {
-          status.textContent = "Please add your Discord username so support can contact you there.";
-          status.className = "status error";
-        }
-        return;
-      }
 
       try {
         const response = await fetch("/api/support/request", {
@@ -77,76 +59,27 @@
 
         const result = await response.json();
         if (!response.ok || !result.ok) {
-          throw new Error(result.error || "Failed to submit support request.");
+          throw new Error(result.error || "Your request could not be sent. Please try again.");
         }
 
         supportForm.reset();
         if (status) {
-          if (result.supportIsFree) {
-            status.textContent = "Request sent. First response within 24 hours. This ticket is marked FREE support.";
-            status.className = "status ok";
-          } else {
-            status.textContent = `Request sent. First response within 24 hours. Billing status: paid support required. Reason: ${result.billingReason || "No qualifying purchase in last 365 days."}`;
-            status.className = "status error";
-          }
+          status.textContent = "Request received. You will get a first human response within 24 hours.";
+          status.className = "status ok";
         }
-        app.track("support_request_submitted", {
-          emailProvided: Boolean(payload.email),
-          preferredContact: payload.preferredContact,
-          serviceLevel: payload.serviceLevel,
-          managementOptions: payload.managementOptions
-        });
+        app.track("support_request_submitted", { emailProvided: Boolean(payload.email) });
       } catch (error) {
-        const subject = encodeURIComponent("Tech Support Request");
-        const body = encodeURIComponent(
-          `Name: ${payload.name}\nEmail: ${payload.email}\nPreferred Contact: ${payload.preferredContact}\nDiscord Username: ${payload.discordUsername || "Not provided"}\nPreferred Time: ${payload.preferredTime}\nService Level: ${payload.serviceLevel}\nManagement Options: ${payload.managementOptions.join(", ") || "None selected"}\nTimezone: ${payload.clientTimezone}\n\nProject Overview / Issue:\n${payload.issue}`
-        );
-        window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
         if (status) {
-          status.textContent = "Backend is unavailable. Opened your email client as fallback. First response is still within 24 hours.";
+          status.textContent = error.message;
           status.className = "status error";
         }
       }
     });
   }
 
-  async function hydrateAccountHint() {
-    try {
-      const response = await fetch("/api/auth/session");
-      const session = await response.json();
-      if (!session.ok || !session.authenticated) {
-        if (accountHint) {
-          accountHint.textContent = "Sign into your account before support requests so purchase-based free-support eligibility can be checked automatically.";
-        }
-        return;
-      }
-
-      const user = session.user || {};
-      const eligibility = session.eligibility || {};
-      const nameInput = document.getElementById("name");
-      const emailInput = document.getElementById("email");
-      if (nameInput && user.name) nameInput.value = user.name;
-      if (emailInput && user.email) emailInput.value = user.email;
-
-      if (accountHint) {
-        if (eligibility.eligible) {
-          accountHint.textContent = `Account detected: ${user.email}. Current support status: FREE through ${formatDate(eligibility.freeSupportUntil)}.`;
-          accountHint.className = "status ok";
-        } else {
-          accountHint.textContent = `Account detected: ${user.email}. Current support status: paid support required. Reason: ${eligibility.reason || "No qualifying purchase in last 365 days."}`;
-          accountHint.className = "status error";
-        }
-      }
-    } catch {
-      if (accountHint) {
-        accountHint.textContent = "Account status unavailable in static mode. Backend hosting is required for automatic eligibility checks.";
-      }
-    }
-  }
-
   function formatDate(value) {
     if (!value) {
-      return "not available yet";
+      return "pending";
     }
 
     const date = new Date(value);

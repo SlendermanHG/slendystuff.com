@@ -1,13 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Product Detail | Slendy Stuff</title>
-  <meta name="description" content="Detailed overview, delivery scope, and implementation flow for this product.">
+  <title>Product | Slendy Stuff</title>
+  <meta name="description" content="Detailed product information, pricing context, and next-step options.">
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body>
+<body class="human-site">
   <a class="skip-link" href="#main">Skip to content</a>
 
   <header class="site-header">
@@ -21,13 +21,8 @@
 
       <nav class="site-nav" data-nav aria-label="Primary">
         <a href="/">Home</a>
-        <a href="/products.html">Products</a>
-        <a href="/#remote-management">Managed Ops</a>
-        <a href="/custom-tool.html">Custom Build</a>
-        <a href="/support.html">Support</a>
-        <a href="/contact.html">Contact</a>
-        <a href="/account.html">Account</a>
-        <a href="/about.html">About</a>
+        <a href="/support.html">Tech Support</a>
+        <a href="/about.html">About Me</a>
       </nav>
     </div>
   </header>
@@ -37,20 +32,17 @@
       <div data-product-content></div>
       <article class="card hidden" data-product-not-found>
         <h1>Product not found</h1>
-        <p class="muted">The requested product lane is unavailable or has moved.</p>
-        <div class="inline-actions">
-          <a class="btn" href="/products.html">Open Product Matrix</a>
-          <a class="btn btn-ghost" href="/custom-tool.html">Request Custom Build</a>
-        </div>
+        <p class="muted">That item is unavailable right now or has been removed.</p>
+        <a class="btn" href="/">Back to Home</a>
       </article>
     </section>
   </main>
 
   <div class="overlay hidden" id="age-gate-overlay" role="dialog" aria-modal="true" aria-labelledby="age-gate-title">
     <article class="card overlay-card">
-      <p class="eyebrow">Verification Layer</p>
+      <p class="eyebrow">Age Verification</p>
       <h2 id="age-gate-title">Are you 18 or older?</h2>
-      <p class="muted">This confirmation is required for restricted listings and is logged for compliance.</p>
+      <p class="muted">This item is for adults only. Confirm your age to continue.</p>
       <div class="inline-actions">
         <button class="btn" data-age-answer="yes">Yes, continue</button>
         <button class="btn btn-ghost" data-age-answer="no">No, exit</button>
@@ -60,6 +52,7 @@
   </div>
 
   <script src="/shared.js"></script>
+  <script src="/chaos.js"></script>
   <script src="/product.js"></script>
 </body>
 </html>

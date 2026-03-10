@@ -7,35 +7,32 @@
   const saveStatus = document.querySelector("[data-save-status]");
   const logoutButton = document.querySelector("[data-logout]");
   const refreshAnydeskButton = document.querySelector("[data-refresh-anydesk]");
-  const adminPasswordForm = document.querySelector("[data-admin-password-form]");
-  const adminPasswordStatus = document.querySelector("[data-admin-password-status]");
-  const productTableBody = document.querySelector("[data-products-body]");
-  const addProductButton = document.querySelector("[data-add-product]");
+  const refreshStatsButton = document.querySelector("[data-refresh-stats]");
+  const claimOwnerBrowserButton = document.querySelector("[data-claim-owner-browser]");
+  const refreshSupportRequestsButton = document.querySelector("[data-refresh-support-requests]");
+  const statsStatus = document.querySelector("[data-stats-status]");
+  const ownerClaimStatus = document.querySelector("[data-owner-claim-status]");
+  const dashboardTabButton = document.querySelector("[data-admin-tab='dashboard']");
+  const settingsTabButton = document.querySelector("[data-admin-tab='settings']");
+  const dashboardView = document.querySelector("[data-admin-view='dashboard']");
+  const settingsView = document.querySelector("[data-admin-view='settings']");
+  const queuePill = document.querySelector("[data-queue-pill]");
 
-  const tabs = Array.from(document.querySelectorAll("[data-admin-tab]"));
-  const views = Array.from(document.querySelectorAll("[data-admin-view]"));
-
-  const statsRefreshButton = document.querySelector("[data-admin-stats-refresh]");
-  const statsStatus = document.querySelector("[data-admin-stats-status]");
-  const statsGenerated = document.querySelector("[data-stats-generated]");
+  const supportRequestsBody = document.querySelector("[data-support-requests-body]");
   const topEventsList = document.querySelector("[data-top-events]");
   const topProductsList = document.querySelector("[data-top-products]");
-  const statRefs = {
-    visitors24h: document.querySelector("[data-stat='visitors24h']"),
-    visitors7d: document.querySelector("[data-stat='visitors7d']"),
-    events24h: document.querySelector("[data-stat='events24h']"),
-    events7d: document.querySelector("[data-stat='events7d']"),
-    support24h: document.querySelector("[data-stat='support24h']"),
-    support7d: document.querySelector("[data-stat='support7d']"),
-    queueTotal: document.querySelector("[data-stat='queueTotal']"),
-    queueNew: document.querySelector("[data-stat='queueNew']"),
-    queueInProgress: document.querySelector("[data-stat='queueInProgress']"),
-    queueClosed: document.querySelector("[data-stat='queueClosed']")
-  };
+  const topIpsList = document.querySelector("[data-top-ips]");
+  const visitorConnectionsBody = document.querySelector("[data-visitor-connections-body]");
+  const sessionActivityBody = document.querySelector("[data-session-activity-body]");
+  const statVisitors24h = document.querySelector("[data-stat='visitors24h']");
+  const statEvents7d = document.querySelector("[data-stat='events7d']");
+  const statQueueOpen = document.querySelector("[data-stat='queueOpen']");
+  const statIps24h = document.querySelector("[data-stat='ips24h']");
+  const statActiveSessions15m = document.querySelector("[data-stat='activeSessions15m']");
+  const statAvgSessionMinutes24h = document.querySelector("[data-stat='avgSessionMinutes24h']");
 
-  const inboxRefreshButton = document.querySelector("[data-admin-inbox-refresh]");
-  const inboxStatus = document.querySelector("[data-admin-inbox-status]");
-  const supportRequestsBody = document.querySelector("[data-support-requests-body]");
+  const productTableBody = document.querySelector("[data-products-body]");
+  const addProductButton = document.querySelector("[data-add-product]");
 
   const formRefs = {
     brandName: document.querySelector("[name='brandName']"),
@@ -51,8 +48,6 @@
     refreshIntervalHours: document.querySelector("[name='refreshIntervalHours']"),
     supportIntro: document.querySelector("[name='supportIntro']"),
     customTrackingEnabled: document.querySelector("[name='customTrackingEnabled']"),
-    ideaAssistantEnabled: document.querySelector("[name='ideaAssistantEnabled']"),
-    ideaHardwiredRules: document.querySelector("[name='ideaHardwiredRules']"),
     protonDriveLogPath: document.querySelector("[name='protonDriveLogPath']"),
     gaMeasurementId: document.querySelector("[name='gaMeasurementId']"),
     metaPixelId: document.querySelector("[name='metaPixelId']"),
@@ -64,8 +59,8 @@
 
   let currentSettings = null;
   let currentSecrets = null;
-  const ADMIN_BACKEND_REQUIRED_MESSAGE =
-    "Admin login requires backend API hosting. This domain is currently serving static GitHub Pages files only.";
+  let csrfToken = "";
+  let supportRequests = [];
 
   init().catch((error) => {
     setStatus(loginStatus, error.message, "error");
@@ -76,284 +71,358 @@
       node.textContent = "Slendy Stuff";
     });
 
+    loginForm.addEventListener("submit", onLogin);
+    saveButton.addEventListener("click", onSave);
+    addProductButton.addEventListener("click", addProductRow);
+    logoutButton.addEventListener("click", onLogout);
+    refreshAnydeskButton.addEventListener("click", onRefreshAnydesk);
+
+    if (refreshStatsButton) {
+      refreshStatsButton.addEventListener("click", loadDashboardStats);
+    }
+
+    if (claimOwnerBrowserButton) {
+      claimOwnerBrowserButton.addEventListener("click", onClaimOwnerBrowser);
+    }
+
+    if (refreshSupportRequestsButton) {
+      refreshSupportRequestsButton.addEventListener("click", loadSupportRequests);
+    }
+
+    if (dashboardTabButton) {
+      dashboardTabButton.addEventListener("click", () => setAdminView("dashboard"));
+    }
+
+    if (settingsTabButton) {
+      settingsTabButton.addEventListener("click", () => setAdminView("settings"));
+    }
+
     const authenticated = await checkSession();
     if (authenticated) {
       await loadAdminData();
+      await loadDashboardData();
       showContent();
-      setActiveView("dashboard");
-      await refreshDashboardAndInbox();
+      setAdminView("dashboard");
     } else {
       showLogin();
     }
-
-    tabs.forEach((tab) => {
-      tab.addEventListener("click", () => setActiveView(tab.dataset.adminTab || "dashboard"));
-    });
-
-    if (loginForm) {
-      loginForm.addEventListener("submit", onLogin);
-    }
-    if (saveButton) {
-      saveButton.addEventListener("click", onSave);
-    }
-    if (addProductButton) {
-      addProductButton.addEventListener("click", addProductRow);
-    }
-    if (logoutButton) {
-      logoutButton.addEventListener("click", onLogout);
-    }
-    if (refreshAnydeskButton) {
-      refreshAnydeskButton.addEventListener("click", onRefreshAnydesk);
-    }
-    if (adminPasswordForm) {
-      adminPasswordForm.addEventListener("submit", onAdminPasswordChange);
-    }
-    if (statsRefreshButton) {
-      statsRefreshButton.addEventListener("click", loadAdminStats);
-    }
-    if (inboxRefreshButton) {
-      inboxRefreshButton.addEventListener("click", loadSupportRequests);
-    }
-  }
-
-  async function refreshDashboardAndInbox() {
-    await Promise.allSettled([loadAdminStats(), loadSupportRequests()]);
-  }
-
-  function setActiveView(view) {
-    tabs.forEach((tab) => {
-      tab.classList.toggle("active", tab.dataset.adminTab === view);
-    });
-
-    views.forEach((section) => {
-      section.classList.toggle("hidden", section.dataset.adminView !== view);
-    });
   }
 
   async function checkSession() {
-    try {
-      const response = await fetch("/api/admin/session", { credentials: "include" });
-      return response.ok;
-    } catch {
+    const response = await fetch("/api/admin/session", { credentials: "include" });
+    if (!response.ok) {
+      csrfToken = "";
       return false;
     }
+
+    const payload = await response.json();
+    if (!payload.ok || !payload.csrfToken) {
+      csrfToken = "";
+      return false;
+    }
+
+    csrfToken = payload.csrfToken;
+    return true;
   }
 
   async function onLogin(event) {
     event.preventDefault();
     setStatus(loginStatus, "Signing in...", "");
 
-    const formData = new FormData(loginForm);
-    const email = String(formData.get("email") || "").trim().toLowerCase();
-    const password = String(formData.get("password") || "");
-    try {
-      const response = await fetch("/api/admin/login", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
+    const password = String(new FormData(loginForm).get("password") || "");
+    const response = await fetch("/api/admin/login", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
 
-      const payload = await parseJson(response);
-      if (!response.ok || !payload.ok) {
-        if (isBackendApiUnavailable(response, payload)) {
-          setStatus(loginStatus, ADMIN_BACKEND_REQUIRED_MESSAGE, "error");
-          return;
-        }
-        setStatus(loginStatus, payload.error || "Login failed.", "error");
-        return;
-      }
-
-      await loadAdminData();
-      showContent();
-      setActiveView("dashboard");
-      await refreshDashboardAndInbox();
-      setStatus(loginStatus, "", "");
-      loginForm.reset();
-    } catch {
-      setStatus(loginStatus, ADMIN_BACKEND_REQUIRED_MESSAGE, "error");
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) {
+      setStatus(loginStatus, payload.error || "Login failed.", "error");
+      return;
     }
+
+    csrfToken = payload.csrfToken || "";
+    await loadAdminData();
+    await loadDashboardData();
+    showContent();
+    setStatus(loginStatus, "", "");
+    loginForm.reset();
   }
 
   async function onLogout() {
-    await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
+    await fetch("/api/admin/logout", {
+      method: "POST",
+      credentials: "include",
+      headers: buildCsrfHeaders()
+    });
+    csrfToken = "";
+    supportRequests = [];
     showLogin();
+  }
+
+  async function onClaimOwnerBrowser() {
+    setStatus(ownerClaimStatus, "Claiming this browser...", "");
+    const response = await fetch("/api/admin/claim-owner-browser", {
+      method: "POST",
+      credentials: "include",
+      headers: buildCsrfHeaders()
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) {
+      setStatus(ownerClaimStatus, payload.error || "Failed to mark this browser.", "error");
+      return;
+    }
+    setStatus(ownerClaimStatus, payload.message || "This browser is now labeled as Me.", "ok");
+    await loadDashboardStats();
+  }
+
+  async function loadDashboardData() {
+    await Promise.all([loadDashboardStats(), loadSupportRequests()]);
+  }
+
+  async function loadDashboardStats() {
+    setStatus(statsStatus, "Refreshing stats...", "");
+    const response = await fetch("/api/admin/stats", { credentials: "include" });
+    const payload = await response.json();
+
+    if (!response.ok || !payload.ok) {
+      setStatus(statsStatus, payload.error || "Failed to load stats.", "error");
+      return;
+    }
+
+    renderStats(payload.stats || {});
+    const stamp = payload.stats && payload.stats.generatedAt ? new Date(payload.stats.generatedAt) : new Date();
+    setStatus(statsStatus, `Updated ${stamp.toLocaleString()}`, "ok");
+  }
+
+  function renderStats(stats) {
+    const traffic = stats.traffic || {};
+    const connections = stats.connections || {};
+    const support = stats.support || {};
+    const queueOpen = Number(support.queueNew || 0) + Number(support.queueInProgress || 0);
+
+    if (statVisitors24h) {
+      statVisitors24h.textContent = String(traffic.visitors24h || 0);
+    }
+
+    if (statEvents7d) {
+      statEvents7d.textContent = String(traffic.events7d || 0);
+    }
+
+    if (statQueueOpen) {
+      statQueueOpen.textContent = String(queueOpen);
+    }
+
+    if (statIps24h) {
+      statIps24h.textContent = String(traffic.ips24h || 0);
+    }
+
+    if (statActiveSessions15m) {
+      statActiveSessions15m.textContent = String(connections.activeSessions15m || 0);
+    }
+
+    if (statAvgSessionMinutes24h) {
+      const avg = Number(connections.avgSessionMinutes24h || 0);
+      statAvgSessionMinutes24h.textContent = `${avg.toFixed(1)}m`;
+    }
+
+    if (queuePill) {
+      queuePill.textContent = String(queueOpen);
+    }
+
+    renderTopList(topEventsList, stats.topEvents || [], "No event data yet.");
+    renderTopList(topProductsList, stats.topProducts || [], "No product click data yet.");
+    renderTopList(topIpsList, stats.topIps || [], "No IP data yet.");
+    renderVisitorConnections(stats.recentVisitors || []);
+    renderSessionActivity(stats.recentSessions || []);
+  }
+
+  function renderTopList(node, list, emptyLabel) {
+    if (!node) {
+      return;
+    }
+
+    if (!Array.isArray(list) || list.length === 0) {
+      node.innerHTML = `<li class="muted">${escapeHtml(emptyLabel)}</li>`;
+      return;
+    }
+
+    node.innerHTML = list
+      .map((item) => `<li>${escapeHtml(item.label || "Unknown")} <span class="muted">(${Number(item.count || 0)})</span></li>`)
+      .join("");
+  }
+
+  function renderVisitorConnections(list) {
+    if (!visitorConnectionsBody) {
+      return;
+    }
+
+    if (!Array.isArray(list) || list.length === 0) {
+      visitorConnectionsBody.innerHTML = "<tr><td colspan='9' class='muted'>No visitor data yet.</td></tr>";
+      return;
+    }
+
+    visitorConnectionsBody.innerHTML = list
+      .map((item) => {
+        const label = item.isOwner ? "Me" : "Visitor";
+        const ips = Array.isArray(item.ips) && item.ips.length ? item.ips.join(", ") : "-";
+        return `
+          <tr>
+            <td>${escapeHtml(label)}</td>
+            <td>${escapeHtml(item.visitorId || "-")}</td>
+            <td>${escapeHtml(ips)}</td>
+            <td>${escapeHtml(formatDate(item.firstSeen))}</td>
+            <td>${escapeHtml(formatDate(item.lastSeen))}</td>
+            <td>${escapeHtml(formatDuration(item.totalConnectedMs))}</td>
+            <td>${escapeHtml(String(item.eventCount || 0))}</td>
+            <td>${escapeHtml(String(item.sessionCount || 0))}</td>
+            <td>${escapeHtml(item.latestPath || "-")}</td>
+          </tr>
+        `;
+      })
+      .join("");
+  }
+
+  function renderSessionActivity(list) {
+    if (!sessionActivityBody) {
+      return;
+    }
+
+    if (!Array.isArray(list) || list.length === 0) {
+      sessionActivityBody.innerHTML = "<tr><td colspan='8' class='muted'>No session data yet.</td></tr>";
+      return;
+    }
+
+    sessionActivityBody.innerHTML = list
+      .map((item) => {
+        const label = item.isOwner ? "Me" : "Visitor";
+        const ip = Array.isArray(item.ips) && item.ips.length ? item.ips[0] : "-";
+        return `
+          <tr>
+            <td>${escapeHtml(label)}</td>
+            <td>${escapeHtml(item.sessionId || "-")}</td>
+            <td>${escapeHtml(ip)}</td>
+            <td>${escapeHtml(formatDate(item.firstSeen))}</td>
+            <td>${escapeHtml(formatDate(item.lastSeen))}</td>
+            <td>${escapeHtml(formatDuration(item.durationMs))}</td>
+            <td>${escapeHtml(String(item.eventCount || 0))}</td>
+            <td>${escapeHtml(item.latestPath || "-")}</td>
+          </tr>
+        `;
+      })
+      .join("");
+  }
+
+  async function loadSupportRequests() {
+    if (!supportRequestsBody) {
+      return;
+    }
+
+    supportRequestsBody.innerHTML = "<tr><td colspan='8' class='muted'>Loading support inbox...</td></tr>";
+
+    const response = await fetch("/api/admin/support-requests", { credentials: "include" });
+    const payload = await response.json();
+
+    if (!response.ok || !payload.ok) {
+      supportRequestsBody.innerHTML = `<tr><td colspan='8' class='status error'>${escapeHtml(payload.error || "Failed to load support inbox.")}</td></tr>`;
+      return;
+    }
+
+    supportRequests = Array.isArray(payload.requests) ? payload.requests : [];
+    renderSupportRequests();
+  }
+
+  function renderSupportRequests() {
+    if (!supportRequestsBody) {
+      return;
+    }
+
+    if (!supportRequests.length) {
+      supportRequestsBody.innerHTML = "<tr><td colspan='8' class='muted'>No support requests yet.</td></tr>";
+      return;
+    }
+
+    supportRequestsBody.innerHTML = supportRequests
+      .map((item) => {
+        const createdAt = formatDate(item.createdAt);
+        return `
+          <tr data-request-id="${escapeHtml(item.id)}">
+            <td>${escapeHtml(createdAt)}</td>
+            <td>${escapeHtml(item.name || "")}</td>
+            <td>${item.email ? `<a href="mailto:${escapeHtml(item.email)}">${escapeHtml(item.email)}</a>` : "<span class='muted'>No email</span>"}</td>
+            <td>${escapeHtml(item.preferredTime || "-")}</td>
+            <td>${escapeHtml(item.issue || "")}</td>
+            <td>
+              <select data-field="status">
+                <option value="new" ${item.status === "new" ? "selected" : ""}>New</option>
+                <option value="in_progress" ${item.status === "in_progress" ? "selected" : ""}>In Progress</option>
+                <option value="closed" ${item.status === "closed" ? "selected" : ""}>Closed</option>
+              </select>
+            </td>
+            <td><textarea data-field="adminNotes" placeholder="Internal notes for follow-up">${escapeHtml(item.adminNotes || "")}</textarea></td>
+            <td>
+              <button class="btn btn-ghost" type="button" data-action="save-support-request">Save</button>
+              <p class="status" data-row-status></p>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    supportRequestsBody.querySelectorAll("[data-action='save-support-request']").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const row = button.closest("tr");
+        await saveSupportRequestRow(row);
+      });
+    });
+  }
+
+  async function saveSupportRequestRow(row) {
+    if (!row) {
+      return;
+    }
+
+    const requestId = row.dataset.requestId || "";
+    const status = row.querySelector("[data-field='status']")?.value || "new";
+    const adminNotes = row.querySelector("[data-field='adminNotes']")?.value || "";
+    const statusNode = row.querySelector("[data-row-status]");
+    setStatus(statusNode, "Saving...", "");
+
+    const response = await fetch(`/api/admin/support-requests/${encodeURIComponent(requestId)}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: {
+        ...buildCsrfHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ status, adminNotes })
+    });
+
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) {
+      setStatus(statusNode, payload.error || "Failed to save request.", "error");
+      return;
+    }
+
+    supportRequests = supportRequests.map((item) => (item.id === requestId ? payload.request : item));
+    setStatus(statusNode, "Saved", "ok");
+    await loadDashboardStats();
   }
 
   async function loadAdminData() {
     const response = await fetch("/api/admin/settings", { credentials: "include" });
-    const payload = await parseJson(response);
+    const payload = await response.json();
 
     if (!response.ok || !payload.ok) {
-      if (isBackendApiUnavailable(response, payload)) {
-        throw new Error(ADMIN_BACKEND_REQUIRED_MESSAGE);
-      }
       throw new Error(payload.error || "Failed to load admin settings.");
     }
 
     currentSettings = payload.settings;
     currentSecrets = payload.secrets;
+
     applyToForm(currentSettings, currentSecrets);
-  }
-
-  async function loadAdminStats() {
-    setStatus(statsStatus, "Refreshing stats...", "");
-
-    const response = await fetch("/api/admin/stats", { credentials: "include" });
-    const payload = await parseJson(response);
-    if (!response.ok || !payload.ok) {
-      if (isBackendApiUnavailable(response, payload)) {
-        setStatus(statsStatus, ADMIN_BACKEND_REQUIRED_MESSAGE, "error");
-        return;
-      }
-      setStatus(statsStatus, payload.error || "Failed to load stats.", "error");
-      return;
-    }
-
-    applyStats(payload.stats || {});
-    setStatus(statsStatus, "Stats updated.", "ok");
-  }
-
-  function applyStats(stats) {
-    const traffic = stats.traffic || {};
-    const support = stats.support || {};
-
-    setNodeText(statRefs.visitors24h, formatNumber(traffic.visitors24h));
-    setNodeText(statRefs.visitors7d, formatNumber(traffic.visitors7d));
-    setNodeText(statRefs.events24h, formatNumber(traffic.events24h));
-    setNodeText(statRefs.events7d, formatNumber(traffic.events7d));
-    setNodeText(statRefs.support24h, formatNumber(support.requests24h));
-    setNodeText(statRefs.support7d, formatNumber(support.requests7d));
-    setNodeText(statRefs.queueTotal, formatNumber(support.queueTotal));
-    setNodeText(statRefs.queueNew, formatNumber(support.queueNew));
-    setNodeText(statRefs.queueInProgress, formatNumber(support.queueInProgress));
-    setNodeText(statRefs.queueClosed, formatNumber(support.queueClosed));
-    setNodeText(statsGenerated, formatDateTime(stats.generatedAt));
-
-    renderTopList(topEventsList, stats.topEvents || [], "No event data yet.");
-    renderTopList(topProductsList, stats.topProducts || [], "No product interaction data yet.");
-  }
-
-  function renderTopList(node, rows, emptyMessage) {
-    if (!node) {
-      return;
-    }
-
-    if (!Array.isArray(rows) || rows.length === 0) {
-      node.innerHTML = `<li class="muted">${escapeHtml(emptyMessage)}</li>`;
-      return;
-    }
-
-    node.innerHTML = rows
-      .map((row) => `<li><strong>${escapeHtml(row.label || "unknown")}</strong> <span class="muted">(${formatNumber(row.count)})</span></li>`)
-      .join("");
-  }
-
-  async function loadSupportRequests() {
-    setStatus(inboxStatus, "Refreshing inbox...", "");
-
-    const response = await fetch("/api/admin/support-requests", { credentials: "include" });
-    const payload = await parseJson(response);
-    if (!response.ok || !payload.ok) {
-      if (isBackendApiUnavailable(response, payload)) {
-        setStatus(inboxStatus, ADMIN_BACKEND_REQUIRED_MESSAGE, "error");
-        return;
-      }
-      setStatus(inboxStatus, payload.error || "Failed to load support inbox.", "error");
-      return;
-    }
-
-    renderSupportRequests(payload.requests || []);
-    setStatus(inboxStatus, `Inbox loaded: ${formatNumber((payload.requests || []).length)} ticket(s).`, "ok");
-  }
-
-  function renderSupportRequests(requests) {
-    if (!supportRequestsBody) {
-      return;
-    }
-
-    supportRequestsBody.innerHTML = "";
-    if (!Array.isArray(requests) || requests.length === 0) {
-      supportRequestsBody.innerHTML = `<tr><td colspan="8" class="muted">No support requests yet.</td></tr>`;
-      return;
-    }
-
-    requests.forEach((item) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>
-          <div>${escapeHtml(formatDateTime(item.createdAt))}</div>
-          <div class="muted">${escapeHtml(formatDateTime(item.updatedAt))}</div>
-        </td>
-        <td>
-          <div><strong>${escapeHtml(item.name || "Anonymous")}</strong></div>
-          <div>${escapeHtml(item.email || "No email")}</div>
-          <div class="muted">${escapeHtml(item.accountEmail ? `Account: ${item.accountEmail}` : "No linked account")}</div>
-          <div class="muted">${escapeHtml(`Contact: ${item.preferredContact || "email"}`)}</div>
-          <div class="muted">${escapeHtml(item.discordUsername ? `Discord: ${item.discordUsername}` : "Discord: not provided")}</div>
-        </td>
-        <td>
-          <div>${escapeHtml(item.issue || "")}</div>
-          <div class="muted">${escapeHtml(item.preferredTime ? `Preferred: ${item.preferredTime}` : "Preferred: not set")}</div>
-          <div class="muted">${escapeHtml((item.managementOptions || []).join(", ") || "No management options selected")}</div>
-        </td>
-        <td>${escapeHtml(item.serviceLevel || "Not specified")}</td>
-        <td>
-          <div>${escapeHtml(formatBillingLabel(item.billingStatus || "paid_support_required"))}</div>
-          <div class="muted">${escapeHtml(item.billingReason || "")}</div>
-        </td>
-        <td>
-          <select data-request-status>
-            ${buildStatusOption("new", item.status)}
-            ${buildStatusOption("in_progress", item.status)}
-            ${buildStatusOption("closed", item.status)}
-          </select>
-        </td>
-        <td><textarea data-request-notes>${escapeHtml(item.adminNotes || "")}</textarea></td>
-        <td>
-          <button class="btn btn-ghost" type="button" data-request-save>Save</button>
-          <p class="status" data-request-row-status></p>
-        </td>
-      `;
-
-      const save = tr.querySelector("[data-request-save]");
-      const status = tr.querySelector("[data-request-status]");
-      const notes = tr.querySelector("[data-request-notes]");
-      const rowStatus = tr.querySelector("[data-request-row-status]");
-
-      save.addEventListener("click", async () => {
-        save.disabled = true;
-        setStatus(rowStatus, "Saving...", "");
-        const result = await updateSupportRequest(item.id, status.value, notes.value);
-        save.disabled = false;
-        if (!result.ok) {
-          setStatus(rowStatus, result.error || "Failed to save.", "error");
-          return;
-        }
-        setStatus(rowStatus, "Saved.", "ok");
-        await loadAdminStats();
-      });
-
-      supportRequestsBody.appendChild(tr);
-    });
-  }
-
-  async function updateSupportRequest(requestId, status, adminNotes) {
-    try {
-      const response = await fetch(`/api/admin/support-requests/${encodeURIComponent(requestId)}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, adminNotes })
-      });
-      const payload = await parseJson(response);
-      if (!response.ok || !payload.ok) {
-        return { ok: false, error: payload.error || "Failed to update support request." };
-      }
-      return { ok: true };
-    } catch {
-      return { ok: false, error: "Network error while updating support request." };
-    }
   }
 
   function applyToForm(settings, secrets) {
@@ -373,10 +442,6 @@
     formRefs.supportIntro.value = settings.support.intro || "";
 
     formRefs.customTrackingEnabled.checked = settings.analytics.customTrackingEnabled !== false;
-    formRefs.ideaAssistantEnabled.checked = !settings.aiAssistant || settings.aiAssistant.enabled !== false;
-    formRefs.ideaHardwiredRules.value =
-      (settings.aiAssistant && settings.aiAssistant.hardwiredRules) ||
-      "You are Slendy Stuff Idea Assistant. Generate practical product and automation concepts with clear scope, audience, and monetization direction.";
 
     formRefs.protonDriveLogPath.value = secrets.protonDriveLogPath || "";
     formRefs.gaMeasurementId.value = secrets.gaMeasurementId || "";
@@ -458,10 +523,6 @@
       analytics: {
         customTrackingEnabled: formRefs.customTrackingEnabled.checked
       },
-      aiAssistant: {
-        enabled: formRefs.ideaAssistantEnabled.checked,
-        hardwiredRules: formRefs.ideaHardwiredRules.value
-      },
       products: collectProducts()
     };
 
@@ -483,16 +544,15 @@
     const response = await fetch("/api/admin/settings", {
       method: "PUT",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        ...buildCsrfHeaders(),
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ settings: nextSettings, secrets: nextSecrets })
     });
 
-    const payload = await parseJson(response);
+    const payload = await response.json();
     if (!response.ok || !payload.ok) {
-      if (isBackendApiUnavailable(response, payload)) {
-        setStatus(saveStatus, ADMIN_BACKEND_REQUIRED_MESSAGE, "error");
-        return;
-      }
       setStatus(saveStatus, payload.error || "Save failed.", "error");
       return;
     }
@@ -507,64 +567,17 @@
 
     const response = await fetch("/api/admin/refresh-anydesk", {
       method: "POST",
-      credentials: "include"
+      credentials: "include",
+      headers: buildCsrfHeaders()
     });
 
-    const payload = await parseJson(response);
+    const payload = await response.json();
     if (!response.ok || !payload.ok) {
-      if (isBackendApiUnavailable(response, payload)) {
-        setStatus(saveStatus, ADMIN_BACKEND_REQUIRED_MESSAGE, "error");
-        return;
-      }
       setStatus(saveStatus, payload.error || "AnyDesk refresh failed.", "error");
       return;
     }
 
     setStatus(saveStatus, `AnyDesk refreshed: ${payload.resolvedUrl}`, "ok");
-  }
-
-  async function onAdminPasswordChange(event) {
-    event.preventDefault();
-    if (!adminPasswordForm) {
-      return;
-    }
-
-    const formData = new FormData(adminPasswordForm);
-    const payload = {
-      currentPassword: String(formData.get("currentPassword") || ""),
-      newPassword: String(formData.get("newPassword") || ""),
-      confirmPassword: String(formData.get("confirmPassword") || "")
-    };
-
-    if (payload.newPassword !== payload.confirmPassword) {
-      setStatus(adminPasswordStatus, "New password and confirm password must match.", "error");
-      return;
-    }
-    if (payload.newPassword.length < 10) {
-      setStatus(adminPasswordStatus, "New password must be at least 10 characters.", "error");
-      return;
-    }
-
-    setStatus(adminPasswordStatus, "Updating admin password...", "");
-    const response = await fetch("/api/admin/change-password", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const result = await parseJson(response);
-
-    if (!response.ok || !result.ok) {
-      if (isBackendApiUnavailable(response, result)) {
-        setStatus(adminPasswordStatus, ADMIN_BACKEND_REQUIRED_MESSAGE, "error");
-        return;
-      }
-      setStatus(adminPasswordStatus, result.error || "Failed to update admin password.", "error");
-      return;
-    }
-
-    adminPasswordForm.reset();
-    setStatus(adminPasswordStatus, "Admin password updated.", "ok");
   }
 
   function collectProducts() {
@@ -591,51 +604,6 @@
       .filter((item) => item.id.trim().length > 0 && item.title.trim().length > 0);
   }
 
-  function formatDateTime(value) {
-    if (!value) {
-      return "--";
-    }
-    const date = new Date(value);
-    if (!Number.isFinite(date.getTime())) {
-      return "--";
-    }
-    return date.toLocaleString();
-  }
-
-  function formatNumber(value) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) {
-      return "0";
-    }
-    return numeric.toLocaleString();
-  }
-
-  function formatBillingLabel(value) {
-    if (value === "free_support") {
-      return "Free Support";
-    }
-    if (value === "paid_support_required") {
-      return "Paid Support Required";
-    }
-    return value || "Unknown";
-  }
-
-  function buildStatusOption(value, currentValue) {
-    const labelMap = {
-      new: "New",
-      in_progress: "In Progress",
-      closed: "Closed"
-    };
-    const selected = value === currentValue ? "selected" : "";
-    return `<option value="${value}" ${selected}>${labelMap[value] || value}</option>`;
-  }
-
-  function setNodeText(node, value) {
-    if (node) {
-      node.textContent = String(value);
-    }
-  }
-
   function setStatus(node, message, type) {
     if (!node) {
       return;
@@ -655,6 +623,54 @@
     contentPane.classList.remove("hidden");
   }
 
+  function setAdminView(viewName) {
+    const showDashboard = viewName !== "settings";
+    if (dashboardView) {
+      dashboardView.classList.toggle("hidden", !showDashboard);
+    }
+    if (settingsView) {
+      settingsView.classList.toggle("hidden", showDashboard);
+    }
+    if (dashboardTabButton) {
+      dashboardTabButton.classList.toggle("active", showDashboard);
+    }
+    if (settingsTabButton) {
+      settingsTabButton.classList.toggle("active", !showDashboard);
+    }
+  }
+
+  function buildCsrfHeaders() {
+    return csrfToken ? { "x-csrf-token": csrfToken } : {};
+  }
+
+  function formatDate(value) {
+    const parsed = new Date(value || "");
+    if (Number.isNaN(parsed.getTime())) {
+      return "Unknown";
+    }
+    return parsed.toLocaleString();
+  }
+
+  function formatDuration(valueMs) {
+    const totalMs = Number(valueMs || 0);
+    if (!Number.isFinite(totalMs) || totalMs <= 0) {
+      return "0s";
+    }
+
+    const totalSeconds = Math.floor(totalMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
+  }
+
   function escapeHtml(value) {
     return String(value || "")
       .replaceAll("&", "&amp;")
@@ -662,22 +678,5 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#39;");
-  }
-
-  function isBackendApiUnavailable(response, payload) {
-    const contentType = String((response && response.headers && response.headers.get("content-type")) || "").toLowerCase();
-    const error = String((payload && payload.error) || "").toLowerCase();
-    return (
-      (response && response.status === 404 && contentType.includes("text/html")) ||
-      error.includes("invalid api response")
-    );
-  }
-
-  async function parseJson(response) {
-    try {
-      return await response.json();
-    } catch {
-      return { ok: false, error: "Invalid API response." };
-    }
   }
 })();
