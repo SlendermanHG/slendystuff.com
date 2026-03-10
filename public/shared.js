@@ -350,6 +350,17 @@
         return;
       }
 
+      const hasForumLink = Array.from(nav.querySelectorAll("a")).some((link) => {
+        const href = String(link.getAttribute("href") || "").trim();
+        return href === "/forum.html" || href === "forum.html";
+      });
+      if (!hasForumLink) {
+        const forumLink = document.createElement("a");
+        forumLink.setAttribute("href", "/forum.html");
+        forumLink.textContent = "Forum";
+        nav.appendChild(forumLink);
+      }
+
       navToggle.addEventListener("click", () => {
         nav.classList.toggle("open");
       });

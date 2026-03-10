@@ -18,12 +18,16 @@ const SETTINGS_PATH = process.env.SETTINGS_PATH || path.join(DATA_DIR, "settings
 const SECRETS_PATH = process.env.SECRETS_PATH || path.join(DATA_DIR, "secrets.json");
 const SUPPORT_REQUESTS_PATH = process.env.SUPPORT_REQUESTS_PATH || path.join(DATA_DIR, "support-requests.json");
 const ACCOUNTS_PATH = process.env.ACCOUNTS_PATH || path.join(DATA_DIR, "accounts.json");
+const FORUM_TOPICS_PATH = process.env.FORUM_TOPICS_PATH || path.join(DATA_DIR, "forum-topics.json");
 
 const SESSION_COOKIE = "slendy_admin_session";
+const ACCOUNT_SESSION_COOKIE = "slendy_account_session";
 const OWNER_BROWSER_COOKIE = "slendy_owner_browser";
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
+const ACCOUNT_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const OWNER_BROWSER_TTL_MS = 365 * 24 * 60 * 60 * 1000;
 const sessions = new Map();
+const accountSessions = new Map();
 const rateLimiterStore = new Map();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "change-this-admin-password";
@@ -49,6 +53,7 @@ let settingsCache = null;
 let secretsCache = null;
 let supportRequestsCache = [];
 let accountsCache = [];
+let forumTopicsCache = [];
 let writeQueue = Promise.resolve();
 let anydeskRefreshTimer = null;
 let rwcovInfoCache = null;
@@ -142,6 +147,7 @@ const defaultSecrets = {
 
 const defaultSupportRequests = [];
 const defaultAccounts = [];
+const defaultForumTopics = [];
 
 function nowIso() {
   return new Date().toISOString();
@@ -300,6 +306,75 @@ function normalizeSupportRequests(payload) {
     .sort((left, right) => right.createdAt.localeCompare(left.createdAt));
 }
 
+function normalizeForumComment(item) {
+  return {
+    id: truncate(safeString(item.id, crypto.randomBytes(8).toString("hex")), 24),
+    body: truncate(safeString(item.body, "").trim(), 2000),
+    authorAccountId: truncate(safeString(item.authorAccountId, ""), 24),
+    authorEmail: normalizeEmail(item.authorEmail),
+    authorName: truncate(safeString(item.authorName, "Member"), 120),
+    createdAt: safeString(item.createdAt, nowIso())
+  };
+}
+
+function normalizeForumTopic(item) {
+  const createdAt = safeString(item.createdAt, nowIso());
+  const comments = Array.isArray(item.comments)
+    ? item.comments
+        .filter((comment) => comment && typeof comment === "object")
+        .map((comment) => normalizeForumComment(comment))
+        .filter((comment) => comment.body.length >= 2)
+        .sort((left, right) => left.createdAt.localeCompare(right.createdAt))
+    : [];
+
+  return {
+    id: truncate(safeString(item.id, crypto.randomBytes(8).toString("hex")), 24),
+    title: truncate(safeString(item.title, "").trim(), 140),
+    body: truncate(safeString(item.body, "").trim(), 3000),
+    authorAccountId: truncate(safeString(item.authorAccountId, ""), 24),
+    authorEmail: normalizeEmail(item.authorEmail),
+    authorName: truncate(safeString(item.authorName, "Member"), 120),
+    createdAt,
+    updatedAt: safeString(item.updatedAt, createdAt),
+    comments,
+    commentCount: comments.length,
+    lastCommentAt: comments.length ? comments[comments.length - 1].createdAt : ""
+  };
+}
+
+function normalizeForumTopics(payload) {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  return payload
+    .filter((item) => item && typeof item === "object")
+    .map((item) => normalizeForumTopic(item))
+    .filter((topic) => topic.title.length >= 3 && topic.body.length >= 8)
+    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+    .slice(0, 1000);
+}
+
+function sanitizeForumTopic(topic) {
+  const comments = Array.isArray(topic.comments) ? topic.comments : [];
+  return {
+    id: topic.id,
+    title: topic.title,
+    body: topic.body,
+    authorName: topic.authorName || "Member",
+    createdAt: topic.createdAt,
+    updatedAt: topic.updatedAt,
+    commentCount: comments.length,
+    lastCommentAt: comments.length ? comments[comments.length - 1].createdAt : "",
+    comments: comments.map((comment) => ({
+      id: comment.id,
+      body: comment.body,
+      authorName: comment.authorName || "Member",
+      createdAt: comment.createdAt
+    }))
+  };
+}
+
 function normalizeAccountRole(value) {
   const role = safeString(value, "").toLowerCase();
   if (role === "admin") {
@@ -422,6 +497,7 @@ async function initData() {
   secretsCache = normalizeSecrets(await readJson(SECRETS_PATH, defaultSecrets));
   supportRequestsCache = normalizeSupportRequests(await readJson(SUPPORT_REQUESTS_PATH, defaultSupportRequests));
   accountsCache = normalizeAccounts(await readJson(ACCOUNTS_PATH, defaultAccounts));
+  forumTopicsCache = normalizeForumTopics(await readJson(FORUM_TOPICS_PATH, defaultForumTopics));
 
   const ownerEmail = normalizeEmail(process.env.ADMIN_EMAIL || "slender@slendystuff.com");
   if (ownerEmail) {
@@ -1205,6 +1281,38 @@ function createAdminSession(req, res) {
   return { csrfToken };
 }
 
+function createAccountSession(req, res, account) {
+  const token = crypto.randomBytes(24).toString("hex");
+  const expiresAt = Date.now() + ACCOUNT_SESSION_TTL_MS;
+  accountSessions.set(token, {
+    expiresAt,
+    createdAt: nowIso(),
+    ip: extractClientIp(req),
+    accountId: account.id,
+    email: account.email
+  });
+
+  res.cookie(ACCOUNT_SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: COOKIE_SECURE,
+    maxAge: ACCOUNT_SESSION_TTL_MS
+  });
+}
+
+function clearAccountSession(req, res) {
+  const token = safeString(req.cookies[ACCOUNT_SESSION_COOKIE], "");
+  if (token) {
+    accountSessions.delete(token);
+  }
+
+  res.clearCookie(ACCOUNT_SESSION_COOKIE, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: COOKIE_SECURE
+  });
+}
+
 function getAdminSessionFromRequest(req) {
   clearExpiredSessions();
   const token = req.cookies[SESSION_COOKIE];
@@ -1212,6 +1320,33 @@ function getAdminSessionFromRequest(req) {
     return null;
   }
   return sessions.get(token) || null;
+}
+
+function clearExpiredAccountSessions() {
+  const now = Date.now();
+  for (const [token, value] of accountSessions.entries()) {
+    if (!value || value.expiresAt < now) {
+      accountSessions.delete(token);
+    }
+  }
+}
+
+function getAccountSessionFromRequest(req) {
+  clearExpiredAccountSessions();
+  const token = safeString(req.cookies[ACCOUNT_SESSION_COOKIE], "");
+  if (!token) {
+    return null;
+  }
+  const session = accountSessions.get(token);
+  if (!session) {
+    return null;
+  }
+  const account = accountsCache.find((entry) => entry.id === session.accountId && entry.email === session.email && !entry.disabled);
+  if (!account) {
+    accountSessions.delete(token);
+    return null;
+  }
+  return { session, account };
 }
 
 function hasOwnerBrowser(req) {
@@ -1254,6 +1389,17 @@ function requireAdmin(req, res, next) {
 
   req.adminSession = session;
   next();
+}
+
+function requireAccount(req, res, next) {
+  const payload = getAccountSessionFromRequest(req);
+  if (!payload || !payload.account) {
+    return res.status(401).json({ ok: false, error: "Sign in required." });
+  }
+
+  req.accountSession = payload.session;
+  req.account = payload.account;
+  return next();
 }
 
 function isPasswordValid(inputPassword) {
@@ -1821,9 +1967,12 @@ app.post("/api/account/register", accountRateLimiter, async (req, res) => {
       lastLoginAt: ""
     });
 
+    account.lastLoginAt = nowIso();
+    account.updatedAt = nowIso();
     accountsCache = [account, ...accountsCache].slice(0, 20000);
     await saveJson(ACCOUNTS_PATH, accountsCache);
     await appendLog("account-register", sanitizeAccountForAdmin(account), req);
+    createAccountSession(req, res, account);
 
     return res.json({ ok: true, account: sanitizeAccountForAdmin(account) });
   } catch (error) {
@@ -1849,10 +1998,121 @@ app.post("/api/account/login", accountRateLimiter, async (req, res) => {
     account.updatedAt = nowIso();
     await saveJson(ACCOUNTS_PATH, accountsCache);
     await appendLog("account-login", { accountId: account.id, email: account.email, role: account.role }, req);
+    createAccountSession(req, res, account);
 
     return res.json({ ok: true, account: sanitizeAccountForAdmin(account) });
   } catch (error) {
     return res.status(500).json({ ok: false, error: safeString(error.message, "Login failed") });
+  }
+});
+
+app.get("/api/account/session", (req, res) => {
+  const payload = getAccountSessionFromRequest(req);
+  if (!payload || !payload.account) {
+    return res.status(401).json({ ok: false, error: "Not signed in." });
+  }
+
+  return res.json({ ok: true, account: sanitizeAccountForAdmin(payload.account) });
+});
+
+app.post("/api/account/logout", (req, res) => {
+  clearAccountSession(req, res);
+  return res.json({ ok: true });
+});
+
+app.get("/api/forum/topics", (_req, res) => {
+  return res.json({
+    ok: true,
+    topics: forumTopicsCache.map((topic) => sanitizeForumTopic(topic))
+  });
+});
+
+app.post("/api/forum/topics", requireAccount, async (req, res) => {
+  try {
+    const title = truncate(safeString(req.body.title, "").trim(), 140);
+    const body = truncate(safeString(req.body.body, "").trim(), 3000);
+    if (title.length < 3) {
+      return res.status(400).json({ ok: false, error: "Topic title must be at least 3 characters." });
+    }
+    if (body.length < 8) {
+      return res.status(400).json({ ok: false, error: "Topic message must be at least 8 characters." });
+    }
+
+    const topic = normalizeForumTopic({
+      id: crypto.randomBytes(8).toString("hex"),
+      title,
+      body,
+      authorAccountId: req.account.id,
+      authorEmail: req.account.email,
+      authorName: req.account.name || req.account.email.split("@")[0],
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      comments: []
+    });
+
+    forumTopicsCache = [topic, ...forumTopicsCache].slice(0, 1000);
+    await saveJson(FORUM_TOPICS_PATH, forumTopicsCache);
+    await appendLog(
+      "forum-topic",
+      {
+        topicId: topic.id,
+        accountId: req.account.id,
+        title: topic.title
+      },
+      req
+    );
+
+    return res.json({ ok: true, topic: sanitizeForumTopic(topic) });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: safeString(error.message, "Could not create topic.") });
+  }
+});
+
+app.post("/api/forum/topics/:id/comments", requireAccount, async (req, res) => {
+  try {
+    const topicId = truncate(safeString(req.params.id, ""), 24);
+    const body = truncate(safeString(req.body.body, "").trim(), 2000);
+    if (body.length < 2) {
+      return res.status(400).json({ ok: false, error: "Comment must be at least 2 characters." });
+    }
+
+    const index = forumTopicsCache.findIndex((entry) => entry.id === topicId);
+    if (index < 0) {
+      return res.status(404).json({ ok: false, error: "Topic not found." });
+    }
+
+    const comment = normalizeForumComment({
+      id: crypto.randomBytes(8).toString("hex"),
+      body,
+      authorAccountId: req.account.id,
+      authorEmail: req.account.email,
+      authorName: req.account.name || req.account.email.split("@")[0],
+      createdAt: nowIso()
+    });
+
+    const topic = forumTopicsCache[index];
+    const nextTopic = normalizeForumTopic({
+      ...topic,
+      comments: [...(Array.isArray(topic.comments) ? topic.comments : []), comment].slice(-500),
+      updatedAt: nowIso()
+    });
+
+    forumTopicsCache[index] = nextTopic;
+    forumTopicsCache = normalizeForumTopics(forumTopicsCache);
+    await saveJson(FORUM_TOPICS_PATH, forumTopicsCache);
+    await appendLog(
+      "forum-comment",
+      {
+        topicId: nextTopic.id,
+        commentId: comment.id,
+        accountId: req.account.id
+      },
+      req
+    );
+
+    return res.json({ ok: true, topic: sanitizeForumTopic(nextTopic), comment: sanitizeForumTopic(nextTopic).comments.slice(-1)[0] || null });
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: safeString(error.message, "Could not post comment.") });
   }
 });
 
