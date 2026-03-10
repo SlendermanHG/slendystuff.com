@@ -289,6 +289,8 @@
           <div><strong>${escapeHtml(item.name || "Anonymous")}</strong></div>
           <div>${escapeHtml(item.email || "No email")}</div>
           <div class="muted">${escapeHtml(item.accountEmail ? `Account: ${item.accountEmail}` : "No linked account")}</div>
+          <div class="muted">${escapeHtml(`Contact: ${item.preferredContact || "email"}`)}</div>
+          <div class="muted">${escapeHtml(item.discordUsername ? `Discord: ${item.discordUsername}` : "Discord: not provided")}</div>
         </td>
         <td>
           <div>${escapeHtml(item.issue || "")}</div>

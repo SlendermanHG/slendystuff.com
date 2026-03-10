@@ -151,7 +151,7 @@
       note.dataset.topNote = "true";
       note.innerHTML = `
         <div class="shell top-note-grid">
-          <p><strong>Fast navigation mode:</strong> Products is your direct catalog, Custom Intake is for net-new builds, and Support is for immediate technical help.</p>
+          <p><strong>Quick guide:</strong> Products shows what is already available, Custom Intake is for new builds, and Support is for help within 24 hours.</p>
           <div class="top-note-actions">
             <a href="/products.html">Catalog</a>
             <a href="/custom-tool.html">Custom Intake</a>
@@ -297,8 +297,8 @@
         if (session.authenticated) {
           return {
             message: eligibility.eligible
-              ? `You are signed in as ${signedEmail}. Your support status is currently free within the active window.`
-              : `You are signed in as ${signedEmail}. Choose paid support or product setup to continue.`,
+              ? `You are signed in as ${signedEmail}. Your support is currently covered in the active window.`
+              : `You are signed in as ${signedEmail}. If you open support, pricing will follow your account status.`,
             actions: [
               { label: "Open Account Center", href: "/account.html", eventName: "helper_account_center" },
               { label: "Open Tech Support", href: "/support.html", variant: "ghost", eventName: "helper_support" }
@@ -322,7 +322,7 @@
         });
 
         return {
-          message: "Need automation? Start with these bot-focused options and move to custom tailoring when ready.",
+          message: "If you need automation, start with these bot-focused options and request custom changes if needed.",
           actions: [
             ...picks.map((item, index) => productAction(item, index === 0 ? "btn" : "ghost")),
             ...(!session.authenticated ? [{ label: "Create Account First", href: "/account.html", variant: "ghost", eventName: "helper_account_create" }] : [])
@@ -337,7 +337,7 @@
         });
 
         return {
-          message: "Need software-focused tools? These offers are built for optimization and operations outcomes.",
+          message: "If you need software tools, these options are aimed at practical operations and maintenance work.",
           actions: picks.map((item, index) => productAction(item, index === 0 ? "btn" : "ghost"))
         };
       }
@@ -345,7 +345,7 @@
       if (intent === "support") {
         return {
           message: session.authenticated
-            ? "Support can use your account context for faster handling."
+            ? "Support can use your account context so we can handle your request faster."
             : "For best support routing, sign in first so purchase-based free support can be checked automatically.",
           actions: [
             { label: "Open Tech Support", href: "/support.html", eventName: "helper_support" },
@@ -364,8 +364,8 @@
 
         return {
           message: current
-            ? `Viewing ${current.title}. Want alternatives in the same lane or direct setup help?`
-            : "Need a fast route? Pick bots, programs, or support and continue in one click.",
+            ? `Viewing ${current.title}. If this is close but not exact, support can help you pick or adjust.`
+            : "Pick products, custom build, or support depending on what you need right now.",
           actions: [
             ...(related.length ? related.map((item, index) => productAction(item, index === 0 ? "btn" : "ghost")) : []),
             { label: "Get Setup Help", href: "/support.html", variant: "ghost", eventName: "helper_support" }
@@ -388,8 +388,8 @@
       const starter = this.pickProducts(products, () => true);
       return {
         message: session.authenticated
-          ? "Welcome back. Pick a lane and continue through product or support flow."
-          : "Find the right product quickly, then create an account to track support and purchases.",
+          ? "Welcome back. You can continue with products, custom build, or support."
+          : "Start with products or custom intake, then create an account if you want tracking and support history.",
         actions: [
           ...starter.map((item, index) => productAction(item, index === 0 ? "btn" : "ghost")),
           ...(!session.authenticated ? [{ label: "Create Account", href: "/account.html", variant: "ghost", eventName: "helper_account_create" }] : [])

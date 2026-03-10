@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Contact Ops | Slendy Stuff</title>
+  <title>Contact | Slendy Stuff</title>
   <meta name="description" content="Send general questions, partnership requests, and project inquiries.">
   <link rel="stylesheet" href="/styles.css">
 </head>
@@ -35,9 +35,9 @@
   <main id="main">
     <section class="section shell chaos-burst">
       <div class="section-head">
-        <p class="eyebrow">Contact Ops</p>
+        <p class="eyebrow">Contact</p>
         <h1>Send a direct message</h1>
-        <p class="muted">Use this channel for general questions, planning discussions, and project clarifications.</p>
+        <p class="muted">Use this for general questions, planning, or clarification. First reply is within 24 hours.</p>
       </div>
 
       <article class="card">
@@ -56,6 +56,19 @@
             <label for="contactSubject">Subject</label>
             <input id="contactSubject" name="subject" required>
           </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="contactPreferredContact">Preferred Contact</label>
+              <select id="contactPreferredContact" name="preferredContact">
+                <option value="discord">Discord (preferred)</option>
+                <option value="email">Email</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="contactDiscordUsername">Discord Username</label>
+              <input id="contactDiscordUsername" name="discordUsername" placeholder="example: username or user#1234">
+            </div>
+          </div>
           <div class="field">
             <label for="contactMessage">Message</label>
             <textarea id="contactMessage" name="message" required placeholder="What do you need and what outcome are you aiming for?"></textarea>
@@ -71,7 +84,7 @@
 
   <footer class="footer">
     <div class="shell footer-grid">
-      <p class="muted">Direct mailbox: <a href="mailto:Help@slendystuff.com">Help@slendystuff.com</a></p>
+      <p class="muted">Direct mailbox: <a href="mailto:Help@slendystuff.com">Help@slendystuff.com</a> | Discord is preferred for active back-and-forth.</p>
     </div>
   </footer>
 

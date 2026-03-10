@@ -282,6 +282,8 @@ function normalizeAccounts(payload) {
               id: safeString(request.id, crypto.randomUUID()),
               createdAt: safeString(request.createdAt, nowIso()),
               issue: safeString(request.issue, ""),
+              preferredContact: safeString(request.preferredContact, "discord"),
+              discordUsername: safeString(request.discordUsername, ""),
               preferredTime: safeString(request.preferredTime, ""),
               serviceLevel: safeString(request.serviceLevel, ""),
               managementOptions: Array.isArray(request.managementOptions)
@@ -334,6 +336,8 @@ function normalizeSupportRequest(item) {
     name: safeString(item.name, "Anonymous").trim(),
     email: safeString(item.email, "").trim(),
     issue: safeString(item.issue, ""),
+    preferredContact: safeString(item.preferredContact, "discord"),
+    discordUsername: safeString(item.discordUsername, ""),
     preferredTime: safeString(item.preferredTime, ""),
     serviceLevel: safeString(item.serviceLevel, ""),
     managementOptions: Array.isArray(item.managementOptions) ? item.managementOptions.map((value) => safeString(value, "")).filter(Boolean) : [],
@@ -638,6 +642,8 @@ function sanitizeSupportRequestForAdmin(item) {
     name: item.name,
     email: item.email,
     issue: item.issue,
+    preferredContact: item.preferredContact,
+    discordUsername: item.discordUsername,
     preferredTime: item.preferredTime,
     serviceLevel: item.serviceLevel,
     managementOptions: [...item.managementOptions],
@@ -1266,6 +1272,8 @@ app.post("/api/support/request", async (req, res) => {
       name: safeString(req.body.name, "Anonymous"),
       email: safeString(req.body.email, ""),
       issue: safeString(req.body.issue, ""),
+      preferredContact: safeString(req.body.preferredContact, "discord"),
+      discordUsername: safeString(req.body.discordUsername, ""),
       preferredTime: safeString(req.body.preferredTime, ""),
       serviceLevel: safeString(req.body.serviceLevel, ""),
       managementOptions: Array.isArray(req.body.managementOptions)
@@ -1292,6 +1300,8 @@ app.post("/api/support/request", async (req, res) => {
         id: crypto.randomUUID(),
         createdAt: nowIso(),
         issue: requestDetails.issue,
+        preferredContact: requestDetails.preferredContact,
+        discordUsername: requestDetails.discordUsername,
         preferredTime: requestDetails.preferredTime,
         serviceLevel: requestDetails.serviceLevel,
         managementOptions: requestDetails.managementOptions,
@@ -1365,6 +1375,8 @@ app.post("/api/contact-message", async (req, res) => {
       name: safeString(req.body.name, "Anonymous"),
       email: safeString(req.body.email, ""),
       subject: safeString(req.body.subject, ""),
+      preferredContact: safeString(req.body.preferredContact, "discord"),
+      discordUsername: safeString(req.body.discordUsername, ""),
       message: safeString(req.body.message, ""),
       clientTimezone: safeString(req.body.clientTimezone, "")
     };

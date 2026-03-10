@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Support Ops | Slendy Stuff</title>
+  <title>Support | Slendy Stuff</title>
   <meta name="description" content="Request remote support, optimization, and managed operations assistance.">
   <link rel="stylesheet" href="/styles.css">
 </head>
@@ -35,20 +35,21 @@
   <main id="main">
     <section class="section shell chaos-burst">
       <div class="section-head">
-        <p class="eyebrow">Support Ops</p>
-        <h1>Remote troubleshooting, cleanup, and managed assistance</h1>
+        <p class="eyebrow">Support</p>
+        <h1>Real help for troubleshooting, cleanup, and setup</h1>
         <p class="muted" data-support-intro>Request a remote cleanup/support session through AnyDesk with minimal steps.</p>
+        <p class="muted">First reply is within 24 hours. Discord is preferred if you want faster back-and-forth.</p>
         <p class="muted" data-support-account-hint></p>
       </div>
 
       <div class="grid two">
         <article class="card sticker-panel">
-          <h2>Fastest Setup Path</h2>
+          <h2>How Support Starts</h2>
           <ol class="list">
             <li>Download the latest AnyDesk build.</li>
             <li>Keep your access code ready.</li>
-            <li>Submit scope and service level.</li>
-            <li>Receive scheduling and handling confirmation.</li>
+            <li>Send your issue details and preferred contact method.</li>
+            <li>Get a first response within 24 hours.</li>
           </ol>
           <div class="inline-actions">
             <a class="btn" data-anydesk-link href="https://download.anydesk.com/AnyDesk.exe" target="_blank" rel="noopener">Download Latest AnyDesk</a>
@@ -67,6 +68,19 @@
               <div class="field">
                 <label for="email">Email</label>
                 <input id="email" name="email" type="email" required>
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="preferredContact">Preferred Contact</label>
+                <select id="preferredContact" name="preferredContact">
+                  <option value="discord">Discord (preferred)</option>
+                  <option value="email">Email</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="discordUsername">Discord Username</label>
+                <input id="discordUsername" name="discordUsername" placeholder="example: username or user#1234">
               </div>
             </div>
             <div class="form-grid">
@@ -110,7 +124,7 @@
 
   <footer class="footer">
     <div class="shell footer-grid">
-      <p class="muted">Fallback mailbox: <a href="mailto:Help@slendystuff.com">Help@slendystuff.com</a></p>
+      <p class="muted">Support email: <a href="mailto:Help@slendystuff.com">Help@slendystuff.com</a> | Preferred: include your Discord username in the ticket.</p>
     </div>
   </footer>
 

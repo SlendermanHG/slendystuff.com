@@ -51,12 +51,22 @@
       const payload = {
         name: String(formData.get("name") || ""),
         email: String(formData.get("email") || ""),
+        preferredContact: String(formData.get("preferredContact") || "discord"),
+        discordUsername: String(formData.get("discordUsername") || ""),
         preferredTime: String(formData.get("preferredTime") || ""),
         serviceLevel: String(formData.get("serviceLevel") || ""),
         managementOptions,
         issue: String(formData.get("issue") || ""),
         clientTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone
       };
+
+      if (payload.preferredContact === "discord" && !payload.discordUsername.trim()) {
+        if (status) {
+          status.textContent = "Please add your Discord username so support can contact you there.";
+          status.className = "status error";
+        }
+        return;
+      }
 
       try {
         const response = await fetch("/api/support/request", {
@@ -73,26 +83,27 @@
         supportForm.reset();
         if (status) {
           if (result.supportIsFree) {
-            status.textContent = `Request sent. This ticket is marked FREE support (qualifying purchase within 365 days).`;
+            status.textContent = "Request sent. First response within 24 hours. This ticket is marked FREE support.";
             status.className = "status ok";
           } else {
-            status.textContent = `Request sent. Billing status: paid support required. Reason: ${result.billingReason || "No qualifying purchase in last 365 days."}`;
+            status.textContent = `Request sent. First response within 24 hours. Billing status: paid support required. Reason: ${result.billingReason || "No qualifying purchase in last 365 days."}`;
             status.className = "status error";
           }
         }
         app.track("support_request_submitted", {
           emailProvided: Boolean(payload.email),
+          preferredContact: payload.preferredContact,
           serviceLevel: payload.serviceLevel,
           managementOptions: payload.managementOptions
         });
       } catch (error) {
         const subject = encodeURIComponent("Tech Support Request");
-        const body = encodeURIComponent(
-          `Name: ${payload.name}\nEmail: ${payload.email}\nPreferred Time: ${payload.preferredTime}\nService Level: ${payload.serviceLevel}\nManagement Options: ${payload.managementOptions.join(", ") || "None selected"}\nTimezone: ${payload.clientTimezone}\n\nProject Overview / Issue:\n${payload.issue}`
+    const body = encodeURIComponent(
+          `Name: ${payload.name}\nEmail: ${payload.email}\nPreferred Contact: ${payload.preferredContact}\nDiscord Username: ${payload.discordUsername || "Not provided"}\nPreferred Time: ${payload.preferredTime}\nService Level: ${payload.serviceLevel}\nManagement Options: ${payload.managementOptions.join(", ") || "None selected"}\nTimezone: ${payload.clientTimezone}\n\nProject Overview / Issue:\n${payload.issue}`
         );
         window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
         if (status) {
-          status.textContent = "Backend is unavailable. Opened your email client as fallback.";
+          status.textContent = "Backend is unavailable. Opened your email client as fallback. First response is still within 24 hours.";
           status.className = "status error";
         }
       }

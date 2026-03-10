@@ -6,7 +6,7 @@
     const config = await app.fetchPublicConfig();
     app.injectAnalytics(config);
 
-    document.title = `${config.brand.name} | Adaptive Build Systems`;
+    document.title = `${config.brand.name} | Software And Support`;
 
     const brandTargets = document.querySelectorAll("[data-brand-name]");
     brandTargets.forEach((node) => {
@@ -47,7 +47,7 @@
     }
 
     if (!products.length) {
-      mount.innerHTML = "<p class='muted'>No products are live right now. Check back soon or open a custom build request.</p>";
+      mount.innerHTML = "<p class='muted'>No products are live right now. You can still open a custom request and get a direct response.</p>";
       return;
     }
 
