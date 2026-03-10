@@ -83,8 +83,11 @@ body::after {
     radial-gradient(circle at 20% 12%, rgba(255, 52, 157, 0.16), transparent 42%),
     radial-gradient(circle at 82% 16%, rgba(83, 233, 204, 0.14), transparent 38%),
     radial-gradient(circle at 52% 82%, rgba(255, 255, 255, 0.05), transparent 22%);
-  filter: blur(54px);
-  animation: skyShift 22s ease-in-out infinite alternate;
+  filter: blur(34px);
+}
+
+.chaos-mode::after {
+  animation: skyShift 30s ease-in-out infinite alternate;
 }
 
 main,
@@ -174,7 +177,7 @@ textarea {
   z-index: 180;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(150deg, rgba(8, 12, 18, 0.88), rgba(15, 21, 28, 0.74));
-  backdrop-filter: blur(12px) saturate(1.05);
+  backdrop-filter: blur(8px) saturate(1.03);
 }
 
 .nav-wrap {
@@ -243,6 +246,14 @@ textarea {
     transform 0.2s ease;
 }
 
+.site-nav a:nth-child(2n) {
+  transform: rotate(-0.4deg);
+}
+
+.site-nav a:nth-child(3n) {
+  transform: rotate(0.35deg);
+}
+
 .site-nav a:hover,
 .site-nav a:focus-visible {
   color: #fff;
@@ -303,7 +314,6 @@ button.btn {
     transform 0.2s ease,
     box-shadow 0.25s ease,
     filter 0.25s ease;
-  animation: btnPulse 3s ease-in-out infinite;
 }
 
 .btn::after,
@@ -396,8 +406,12 @@ button.btn::after {
   inset: auto 12% -34% 12%;
   height: 66%;
   background: radial-gradient(closest-side, rgba(255, 52, 157, 0.2), transparent 82%);
-  filter: blur(34px);
+  filter: blur(22px);
   pointer-events: none;
+}
+
+.card::after {
+  display: none;
 }
 
 .hero-copy h1 {
@@ -439,10 +453,30 @@ button.btn::after {
 
 .section {
   padding: 1rem 0;
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 820px;
 }
 
 .section-head {
   margin-bottom: 0.78rem;
+}
+
+.section-head h2 {
+  display: inline-block;
+  position: relative;
+}
+
+.section-head h2::after {
+  content: "";
+  position: absolute;
+  left: -0.15rem;
+  right: -0.15rem;
+  bottom: 0.08rem;
+  height: 0.42em;
+  background: linear-gradient(100deg, rgba(255, 52, 157, 0.26), rgba(83, 233, 204, 0.2));
+  z-index: -1;
+  transform: skewX(-12deg);
+  border-radius: 6px;
 }
 
 .grid {
@@ -460,14 +494,21 @@ button.btn::after {
 
 .grid > .card:nth-child(2n) {
   border-radius: 16px 22px 16px 24px;
+  transform: rotate(-0.28deg);
 }
 
 .grid > .card:nth-child(3n) {
   border-radius: 22px 15px 24px 15px;
+  transform: rotate(0.34deg);
+}
+
+.grid > .card:nth-child(4n) {
+  transform: translateY(-2px) rotate(-0.42deg);
 }
 
 .grid > .card:hover {
   border-color: var(--line-b);
+  transform: translateY(-4px) rotate(0deg);
 }
 
 .tilt-card {
@@ -475,11 +516,11 @@ button.btn::after {
 }
 
 .tilt-card:nth-child(2n) {
-  transform: rotate(0.3deg);
+  transform: rotate(0.5deg);
 }
 
 .tilt-card:nth-child(3n) {
-  transform: rotate(-0.35deg);
+  transform: rotate(-0.62deg);
 }
 
 .tilt-card:hover {
@@ -826,7 +867,7 @@ button.btn::after {
   gap: 2rem;
   white-space: nowrap;
   padding-inline: 1.18rem;
-  animation: laneScroll 19s linear infinite;
+  animation: laneScroll 24s linear infinite;
 }
 
 .chaos-ribbon-track span {
@@ -998,6 +1039,11 @@ button.btn::after {
 
   .tilt-card:nth-child(2n),
   .tilt-card:nth-child(3n) {
+    transform: none;
+  }
+
+  .site-nav a:nth-child(2n),
+  .site-nav a:nth-child(3n) {
     transform: none;
   }
 }
