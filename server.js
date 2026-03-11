@@ -5,7 +5,9 @@ const fs = require("fs/promises");
 const path = require("path");
 
 const app = express();
-app.set("trust proxy", true);
+const trustProxyRaw = String(process.env.TRUST_PROXY_HOPS || "1").trim();
+const trustProxyHops = Number(trustProxyRaw);
+app.set("trust proxy", Number.isFinite(trustProxyHops) && trustProxyHops >= 0 ? trustProxyHops : 1);
 app.disable("x-powered-by");
 
 const ROOT_DIR = __dirname;
@@ -31,6 +33,7 @@ const accountSessions = new Map();
 const rateLimiterStore = new Map();
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "change-this-admin-password";
+const ADMIN_EMAIL = normalizeEmail(process.env.ADMIN_EMAIL || "slender@slendystuff.com");
 const ADMIN_PASSWORD_MIN_LENGTH = Number(process.env.ADMIN_PASSWORD_MIN_LENGTH || 12);
 const IS_PRODUCTION = String(process.env.NODE_ENV || "").toLowerCase() === "production";
 const COOKIE_SECURE = String(process.env.COOKIE_SECURE || (IS_PRODUCTION ? "true" : "false")).toLowerCase() === "true";
@@ -2506,13 +2509,24 @@ app.post("/api/forum/topics/:id/comments", requireAccount, async (req, res) => {
 
 app.post("/api/admin/login", loginRateLimiter, async (req, res) => {
   try {
-    if (!isPasswordValid(req.body.password)) {
-      return res.status(401).json({ ok: false, error: "Invalid password" });
+    const inputEmail = normalizeEmail(req.body && req.body.email);
+    const validEmail = Boolean(ADMIN_EMAIL) && Boolean(inputEmail) && timingSafeEqualString(inputEmail, ADMIN_EMAIL);
+    const validPassword = isPasswordValid(req.body && req.body.password);
+    if (!validEmail || !validPassword) {
+      await appendLog(
+        "admin-login-failed",
+        {
+          reason: "invalid_credentials",
+          emailProvided: Boolean(inputEmail),
+          email: inputEmail || null
+        },
+        req
+      );
+      return res.status(401).json({ ok: false, error: "Invalid credentials" });
     }
 
-    const ownerEmail = normalizeEmail(process.env.ADMIN_EMAIL || "slender@slendystuff.com");
-    if (ownerEmail) {
-      const ownerAccount = accountsCache.find((account) => account.email === ownerEmail);
+    if (ADMIN_EMAIL) {
+      const ownerAccount = accountsCache.find((account) => account.email === ADMIN_EMAIL);
       if (ownerAccount) {
         ownerAccount.lastLoginAt = nowIso();
         ownerAccount.updatedAt = nowIso();
@@ -2526,6 +2540,13 @@ app.post("/api/admin/login", loginRateLimiter, async (req, res) => {
       await saveJson(SECRETS_PATH, secretsCache);
     }
     setOwnerBrowserCookie(res, secretsCache.ownerBrowserToken);
+    await appendLog(
+      "admin-login-success",
+      {
+        email: ADMIN_EMAIL
+      },
+      req
+    );
 
     return res.json({ ok: true, csrfToken: session.csrfToken, ownerBrowserClaimed: true });
   } catch (error) {

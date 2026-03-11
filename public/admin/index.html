@@ -41,8 +41,12 @@
         <p class="muted">Use a strong `ADMIN_PASSWORD` (upper/lower/digit/symbol, 12+ chars by default).</p>
         <form data-login-form>
           <div class="field">
+            <label for="adminEmail">Email</label>
+            <input id="adminEmail" name="email" type="email" autocomplete="username" required>
+          </div>
+          <div class="field">
             <label for="password">Password</label>
-            <input id="password" name="password" type="password" required>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
           </div>
           <div class="inline-actions">
             <button class="btn" type="submit">Sign In</button>
