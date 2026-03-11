@@ -100,6 +100,12 @@
                   <li class="muted">No IP data yet.</li>
                 </ul>
               </div>
+              <div class="card">
+                <h3>Top Coupons</h3>
+                <ul class="list" data-top-coupons>
+                  <li class="muted">No coupon usage yet.</li>
+                </ul>
+              </div>
             </div>
             <div class="inline-actions">
               <button class="btn" type="button" data-claim-owner-browser>Label This Browser As Me</button>
@@ -353,6 +359,27 @@
                 <label>Remodel Discount Percent</label>
                 <input name="discordRemodelDiscountPercent" type="number" min="0" max="90" step="1" placeholder="40">
               </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <h2>Coupons</h2>
+            <p class="muted">Add, remove, and toggle coupons used at cart checkout.</p>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Code</th>
+                    <th>% Off</th>
+                    <th>Active</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody data-coupons-body></tbody>
+              </table>
+            </div>
+            <div class="inline-actions">
+              <button class="btn btn-ghost" type="button" data-add-coupon>Add Coupon Row</button>
             </div>
           </article>
 

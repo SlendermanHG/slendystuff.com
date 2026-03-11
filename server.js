@@ -89,6 +89,18 @@ const defaultSettings = {
   analytics: {
     customTrackingEnabled: true
   },
+  coupons: [
+    {
+      code: "SLENDERFAM",
+      percentOff: 100,
+      active: true
+    },
+    {
+      code: "SHEETZFAM",
+      percentOff: 50,
+      active: true
+    }
+  ],
   products: [
     {
       id: "pos-suite",
@@ -250,6 +262,7 @@ function normalizeSettings(payload) {
     stripeLinks: { ...defaultSettings.stripeLinks, ...(payload.stripeLinks || {}) },
     support: { ...defaultSettings.support, ...(payload.support || {}) },
     analytics: { ...defaultSettings.analytics, ...(payload.analytics || {}) },
+    coupons: Array.isArray(payload.coupons) ? payload.coupons : defaultSettings.coupons,
     products: Array.isArray(payload.products) ? payload.products : defaultSettings.products
   };
 
@@ -269,6 +282,20 @@ function normalizeSettings(payload) {
   merged.support.anydeskSourceUrl = normalizeHttpsUrl(merged.support.anydeskSourceUrl) || defaultSettings.support.anydeskSourceUrl;
   merged.support.refreshIntervalHours = Math.min(168, Math.max(1, Number(merged.support.refreshIntervalHours || 12)));
   merged.support.intro = truncate(merged.support.intro, 400);
+
+  merged.coupons = merged.coupons
+    .filter((item) => item && typeof item === "object")
+    .map((item) => ({
+      code: truncate(String(item.code || "").trim().toUpperCase().replace(/[^A-Z0-9_-]/g, ""), 40),
+      percentOff: Math.min(100, Math.max(0, Math.round(Number(item.percentOff || 0)))),
+      active: item.active !== false
+    }))
+    .filter((item) => item.code && item.percentOff > 0)
+    .slice(0, 100);
+
+  if (merged.coupons.length === 0) {
+    merged.coupons = structuredClone(defaultSettings.coupons);
+  }
 
   merged.products = merged.products
     .filter((item) => item && typeof item === "object")
@@ -1059,6 +1086,9 @@ async function buildAdminStats() {
   const analyticsEntries = await readRecentLogEntries("analytics", 7);
   const supportLogEntries = await readRecentLogEntries("support-request", 7);
   const ageEntries = await readRecentLogEntries("age-verification", 7);
+  const checkoutSessionEntries = await readRecentLogEntries("checkout-session", 7);
+  const checkoutFreeEntries = await readRecentLogEntries("checkout-free", 7);
+  const checkoutEntries = [...checkoutSessionEntries, ...checkoutFreeEntries];
   const sessions = buildSessionSummaries(analyticsEntries);
   const visitors = buildVisitorSummaries(sessions);
   const now = Date.now();
@@ -1075,6 +1105,12 @@ async function buildAdminStats() {
     6
   );
   const topIpsRaw = topCounts(analyticsEntries.map((entry) => entry.ip), 10);
+  const topCoupons = topCounts(
+    checkoutEntries
+      .map((entry) => safeString(entry.couponCode, "").trim().toUpperCase())
+      .filter(Boolean),
+    10
+  );
 
   const ipLookupSet = new Set();
   for (const item of topIpsRaw) {
@@ -1151,12 +1187,18 @@ async function buildAdminStats() {
       queueInProgress: supportRequestsCache.filter((item) => item.status === "in_progress").length,
       queueClosed: supportRequestsCache.filter((item) => item.status === "closed").length
     },
+    coupons: {
+      checkouts24h: countEntriesSince(checkoutEntries, since24h),
+      checkouts7d: countEntriesSince(checkoutEntries, since7d),
+      couponCheckouts7d: checkoutEntries.filter((entry) => safeString(entry.couponCode, "").trim().length > 0).length
+    },
     ageGate: {
       approvals7d: ageEntries.filter((entry) => entry.allowed === true).length,
       denied7d: ageEntries.filter((entry) => entry.allowed === false).length
     },
     topEvents,
     topProducts,
+    topCoupons,
     topIps,
     recentVisitors: enrichedVisitors.slice(0, 120),
     recentSessions: enrichedSessions.slice(0, 180)
@@ -1299,6 +1341,56 @@ function applyDiscordRemodelDiscount(lineItems, upgradeCode) {
     lineItems: discounted,
     discountApplied: discounted.some((item, index) => item.unitAmountCents !== lineItems[index].unitAmountCents),
     discountPercent
+  };
+}
+
+function findActiveCouponByCode(couponCode) {
+  const code = truncate(safeString(couponCode, "").trim().toUpperCase(), 40);
+  if (!code) {
+    return null;
+  }
+
+  const coupons = Array.isArray(settingsCache.coupons) ? settingsCache.coupons : [];
+  return (
+    coupons.find((item) => {
+      if (!item || typeof item !== "object" || item.active === false) {
+        return false;
+      }
+      return safeString(item.code, "").trim().toUpperCase() === code;
+    }) || null
+  );
+}
+
+function applyCouponDiscount(lineItems, coupon) {
+  const percentOff = Math.min(100, Math.max(0, Number(coupon && coupon.percentOff ? coupon.percentOff : 0)));
+  if (!coupon || percentOff <= 0) {
+    return {
+      lineItems,
+      applied: false,
+      percentOff: 0
+    };
+  }
+
+  if (percentOff >= 100) {
+    return {
+      lineItems,
+      applied: true,
+      percentOff: 100
+    };
+  }
+
+  const discounted = lineItems.map((item) => {
+    const nextAmount = Math.max(50, Math.round(item.unitAmountCents * (1 - percentOff / 100)));
+    return {
+      ...item,
+      unitAmountCents: nextAmount
+    };
+  });
+
+  return {
+    lineItems: discounted,
+    applied: discounted.some((item, index) => item.unitAmountCents !== lineItems[index].unitAmountCents),
+    percentOff
   };
 }
 
@@ -1652,6 +1744,12 @@ function getPublicConfig() {
     offers: {
       discordRemodelDiscountPercent: Math.min(90, Math.max(0, Number(secretsCache.discordRemodelDiscountPercent || 40)))
     },
+    coupons: (Array.isArray(settingsCache.coupons) ? settingsCache.coupons : [])
+      .filter((item) => item && item.active !== false)
+      .map((item) => ({
+        code: truncate(String(item.code || "").trim().toUpperCase(), 40),
+        percentOff: Math.min(100, Math.max(0, Number(item.percentOff || 0)))
+      })),
     products: settingsCache.products
   };
 }
@@ -2212,14 +2310,18 @@ app.post("/api/checkout/cart-session", checkoutRateLimiter, async (req, res) => 
       return res.status(400).json({ ok: false, error: "Cart is empty or contains invalid items." });
     }
     const remodeled = applyDiscordRemodelDiscount(initialLineItems, upgradeCode);
-    const lineItems = remodeled.lineItems;
-
+    const coupon = findActiveCouponByCode(couponCode);
+    const couponResult = applyCouponDiscount(remodeled.lineItems, coupon);
+    const lineItems = couponResult.lineItems;
     const subtotalCents = lineItems.reduce((sum, item) => sum + item.unitAmountCents * item.qty, 0);
-    if (couponCode === "SLENDERFAM") {
+    const isFreeCheckout = couponResult.applied && couponResult.percentOff >= 100;
+
+    if (isFreeCheckout) {
       await appendLog(
         "checkout-free",
         {
-          couponCode,
+          couponCode: coupon ? coupon.code : couponCode,
+          couponPercentOff: couponResult.percentOff,
           remodelDiscountApplied: remodeled.discountApplied,
           remodelDiscountPercent: remodeled.discountApplied ? remodeled.discountPercent : 0,
           lineItems: lineItems.map((item) => ({ id: item.id, qty: item.qty, unitAmountCents: item.unitAmountCents })),
@@ -2231,6 +2333,8 @@ app.post("/api/checkout/cart-session", checkoutRateLimiter, async (req, res) => 
       return res.json({
         ok: true,
         freeCheckout: true,
+        couponCode: coupon ? coupon.code : couponCode,
+        couponPercentOff: couponResult.percentOff,
         subtotalCents,
         totalCents: 0
       });
@@ -2241,7 +2345,8 @@ app.post("/api/checkout/cart-session", checkoutRateLimiter, async (req, res) => 
       "checkout-session",
       {
         sessionId: session.id,
-        couponCode: couponCode || null,
+        couponCode: coupon ? coupon.code : couponCode || null,
+        couponPercentOff: couponResult.applied ? couponResult.percentOff : 0,
         remodelDiscountApplied: remodeled.discountApplied,
         remodelDiscountPercent: remodeled.discountApplied ? remodeled.discountPercent : 0,
         subtotalCents,
@@ -2256,6 +2361,8 @@ app.post("/api/checkout/cart-session", checkoutRateLimiter, async (req, res) => 
       sessionId: session.id,
       subtotalCents,
       totalCents: subtotalCents,
+      couponCode: coupon ? coupon.code : null,
+      couponPercentOff: couponResult.applied ? couponResult.percentOff : 0,
       remodelDiscountApplied: remodeled.discountApplied,
       remodelDiscountPercent: remodeled.discountApplied ? remodeled.discountPercent : 0
     });

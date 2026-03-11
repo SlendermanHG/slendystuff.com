@@ -15,7 +15,6 @@
   const upgradeCodeInput = document.querySelector("[data-upgrade-code]");
   const upgradeNoteNode = document.querySelector("[data-upgrade-note]");
 
-  const COUPON_CODE = "SLENDERFAM";
   let config = null;
   let cartItems = [];
   let selectedCouponCode = "";
@@ -57,9 +56,10 @@
   if (applyCouponButton) {
     applyCouponButton.addEventListener("click", () => {
       const code = String((couponInput && couponInput.value) || "").trim().toUpperCase();
-      if (code === COUPON_CODE) {
+      const rule = getCouponRule(code);
+      if (rule) {
         selectedCouponCode = code;
-        setStatus("Coupon applied.", "ok");
+        setStatus(`Coupon applied (${rule.percentOff}% off).`, "ok");
       } else {
         selectedCouponCode = "";
         setStatus("Invalid coupon code.", "error");
@@ -143,7 +143,7 @@
       app.clearCart();
       render();
       setStatus("Free checkout completed. I will follow up with setup details.", "ok");
-      app.track("free_checkout_complete", { coupon: COUPON_CODE });
+      app.track("free_checkout_complete", { coupon: selectedCouponCode || null });
     });
   }
 
@@ -192,7 +192,7 @@
     }
 
     const subtotalCents = cartItems.reduce((sum, item) => sum + item.unitAmountCents * item.qty, 0);
-    const couponDiscountCents = selectedCouponCode === COUPON_CODE ? subtotalCents : 0;
+    const couponDiscountCents = calculateCouponDiscountCents(subtotalCents, selectedCouponCode);
     const totalCents = Math.max(0, subtotalCents - couponDiscountCents);
 
     if (itemsNode) {
@@ -257,6 +257,40 @@
       return 0;
     }
     return Math.round((Number(match[1]) || 0) * 100);
+  }
+
+  function getCouponRule(code) {
+    const key = String(code || "").trim().toUpperCase();
+    if (!key) {
+      return null;
+    }
+
+    const configuredCoupons = Array.isArray(config && config.coupons) ? config.coupons : [];
+    const configured = configuredCoupons.find((item) => String(item && item.code ? item.code : "").trim().toUpperCase() === key);
+    if (configured) {
+      const percentOff = Math.min(100, Math.max(0, Number(configured.percentOff || 0)));
+      if (percentOff <= 0) {
+        return null;
+      }
+      return {
+        type: percentOff >= 100 ? "free" : "percent",
+        percentOff
+      };
+    }
+
+    return null;
+  }
+
+  function calculateCouponDiscountCents(subtotalCents, couponCode) {
+    const subtotal = Math.max(0, Number(subtotalCents || 0));
+    const rule = getCouponRule(couponCode);
+    if (!rule) {
+      return 0;
+    }
+    if (rule.percentOff >= 100) {
+      return subtotal;
+    }
+    return Math.round(subtotal * (rule.percentOff / 100));
   }
 
   function writeTotals(subtotalCents, discountCents, totalCents) {

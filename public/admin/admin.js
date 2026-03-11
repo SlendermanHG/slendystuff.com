@@ -24,6 +24,7 @@
   const topEventsList = document.querySelector("[data-top-events]");
   const topProductsList = document.querySelector("[data-top-products]");
   const topIpsList = document.querySelector("[data-top-ips]");
+  const topCouponsList = document.querySelector("[data-top-coupons]");
   const visitorConnectionsBody = document.querySelector("[data-visitor-connections-body]");
   const sessionActivityBody = document.querySelector("[data-session-activity-body]");
   const accountsBody = document.querySelector("[data-accounts-body]");
@@ -39,6 +40,8 @@
 
   const productTableBody = document.querySelector("[data-products-body]");
   const addProductButton = document.querySelector("[data-add-product]");
+  const couponTableBody = document.querySelector("[data-coupons-body]");
+  const addCouponButton = document.querySelector("[data-add-coupon]");
 
   const formRefs = {
     brandName: document.querySelector("[name='brandName']"),
@@ -83,6 +86,9 @@
     loginForm.addEventListener("submit", onLogin);
     saveButton.addEventListener("click", onSave);
     addProductButton.addEventListener("click", addProductRow);
+    if (addCouponButton) {
+      addCouponButton.addEventListener("click", addCouponRow);
+    }
     logoutButton.addEventListener("click", onLogout);
     refreshAnydeskButton.addEventListener("click", onRefreshAnydesk);
 
@@ -249,6 +255,7 @@
     renderTopList(topEventsList, stats.topEvents || [], "No event data yet.");
     renderTopList(topProductsList, stats.topProducts || [], "No product click data yet.");
     renderTopIpList(topIpsList, stats.topIps || [], "No IP data yet.");
+    renderTopList(topCouponsList, stats.topCoupons || [], "No coupon usage yet.");
     renderVisitorConnections(stats.recentVisitors || []);
     renderSessionActivity(stats.recentSessions || []);
   }
@@ -575,7 +582,44 @@
     formRefs.discordRemodelCode.value = secrets.discordRemodelCode || "";
     formRefs.discordRemodelDiscountPercent.value = String(secrets.discordRemodelDiscountPercent || 40);
 
+    renderCouponRows(settings.coupons || []);
     renderProductRows(settings.products || []);
+  }
+
+  function renderCouponRows(coupons) {
+    if (!couponTableBody) {
+      return;
+    }
+
+    couponTableBody.innerHTML = "";
+    coupons.forEach((coupon) => {
+      couponTableBody.appendChild(buildCouponRow(coupon));
+    });
+
+    if (!coupons.length) {
+      addCouponRow();
+    }
+  }
+
+  function buildCouponRow(coupon = {}) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input data-key="code" value="${escapeHtml(String(coupon.code || "").toUpperCase())}" placeholder="SHEETZFAM"></td>
+      <td><input data-key="percentOff" value="${escapeHtml(String(coupon.percentOff || ""))}" type="number" min="1" max="100" step="1" placeholder="50"></td>
+      <td><label><input type="checkbox" data-key="active" ${coupon.active !== false ? "checked" : ""}>Active</label></td>
+      <td><button type="button" class="btn btn-ghost" data-remove>Remove</button></td>
+    `;
+    tr.querySelector("[data-remove]").addEventListener("click", () => {
+      tr.remove();
+    });
+    return tr;
+  }
+
+  function addCouponRow() {
+    if (!couponTableBody) {
+      return;
+    }
+    couponTableBody.appendChild(buildCouponRow());
   }
 
   function renderProductRows(products) {
@@ -648,6 +692,7 @@
       analytics: {
         customTrackingEnabled: formRefs.customTrackingEnabled.checked
       },
+      coupons: collectCoupons(),
       products: collectProducts()
     };
 
@@ -730,6 +775,28 @@
         };
       })
       .filter((item) => item.id.trim().length > 0 && item.title.trim().length > 0);
+  }
+
+  function collectCoupons() {
+    if (!couponTableBody) {
+      return [];
+    }
+
+    const rows = Array.from(couponTableBody.querySelectorAll("tr"));
+    return rows
+      .map((row) => {
+        const get = (key) => {
+          const input = row.querySelector(`[data-key='${key}']`);
+          return input ? input.value : "";
+        };
+        const active = row.querySelector("[data-key='active']")?.checked !== false;
+        return {
+          code: String(get("code") || "").trim().toUpperCase(),
+          percentOff: Number(get("percentOff") || 0),
+          active
+        };
+      })
+      .filter((item) => item.code.length > 0 && Number(item.percentOff || 0) > 0);
   }
 
   function setStatus(node, message, type) {
