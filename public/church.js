@@ -103,19 +103,24 @@
   }
 
   function setText(selector, value) {
-    const node = document.querySelector(selector);
-    if (!node) {
+    const nodes = Array.from(document.querySelectorAll(selector));
+    if (!nodes.length) {
       return;
     }
-    node.textContent = String(value || "").trim() || node.textContent;
+    const text = String(value || "").trim();
+    nodes.forEach((node) => {
+      if (text) {
+        node.textContent = text;
+      }
+    });
   }
 
   function setLink(selector, value) {
-    const node = document.querySelector(selector);
+    const nodes = Array.from(document.querySelectorAll(selector));
     const href = String(value || "").trim();
-    if (!node || !href) {
+    if (!nodes.length || !href) {
       return;
     }
-    node.setAttribute("href", href);
+    nodes.forEach((node) => node.setAttribute("href", href));
   }
 })();
