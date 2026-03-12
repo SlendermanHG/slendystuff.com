@@ -1328,25 +1328,22 @@ body.admin-shell .status.error {
   }
 }
 
-/* Church page shell: mapped to rwcov.org live theme tokens */
+/* Church page shell: aligned to rwcov.org primary palette */
 body.church-site {
   --rwc-primary: #87a7f0;
+  --rwc-primary-strong: #6f8fda;
+  --rwc-primary-soft: #dfe7fb;
   --rwc-secondary: #0f0f0f;
   --rwc-text: #666b68;
-  --rwc-accent: #ecce68;
   --rwc-tertiary: #9f9f9f;
   --rwc-bg: #ffffff;
-  --rwc-alt: #ececec;
-  --rwc-border: #c5c5c5;
-  --rwc-deep: #183135;
-  --rwc-main: #183135;
-  --rwc-highlight: #601d79;
-  --rwc-highlight-soft: #ab76ce;
+  --rwc-alt: #eceff8;
+  --rwc-border: #c5cde0;
   color: var(--rwc-text);
   background:
-    radial-gradient(960px 420px at 102% -8%, rgba(135, 167, 240, 0.18), transparent 64%),
-    radial-gradient(860px 520px at -10% 105%, rgba(236, 206, 104, 0.18), transparent 62%),
-    linear-gradient(180deg, #fbfcff 0%, var(--rwc-bg) 38%, #f7f8fb 100%);
+    radial-gradient(900px 420px at 100% -8%, rgba(135, 167, 240, 0.18), transparent 64%),
+    radial-gradient(760px 460px at -10% 102%, rgba(111, 143, 218, 0.14), transparent 62%),
+    linear-gradient(180deg, #fcfdff 0%, var(--rwc-bg) 34%, #f8faff 100%);
   font-family: "Epilogue", "Nunito Sans", "Segoe UI", sans-serif;
 }
 
@@ -1364,26 +1361,26 @@ body.church-site h3 {
 }
 
 body.church-site a {
-  color: var(--rwc-main);
+  color: var(--rwc-primary-strong);
 }
 
 body.church-site a:hover,
 body.church-site a:focus-visible {
-  color: #2b5a62;
+  color: var(--rwc-primary-strong);
 }
 
 .church-header {
   position: sticky;
   top: 0;
   z-index: 240;
-  border-bottom: 1px solid rgba(24, 49, 53, 0.12);
-  background: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid rgba(135, 167, 240, 0.3);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(9px);
 }
 
 .church-topline {
-  background: linear-gradient(90deg, var(--rwc-deep), #214247 66%, #2b5a62);
-  color: #f1f5ff;
+  background: linear-gradient(90deg, #6f8fda 0%, var(--rwc-primary) 58%, #9ab5f3 100%);
+  color: #f7f9ff;
   font-size: 0.8rem;
 }
 
@@ -1410,16 +1407,16 @@ body.church-site a:focus-visible {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: rgba(236, 206, 104, 0.22);
-  border: 1px solid rgba(236, 206, 104, 0.44);
-  color: #fff5ce;
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  color: #f7fbff;
 }
 
 .church-dot {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .church-nav-wrap {
@@ -1449,8 +1446,8 @@ body.church-site a:focus-visible {
   font-weight: 800;
   font-size: 0.8rem;
   letter-spacing: 0.04em;
-  background: linear-gradient(145deg, #2b5a62, var(--rwc-main));
-  box-shadow: 0 8px 18px rgba(24, 49, 53, 0.34);
+  background: linear-gradient(145deg, #9ab5f3, var(--rwc-primary-strong));
+  box-shadow: 0 8px 18px rgba(111, 143, 218, 0.34);
 }
 
 .church-brand-copy {
@@ -1473,9 +1470,9 @@ body.church-site a:focus-visible {
   min-height: 40px;
   padding: 0.5rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid rgba(15, 15, 15, 0.2);
-  background: linear-gradient(145deg, #ffffff, #f6f7fb);
-  color: #1e1f24;
+  border: 1px solid rgba(135, 167, 240, 0.45);
+  background: linear-gradient(145deg, #ffffff, #f0f4ff);
+  color: #232632;
   text-decoration: none;
   font-size: 0.84rem;
   font-weight: 700;
@@ -1485,9 +1482,9 @@ body.church-site a:focus-visible {
 .church-return-btn:hover,
 .church-return-btn:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 8px 14px rgba(15, 15, 15, 0.12);
-  border-color: rgba(15, 15, 15, 0.36);
-  color: #1e1f24;
+  box-shadow: 0 8px 14px rgba(111, 143, 218, 0.2);
+  border-color: rgba(111, 143, 218, 0.7);
+  color: #232632;
 }
 
 .church-nav {
@@ -1499,12 +1496,12 @@ body.church-site a:focus-visible {
 
 .church-nav a {
   text-decoration: none;
-  color: #273343;
+  color: #2f3647;
   font-weight: 600;
   font-size: 0.84rem;
   padding: 0.46rem 0.66rem;
   border-radius: 10px;
-  border: 1px solid rgba(197, 197, 197, 0.62);
+  border: 1px solid rgba(135, 167, 240, 0.42);
   background: rgba(255, 255, 255, 0.92);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
@@ -1512,14 +1509,14 @@ body.church-site a:focus-visible {
 .church-nav a:hover,
 .church-nav a:focus-visible {
   transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(24, 49, 53, 0.12);
-  border-color: rgba(24, 49, 53, 0.45);
-  color: #192638;
+  box-shadow: 0 10px 18px rgba(135, 167, 240, 0.18);
+  border-color: rgba(111, 143, 218, 0.68);
+  color: #20263a;
 }
 
 .church-hero {
   padding: 2rem 0 1.4rem;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(236, 236, 236, 0.34));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(223, 231, 251, 0.34));
 }
 
 .church-hero::before {
@@ -1535,14 +1532,14 @@ body.church-site a:focus-visible {
 .church-hero-copy,
 .church-panel {
   border-radius: 18px;
-  border: 1px solid rgba(197, 197, 197, 0.72);
+  border: 1px solid rgba(135, 167, 240, 0.3);
 }
 
 .church-hero-copy {
   padding: 1.5rem;
   color: #2a364a;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 16px 34px rgba(24, 49, 53, 0.12);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 16px 34px rgba(111, 143, 218, 0.12);
 }
 
 .church-script {
@@ -1550,11 +1547,11 @@ body.church-site a:focus-visible {
   font-family: "Hurricane", "Brush Script MT", cursive;
   font-size: clamp(2rem, 4vw, 3.2rem);
   line-height: 1;
-  color: var(--rwc-main);
+  color: var(--rwc-primary-strong);
 }
 
 .church-hero-copy h1 {
-  color: #162331;
+  color: #1c2132;
   margin-bottom: 0.66rem;
   font-size: clamp(1.9rem, 3vw, 2.9rem);
 }
@@ -1577,9 +1574,9 @@ body.church-site a:focus-visible {
   padding: 0.28rem 0.62rem;
   font-size: 0.76rem;
   font-weight: 600;
-  color: #23454c;
-  border: 1px solid rgba(24, 49, 53, 0.35);
-  background: rgba(24, 49, 53, 0.1);
+  color: #3d4a66;
+  border: 1px solid rgba(135, 167, 240, 0.45);
+  background: rgba(135, 167, 240, 0.18);
 }
 
 .church-cta-row {
@@ -1595,8 +1592,8 @@ body.church-site a:focus-visible {
   min-height: 42px;
   padding: 0.6rem 0.95rem;
   border-radius: 11px;
-  border: 1px solid rgba(197, 197, 197, 0.85);
-  color: #1f2d3d;
+  border: 1px solid rgba(135, 167, 240, 0.55);
+  color: #253048;
   background: #ffffff;
   text-decoration: none;
   font-size: 0.84rem;
@@ -1608,14 +1605,14 @@ body.church-site a:focus-visible {
 .church-btn:focus-visible {
   transform: translateY(-1px);
   filter: saturate(1.02);
-  box-shadow: 0 10px 20px rgba(24, 49, 53, 0.16);
-  color: #1f2d3d;
+  box-shadow: 0 10px 20px rgba(111, 143, 218, 0.2);
+  color: #1f2b43;
 }
 
 .church-btn-primary {
   border-color: transparent;
   color: #ffffff;
-  background: linear-gradient(145deg, #2b5a62, var(--rwc-main));
+  background: linear-gradient(145deg, #9ab5f3, var(--rwc-primary-strong));
 }
 
 .church-btn-primary:hover,
@@ -1624,15 +1621,15 @@ body.church-site a:focus-visible {
 }
 
 .church-btn-soft {
-  border-color: rgba(171, 118, 206, 0.75);
-  background: rgba(171, 118, 206, 0.25);
+  border-color: rgba(135, 167, 240, 0.72);
+  background: rgba(135, 167, 240, 0.22);
 }
 
 .church-panel {
   padding: 1.2rem 1.05rem;
-  background: rgba(255, 255, 255, 0.94);
-  border-color: rgba(197, 197, 197, 0.65);
-  box-shadow: 0 16px 34px rgba(15, 15, 15, 0.14);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(135, 167, 240, 0.36);
+  box-shadow: 0 16px 34px rgba(111, 143, 218, 0.12);
 }
 
 .church-panel h2,
@@ -1651,7 +1648,7 @@ body.church-site a:focus-visible {
 
 .church-panel hr {
   margin: 0.75rem 0;
-  border-top-color: rgba(197, 197, 197, 0.66);
+  border-top-color: rgba(135, 167, 240, 0.32);
 }
 
 body.church-site .status {
@@ -1664,8 +1661,8 @@ body.church-site .status {
 }
 
 .church-section-soft {
-  border-top: 1px solid rgba(197, 197, 197, 0.4);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(236, 236, 236, 0.38));
+  border-top: 1px solid rgba(135, 167, 240, 0.3);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(223, 231, 251, 0.36));
 }
 
 .church-section-head {
@@ -1696,9 +1693,9 @@ body.church-site .status {
   padding: 1rem;
   border-radius: 16px;
   text-decoration: none;
-  border: 1px solid rgba(197, 197, 197, 0.72);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 14px 28px rgba(15, 15, 15, 0.08);
+  border: 1px solid rgba(135, 167, 240, 0.34);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 28px rgba(111, 143, 218, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
@@ -1715,8 +1712,8 @@ body.church-site .status {
 .church-link-card:hover,
 .church-link-card:focus-visible {
   transform: translateY(-2px);
-  border-color: rgba(135, 167, 240, 0.85);
-  box-shadow: 0 16px 32px rgba(135, 167, 240, 0.2);
+  border-color: rgba(111, 143, 218, 0.8);
+  box-shadow: 0 16px 32px rgba(135, 167, 240, 0.25);
 }
 
 .church-giving-wrap {
@@ -1728,9 +1725,9 @@ body.church-site .status {
 .church-giving-card {
   padding: 1.12rem;
   border-radius: 16px;
-  border: 1px solid rgba(197, 197, 197, 0.7);
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 14px 28px rgba(15, 15, 15, 0.08);
+  border: 1px solid rgba(135, 167, 240, 0.34);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 14px 28px rgba(111, 143, 218, 0.1);
 }
 
 .church-giving-card p {
@@ -1739,7 +1736,7 @@ body.church-site .status {
 
 .church-footer {
   padding: 1.15rem 0 1.3rem;
-  border-top: 1px solid rgba(197, 197, 197, 0.7);
+  border-top: 1px solid rgba(135, 167, 240, 0.36);
   background: rgba(255, 255, 255, 0.95);
 }
 
@@ -1767,13 +1764,13 @@ body.church-site .status {
   min-height: 44px;
   padding: 0.56rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid rgba(15, 15, 15, 0.22);
-  background: linear-gradient(145deg, #ffffff, #f8f9fc);
+  border: 1px solid rgba(135, 167, 240, 0.5);
+  background: linear-gradient(145deg, #ffffff, #edf2ff);
   color: #1e1f24;
   text-decoration: none;
   font-size: 0.82rem;
   font-weight: 700;
-  box-shadow: 0 12px 24px rgba(15, 15, 15, 0.16);
+  box-shadow: 0 12px 24px rgba(111, 143, 218, 0.18);
 }
 
 .church-return-fixed:hover,
