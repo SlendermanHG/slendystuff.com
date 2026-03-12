@@ -1836,3 +1836,129 @@ body.church-site .status {
     bottom: 0.65rem;
   }
 }
+
+/* Live church mirror layout */
+body.church-live-shell {
+  margin: 0;
+  color: #e9edf4;
+  background: #0b0f16;
+  font-family: "Segoe UI", "Nunito Sans", sans-serif;
+}
+
+body.church-live-shell::before,
+body.church-live-shell::after {
+  content: none;
+}
+
+.church-live-bar {
+  position: sticky;
+  top: 0;
+  z-index: 400;
+  background: linear-gradient(145deg, rgba(10, 14, 20, 0.96), rgba(18, 24, 34, 0.92));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.church-live-actions {
+  width: min(1680px, calc(100% - 1rem));
+  margin: 0 auto;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+
+.church-live-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0.46rem 0.78rem;
+  border-radius: 9px;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f7fbff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.church-live-btn:hover,
+.church-live-btn:focus-visible {
+  transform: translateY(-1px);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.church-live-btn-primary {
+  color: #121317;
+  border-color: transparent;
+  background: linear-gradient(145deg, #ecce68, #f5e4b1);
+}
+
+.church-live-btn-primary:hover,
+.church-live-btn-primary:focus-visible {
+  color: #121317;
+  background: linear-gradient(145deg, #f1d982, #f9edc8);
+}
+
+.church-live-status {
+  margin-left: auto;
+  font-size: 0.77rem;
+  color: rgba(233, 238, 248, 0.9);
+}
+
+.church-live-status.is-ok {
+  color: #9beab7;
+}
+
+.church-live-status.is-warn {
+  color: #f5e2a7;
+}
+
+.church-live-status.is-error {
+  color: #ff9cad;
+}
+
+.church-live-main {
+  min-height: calc(100vh - 58px);
+}
+
+.church-live-frame {
+  width: 100%;
+  height: calc(100vh - 58px);
+  border: 0;
+  display: block;
+  background: #ffffff;
+}
+
+.church-live-noscript {
+  margin: 1rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 880px) {
+  .church-live-actions {
+    width: calc(100% - 0.7rem);
+    gap: 0.38rem;
+  }
+
+  .church-live-status {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .church-live-btn {
+    flex: 1 1 calc(50% - 0.45rem);
+  }
+
+  .church-live-main,
+  .church-live-frame {
+    min-height: calc(100vh - 112px);
+    height: calc(100vh - 112px);
+  }
+}

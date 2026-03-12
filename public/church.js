@@ -56,7 +56,7 @@
       const state = payload.stale ? "Using cached rwcov.org details." : "Live details loaded from rwcov.org.";
       const stamp = payload.fetchedAt ? ` Last update: ${new Date(payload.fetchedAt).toLocaleString()}.` : "";
       status.textContent = `${state}${stamp}`;
-      status.className = payload.stale ? "status" : "status ok";
+      setStatusTone(payload.stale ? "warn" : "ok");
     }
 
     app.track("page_view", { page: "church", source: "rwcov", stale: Boolean(payload.stale) });
@@ -64,7 +64,7 @@
     applyChurchData(defaults);
     if (status) {
       status.textContent = `${error.message} Showing trusted fallback details.`;
-      status.className = "status error";
+      setStatusTone("error");
     }
   }
 
@@ -86,6 +86,7 @@
     setLink("[data-rwc-giving-2]", church.links.giving);
     setLink("[data-rwc-zeffy]", buildZeffyDirectUrl(church.links.zeffyEmbed, church.links.giving));
     setLink("[data-rwc-youtube]", church.links.youtube);
+    setFrameSrc("[data-rwc-frame]", church.links.home || defaults.links.home);
 
     const phoneHref = `tel:${String(church.phone || "").replace(/[^\d+]/g, "")}`;
     setLink("[data-rwc-phone-link]", phoneHref);
@@ -122,5 +123,41 @@
       return;
     }
     nodes.forEach((node) => node.setAttribute("href", href));
+  }
+
+  function setFrameSrc(selector, value) {
+    const nodes = Array.from(document.querySelectorAll(selector));
+    const src = String(value || "").trim();
+    if (!nodes.length || !src) {
+      return;
+    }
+    nodes.forEach((node) => node.setAttribute("src", src));
+  }
+
+  function setStatusTone(tone) {
+    if (!status) {
+      return;
+    }
+
+    const isLiveShell = status.classList.contains("church-live-status");
+    if (isLiveShell) {
+      status.classList.remove("is-ok", "is-warn", "is-error");
+      if (tone === "ok") {
+        status.classList.add("is-ok");
+      } else if (tone === "error") {
+        status.classList.add("is-error");
+      } else {
+        status.classList.add("is-warn");
+      }
+      return;
+    }
+
+    if (tone === "ok") {
+      status.className = "status ok";
+    } else if (tone === "error") {
+      status.className = "status error";
+    } else {
+      status.className = "status";
+    }
   }
 })();
