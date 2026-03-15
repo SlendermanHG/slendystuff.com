@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Community Forum | slendystuff</title>
+  <meta name="description" content="Signed-in community forum for slendystuff users to post topics, comment, and connect.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://slendystuff.com/forum.html">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="human-site chaos-mode">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="shell nav-wrap">
+      <a class="brand" href="/">
+        <span class="brand-mark">SS</span>
+        <span data-brand-name>slendystuff</span>
+      </a>
+      <button class="nav-toggle" data-nav-toggle aria-label="Toggle navigation">Menu</button>
+      <nav class="site-nav" data-nav aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/catalog.html">Catalog</a>
+        <a href="/support.html">Support</a>
+        <a href="/about.html">About Me</a>
+        <a href="/forum.html">Forum</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section shell">
+      <div class="section-head">
+        <p class="eyebrow">Community Forum</p>
+        <h1>Post, comment, and connect.</h1>
+        <p class="muted">Sign in or create an account to publish topics and join comments.</p>
+      </div>
+      <p class="status" data-forum-page-status></p>
+    </section>
+
+    <section class="section shell">
+      <div class="grid two">
+        <article class="card note-card">
+          <h2>Account Access</h2>
+          <p class="muted" data-forum-auth-state>Checking session...</p>
+          <div class="inline-actions">
+            <button class="btn btn-ghost hidden" type="button" data-forum-logout>Sign Out</button>
+          </div>
+
+          <hr>
+          <h3>Sign In</h3>
+          <form data-forum-login-form>
+            <div class="field">
+              <label for="forumLoginEmail">Email</label>
+              <input id="forumLoginEmail" name="email" type="email" required>
+            </div>
+            <div class="field">
+              <label for="forumLoginPassword">Password</label>
+              <input id="forumLoginPassword" name="password" type="password" required>
+            </div>
+            <div class="inline-actions">
+              <button class="btn" type="submit">Sign In</button>
+            </div>
+          </form>
+
+          <hr>
+          <h3>Create Account</h3>
+          <form data-forum-register-form>
+            <div class="field">
+              <label for="forumRegisterName">Name</label>
+              <input id="forumRegisterName" name="name" required>
+            </div>
+            <div class="field">
+              <label for="forumRegisterEmail">Email</label>
+              <input id="forumRegisterEmail" name="email" type="email" required>
+            </div>
+            <div class="field">
+              <label for="forumRegisterPassword">Password</label>
+              <input id="forumRegisterPassword" name="password" type="password" minlength="8" required>
+            </div>
+            <div class="inline-actions">
+              <button class="btn" type="submit">Create Account</button>
+            </div>
+          </form>
+          <p class="status" data-forum-auth-status></p>
+        </article>
+
+        <article class="card" data-topic-create-panel>
+          <h2>Create Topic</h2>
+          <p class="muted">Start a conversation with a clear title and context.</p>
+          <form data-forum-topic-form>
+            <div class="field">
+              <label for="forumTopicTitle">Title</label>
+              <input id="forumTopicTitle" name="title" maxlength="140" placeholder="Example: Best setup workflow for new buyers?" required>
+            </div>
+            <div class="field">
+              <label for="forumTopicBody">Topic</label>
+              <textarea id="forumTopicBody" name="body" maxlength="3000" placeholder="Write your full message..." required></textarea>
+            </div>
+            <div class="inline-actions">
+              <button class="btn" type="submit">Post Topic</button>
+            </div>
+          </form>
+          <p class="status" data-forum-topic-status></p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell">
+      <div class="section-head">
+        <p class="eyebrow">Topics</p>
+        <h2>Recent discussions</h2>
+      </div>
+      <div data-forum-topics></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell">
+      <p class="muted">&copy; 2026 <span data-brand-name>slendystuff</span>. Community chat for signed-in members.</p>
+    </div>
+  </footer>
+
+  <script src="/shared.js"></script>
+  <script src="/chaos.js"></script>
+  <script src="/forum.js"></script>
+</body>
+</html>

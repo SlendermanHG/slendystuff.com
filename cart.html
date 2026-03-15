@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cart | slendystuff</title>
+  <meta name="description" content="Review items in your slendystuff cart and continue to checkout.">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <link rel="canonical" href="https://slendystuff.com/cart.html">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="human-site">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="shell nav-wrap">
+      <a class="brand" href="/">
+        <span class="brand-mark">SS</span>
+        <span data-brand-name>slendystuff</span>
+      </a>
+
+      <button class="nav-toggle" data-nav-toggle aria-label="Toggle navigation">Menu</button>
+
+      <nav class="site-nav" data-nav aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/catalog.html">Catalog</a>
+        <a href="/cart.html">Cart</a>
+        <a href="/support.html">Support</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="section shell">
+      <div class="section-head">
+        <p class="eyebrow">Shopping Cart</p>
+        <h1>Review your picks.</h1>
+        <p class="muted">Keep shopping, remove items, or go straight to checkout.</p>
+      </div>
+      <p class="status" data-cart-status></p>
+      <div data-cart-mount></div>
+      <div class="inline-actions">
+        <a class="btn btn-ghost" href="/catalog.html">Back To Catalog</a>
+        <button class="btn btn-ghost" type="button" data-clear-cart>Clear Cart</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="shell">
+      <p class="muted">&copy; 2026 <span data-brand-name>slendystuff</span>. Checkout links update from your live settings.</p>
+    </div>
+  </footer>
+
+  <script src="/shared.js"></script>
+  <script src="/cart.js"></script>
+</body>
+</html>

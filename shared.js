@@ -3,6 +3,14 @@
   const SESSION_ID_KEY = "slendy_session_id";
   const SESSION_STARTED_AT_KEY = "slendy_session_started_at";
   const SESSION_START_SENT_PREFIX = "slendy_session_start_sent_";
+  const CART_STORAGE_KEY = "slendy_cart_items";
+  const FOOTER_COPY_SUFFIX = "Owner-built software for niche real-world problems.";
+  const PRODUCT_PAGE_PATHS = {
+    "pos-suite": "/products/pos-suite.html",
+    "system-optimizer": "/products/system-optimizer.html",
+    "discord-bot-kit": "/products/discord-bot-kit.html",
+    "remote-control-limited": "/products/remote-control-limited.html"
+  };
 
   function generateId(prefix) {
     try {
@@ -93,6 +101,143 @@
       };
     },
 
+    getProductPageUrl(productId) {
+      const key = String(productId || "").trim();
+      return PRODUCT_PAGE_PATHS[key] || `/product.html?id=${encodeURIComponent(key)}`;
+    },
+
+    getCheckoutPageUrl(productId) {
+      const key = String(productId || "").trim();
+      return `/checkout.html?id=${encodeURIComponent(key)}`;
+    },
+
+    getCheckoutUrl(product) {
+      const productId = String((product && product.id) || "").trim();
+      if (!productId) {
+        return "/checkout.html";
+      }
+      return this.getCheckoutPageUrl(productId);
+    },
+
+    getApiOrigin() {
+      const explicit = String(document.documentElement.getAttribute("data-api-origin") || "").trim();
+      if (explicit) {
+        return explicit.replace(/\/+$/, "");
+      }
+
+      const host = String(window.location.hostname || "").trim().toLowerCase();
+      const origin = String(window.location.origin || "").trim().replace(/\/+$/, "");
+      const staticHosts = new Set(["slendystuff.com", "www.slendystuff.com"]);
+      if (!host || host === "localhost" || host === "127.0.0.1") {
+        return origin;
+      }
+      if (host === "api.slendystuff.com" || host === "ops.slendystuff.com") {
+        return origin;
+      }
+      if (staticHosts.has(host) || host.endsWith(".github.io")) {
+        return "https://api.slendystuff.com";
+      }
+      return origin;
+    },
+
+    apiUrl(pathname) {
+      const path = String(pathname || "").trim();
+      if (!path) {
+        return this.getApiOrigin();
+      }
+      if (/^https?:\/\//i.test(path)) {
+        return path;
+      }
+      const normalized = path.startsWith("/") ? path : `/${path}`;
+      return `${this.getApiOrigin()}${normalized}`;
+    },
+
+    apiFetch(pathname, options = {}) {
+      const requestOptions = { ...options };
+      if (requestOptions.credentials == null) {
+        requestOptions.credentials = "include";
+      }
+      return fetch(this.apiUrl(pathname), requestOptions);
+    },
+
+    getCart() {
+      const raw = this.safeStorageGet(window.localStorage, CART_STORAGE_KEY);
+      if (!raw) {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          return [];
+        }
+
+        return parsed
+          .filter((item) => item && typeof item === "object")
+          .map((item) => ({
+            id: String(item.id || "").trim(),
+            qty: Math.max(1, Math.min(99, Number(item.qty || 1)))
+          }))
+          .filter((item) => item.id);
+      } catch {
+        return [];
+      }
+    },
+
+    saveCart(items) {
+      const normalized = Array.isArray(items)
+        ? items
+            .filter((item) => item && typeof item === "object")
+            .map((item) => ({
+              id: String(item.id || "").trim(),
+              qty: Math.max(1, Math.min(99, Number(item.qty || 1)))
+            }))
+            .filter((item) => item.id)
+        : [];
+
+      this.safeStorageSet(window.localStorage, CART_STORAGE_KEY, JSON.stringify(normalized));
+      return normalized;
+    },
+
+    addToCart(productId, qty = 1) {
+      const id = String(productId || "").trim();
+      if (!id) {
+        return this.getCart();
+      }
+
+      const amount = Math.max(1, Math.min(99, Number(qty || 1)));
+      const cart = this.getCart();
+      const index = cart.findIndex((item) => item.id === id);
+      if (index >= 0) {
+        cart[index].qty = Math.max(1, Math.min(99, cart[index].qty + amount));
+      } else {
+        cart.push({ id, qty: amount });
+      }
+      return this.saveCart(cart);
+    },
+
+    updateCartQty(productId, qty) {
+      const id = String(productId || "").trim();
+      const amount = Math.max(0, Math.min(99, Number(qty || 0)));
+      const cart = this.getCart();
+      const index = cart.findIndex((item) => item.id === id);
+      if (index < 0) {
+        return this.saveCart(cart);
+      }
+
+      if (amount <= 0) {
+        cart.splice(index, 1);
+      } else {
+        cart[index].qty = amount;
+      }
+      return this.saveCart(cart);
+    },
+
+    clearCart() {
+      this.safeStorageSet(window.localStorage, CART_STORAGE_KEY, JSON.stringify([]));
+      return [];
+    },
+
     buildTrackPayload(eventName, meta = {}) {
       const session = this.getOrCreateSession();
       const elapsedMs = Math.max(0, Date.now() - session.startedAtMs);
@@ -117,7 +262,7 @@
       if (useBeacon) {
         try {
           const blob = new Blob([body], { type: "application/json" });
-          const sent = navigator.sendBeacon("/api/track", blob);
+          const sent = navigator.sendBeacon(this.apiUrl("/api/track"), blob);
           if (sent) {
             return;
           }
@@ -126,10 +271,9 @@
         }
       }
 
-      await fetch("/api/track", {
+      await this.apiFetch("/api/track", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
         keepalive: options.keepalive !== false,
         body
       });
@@ -203,18 +347,31 @@
         return this.config;
       }
 
-      const response = await fetch("/api/public-config");
+      const response = await this.apiFetch("/api/public-config");
       const payload = await response.json();
       if (!payload.ok) {
         throw new Error("We could not load page details. Please refresh.");
       }
 
       this.config = payload.config;
+      this.applyFooterCopy(this.config && this.config.brand ? this.config.brand.name : "slendystuff");
       return this.config;
     },
 
+    applyFooterCopy(brandName) {
+      const brand = String(brandName || "slendystuff").trim() || "slendystuff";
+      const year = new Date().getFullYear();
+      const line = `\u00A9 ${year} ${brand}. ${FOOTER_COPY_SUFFIX}`;
+      const nodes = Array.from(document.querySelectorAll(".footer p, .footer .muted"));
+      nodes
+        .filter((node) => String(node.textContent || "").includes("\u00A9"))
+        .forEach((node) => {
+          node.textContent = line;
+        });
+    },
+
     async getAnydeskInfo() {
-      const response = await fetch("/api/support/anydesk");
+      const response = await this.apiFetch("/api/support/anydesk");
       const payload = await response.json();
       if (!payload.ok) {
         throw new Error("We could not load download details right now.");
@@ -231,6 +388,17 @@
 
       if (!navToggle || !nav) {
         return;
+      }
+
+      const hasForumLink = Array.from(nav.querySelectorAll("a")).some((link) => {
+        const href = String(link.getAttribute("href") || "").trim();
+        return href === "/forum.html" || href === "forum.html";
+      });
+      if (!hasForumLink) {
+        const forumLink = document.createElement("a");
+        forumLink.setAttribute("href", "/forum.html");
+        forumLink.textContent = "Forum";
+        nav.appendChild(forumLink);
       }
 
       navToggle.addEventListener("click", () => {
@@ -285,7 +453,7 @@
 
         const submit = async (answer) => {
           try {
-            const response = await fetch("/api/age-verify", {
+            const response = await this.apiFetch("/api/age-verify", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({

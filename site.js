@@ -79,8 +79,8 @@
                   ${adultBadge}
                 </div>
                 <div class="product-actions">
-                  <a class="btn" href="/product.html?id=${encodeURIComponent(item.id)}" data-action="product_open" data-product-id="${escapeHtml(item.id)}">View Details</a>
-                  <a class="btn btn-ghost" href="${escapeHtml(item.ctaUrl || "#")}" target="_blank" rel="noopener" data-action="product_cta" data-product-id="${escapeHtml(item.id)}">${escapeHtml(item.ctaLabel || "Learn More")}</a>
+                  <a class="btn" href="${escapeHtml(app.getProductPageUrl(item.id))}" data-action="product_open" data-product-id="${escapeHtml(item.id)}">View Details</a>
+                  <a class="btn btn-ghost" href="${escapeHtml(normalizeNonStripeUrl(item.ctaUrl || "/support.html"))}" target="_blank" rel="noopener" data-action="product_cta" data-product-id="${escapeHtml(item.id)}">${escapeHtml(item.ctaLabel || "Learn More")}</a>
                 </div>
               </article>
             `;
@@ -159,7 +159,7 @@
 
       const adventures = [1, 2, 3].map((index) => {
         const product = pickProductForStage(productPool, answers.stage, index);
-        return buildIdeaAdventure(index, answers, product, supportEmail);
+        return buildIdeaAdventure(index, answers, product, supportEmail, stripeLinks);
       });
 
       ideaResultsNode.innerHTML = adventures.map((item) => renderIdeaAdventureCard(item)).join("");
@@ -247,20 +247,21 @@
     return list[(index - 1) % list.length] || fallback;
   }
 
-  function buildIdeaAdventure(index, answers, product, supportEmail) {
+  function buildIdeaAdventure(index, answers, product, supportEmail, stripeLinks) {
     const timelineActions = {
-      "48h": "Book a setup call today and launch your first use-case within 48 hours.",
-      "7d": "Run a focused 7-day implementation sprint with one measurable win.",
-      "30d": "Roll out in phases and stack wins through a 30-day growth plan."
+      "48h": "Fast path: start now and target your first measurable result within 48 hours.",
+      "7d": "Standard path: run a focused 7-day launch sprint with clear checkpoints.",
+      "30d": "Growth path: roll out in phases and improve each week over 30 days."
     };
 
     const momentumMoves = [
-      "Publish one clear offer message and send it to your warm audience today.",
-      "Create a simple onboarding checklist so buyers see value in their first session.",
-      "Track one KPI daily to prove momentum and make fast improvements."
+      "Share one clear offer statement with your audience and measure response today.",
+      "Use a short onboarding flow so customers see value in the first session.",
+      "Track one key metric daily and tighten your workflow as soon as data comes in."
     ];
 
-    const productHref = product.id ? `/product.html?id=${encodeURIComponent(product.id)}` : "/#products";
+    const productHref = product.id ? app.getProductPageUrl(product.id) : "/catalog.html";
+    const checkoutHref = product.id ? app.getCheckoutPageUrl(product.id) : "/catalog.html";
     const supportHref = `/support.html?from=idea-lab&product=${encodeURIComponent(product.title)}`;
     const contactHref = `mailto:${encodeURIComponent(supportEmail)}?subject=${encodeURIComponent(`Adventure ${index} Setup Request`)}&body=${encodeURIComponent(`Hi, I want help starting Adventure ${index} for ${product.title}. Audience: ${answers.audience}. Goal: ${answers.goal}.`)}`;
 
@@ -268,14 +269,15 @@
       title: `Adventure ${index}: ${product.title}`,
       audience: answers.audience,
       target: answers.goal,
-      firstMove: `Start with ${product.title} for ${answers.audience} and focus on: ${answers.goal}.`,
-      nextStep: timelineActions[answers.timeline] || timelineActions["7d"],
-      momentum: momentumMoves[(index - 1) % momentumMoves.length],
+      whyItFits: `${product.title} fits ${answers.audience} and is aimed at "${answers.goal}".`,
+      nextAction: timelineActions[answers.timeline] || timelineActions["7d"],
+      upgradePath: momentumMoves[(index - 1) % momentumMoves.length],
       productHref,
+      checkoutHref,
       supportHref,
       contactHref,
       productId: product.id,
-      productCta: `Open ${product.title}`
+      productCta: `View ${product.title}`
     };
   }
 
@@ -298,12 +300,16 @@
     const growth = roundToStep(base * spread.growth, 10);
     const scale = roundToStep(base * spread.scale, 10);
 
-    const primaryCheckoutHref = answers.goal === "conversion"
-      ? normalizeLink(stripeLinks.starter)
-      : normalizeLink(stripeLinks.pro || stripeLinks.starter);
-    const compareCheckoutHref = answers.goal === "margin"
-      ? normalizeLink(stripeLinks.pro || stripeLinks.starter)
-      : normalizeLink(stripeLinks.reset || stripeLinks.pro || stripeLinks.starter);
+    const primaryProductId = answers.goal === "conversion"
+      ? "pos-suite"
+      : answers.goal === "margin"
+        ? "remote-control-limited"
+        : "discord-bot-kit";
+    const compareProductId = answers.goal === "margin"
+      ? "system-optimizer"
+      : "pos-suite";
+    const primaryCheckoutHref = app.getCheckoutPageUrl(primaryProductId);
+    const compareCheckoutHref = app.getCheckoutPageUrl(compareProductId);
     const supportHref = `/support.html?from=pricing-adventure&audience=${encodeURIComponent(answers.audience)}`;
     const referenceCode = `START-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -328,13 +334,15 @@
     const steps = launchTracks[answers.goal] || launchTracks.conversion;
 
     return {
-      headline: `Pricing Adventure for ${answers.audience}`,
-      starterPlan: `$${starter} entry path focused on fast initial wins.`,
-      growthPlan: `$${growth} expansion path with deeper capability and support.`,
-      scalePlan: `$${scale} premium path for sustained performance and priority execution.`,
+      headline: `Pricing Options for ${answers.audience}`,
+      starterPlan: `$${starter} starter option focused on fast initial wins.`,
+      growthPlan: `$${growth} growth option with deeper capability and support.`,
+      scalePlan: `$${scale} scale option for sustained performance and priority execution.`,
       day1: steps[0],
       day3: steps[1],
       day7: steps[2],
+      primaryProductId,
+      compareProductId,
       primaryCheckoutHref,
       compareCheckoutHref,
       supportHref,
@@ -347,15 +355,16 @@
     return `
       <article class="idea-result-item">
         <strong>${escapeHtml(item.title)}</strong>
-        <p><strong>Customer:</strong> ${escapeHtml(item.audience)}</p>
-        <p><strong>Target:</strong> ${escapeHtml(item.target)}</p>
-        <p><strong>Step 1:</strong> ${escapeHtml(item.firstMove)}</p>
-        <p><strong>Step 2:</strong> ${escapeHtml(item.nextStep)}</p>
-        <p><strong>Step 3:</strong> ${escapeHtml(item.momentum)}</p>
+        <p><strong>Best for:</strong> ${escapeHtml(item.audience)}</p>
+        <p><strong>Main outcome:</strong> ${escapeHtml(item.target)}</p>
+        <p><strong>Why this option:</strong> ${escapeHtml(item.whyItFits)}</p>
+        <p><strong>Suggested launch path:</strong> ${escapeHtml(item.nextAction)}</p>
+        <p><strong>After launch:</strong> ${escapeHtml(item.upgradePath)}</p>
         <div class="inline-actions">
           <a class="btn" href="${escapeHtml(item.productHref)}" data-adventure-action="idea_open_product" data-product-id="${escapeHtml(item.productId || "unknown")}">${escapeHtml(item.productCta)}</a>
-          <a class="btn btn-ghost" href="${escapeHtml(item.supportHref)}" data-adventure-action="idea_open_support" data-product-id="${escapeHtml(item.productId || "unknown")}">Request Setup Help</a>
-          <a class="btn btn-ghost" href="${escapeHtml(item.contactHref)}" data-adventure-action="idea_email_support" data-product-id="${escapeHtml(item.productId || "unknown")}">Email Support</a>
+          <button class="btn btn-ghost" type="button" data-adventure-add-to-cart="${escapeHtml(item.productId || "")}" data-product-id="${escapeHtml(item.productId || "unknown")}">Add To Cart</button>
+          <a class="btn btn-ghost" href="${escapeHtml(item.checkoutHref)}" target="_blank" rel="noopener" data-adventure-action="idea_checkout" data-product-id="${escapeHtml(item.productId || "unknown")}">Checkout</a>
+          <a class="btn btn-ghost" href="${escapeHtml(item.supportHref)}" data-adventure-action="idea_open_support" data-product-id="${escapeHtml(item.productId || "unknown")}">Need Setup Help?</a>
         </div>
       </article>
     `;
@@ -375,8 +384,8 @@
           <li>${escapeHtml(item.day7)}</li>
         </ul>
         <div class="inline-actions">
-          <a class="btn" href="${escapeHtml(item.primaryCheckoutHref)}" target="_blank" rel="noopener" data-adventure-action="pricing_checkout_primary">Start Checkout</a>
-          <a class="btn btn-ghost" href="${escapeHtml(item.compareCheckoutHref)}" target="_blank" rel="noopener" data-adventure-action="pricing_checkout_compare">Compare Next Tier</a>
+          <a class="btn" href="${escapeHtml(item.primaryCheckoutHref)}" data-adventure-action="pricing_checkout_primary" data-product-id="${escapeHtml(item.primaryProductId)}">Start Checkout</a>
+          <a class="btn btn-ghost" href="${escapeHtml(item.compareCheckoutHref)}" data-adventure-action="pricing_checkout_compare" data-product-id="${escapeHtml(item.compareProductId)}">Compare Next Option</a>
           <a class="btn btn-ghost" href="${escapeHtml(item.supportHref)}" data-adventure-action="pricing_open_support">Get Launch Help</a>
           <a class="btn btn-ghost" href="${escapeHtml(item.contactHref)}" data-adventure-action="pricing_email_support">Email Me</a>
         </div>
@@ -391,6 +400,20 @@
         app.track(node.dataset.adventureAction, {
           productId: node.dataset.productId || "unknown"
         });
+      });
+    });
+
+    container.querySelectorAll("[data-adventure-add-to-cart]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const productId = button.getAttribute("data-adventure-add-to-cart");
+        if (productId) {
+          app.addToCart(productId, 1);
+          app.track("idea_add_to_cart", { productId });
+          button.textContent = "Added";
+          setTimeout(() => {
+            button.textContent = "Add To Cart";
+          }, 1200);
+        }
       });
     });
   }
@@ -421,6 +444,25 @@
   function normalizeLink(value) {
     const link = String(value || "").trim();
     return link || "#";
+  }
+
+  function normalizeNonStripeUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) {
+      return "/support.html";
+    }
+
+    try {
+      const parsed = new URL(raw, window.location.origin);
+      if (/stripe\.com$/i.test(parsed.hostname) || /\.stripe\.com$/i.test(parsed.hostname)) {
+        return "/checkout.html";
+      }
+      return parsed.href.startsWith(window.location.origin)
+        ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+        : parsed.href;
+    } catch {
+      return raw.startsWith("/") ? raw : "/support.html";
+    }
   }
 
   function roundToStep(value, step) {
