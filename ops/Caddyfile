@@ -1,0 +1,11 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$WWW_DOMAIN} {
+	redir https://{$SITE_DOMAIN}{uri}
+}
+
+{$SITE_DOMAIN} {
+	reverse_proxy 127.0.0.1:4173
+}

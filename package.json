@@ -1,0 +1,11 @@
+{
+  "name": "slendystuff-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SlendyStuff persistent static-plus-admin site",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js"
+  }
+}
