@@ -679,6 +679,210 @@ select {
   color: #ffe4bf;
 }
 
+body[data-page="spiralism"] {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 230, 189, 0.12), transparent 20rem),
+    radial-gradient(circle at 12% 24%, rgba(201, 127, 61, 0.16), transparent 24rem),
+    radial-gradient(circle at 88% 28%, rgba(150, 55, 28, 0.16), transparent 22rem),
+    linear-gradient(180deg, #140c08 0%, #090504 42%, #040202 100%);
+  color: #f5eee5;
+}
+
+body[data-page="spiralism"]::before {
+  background:
+    linear-gradient(rgba(255, 229, 190, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 229, 190, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(circle at center, black 32%, transparent 88%);
+  opacity: 0.24;
+}
+
+body[data-page="spiralism"]::after {
+  background:
+    radial-gradient(circle at center, rgba(255, 208, 133, 0.08), transparent 24rem),
+    repeating-radial-gradient(circle at center, rgba(255, 213, 161, 0.06) 0 2px, transparent 2px 26px);
+  opacity: 0.52;
+}
+
+body[data-page="spiralism"] .site-header {
+  background: rgba(17, 9, 8, 0.84);
+  border-bottom-color: rgba(255, 220, 170, 0.14);
+}
+
+body[data-page="spiralism"] .brand-mark {
+  border-color: rgba(255, 220, 170, 0.34);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 220, 170, 0.22), transparent 58%),
+    conic-gradient(from 220deg, rgba(255, 220, 170, 0.1), rgba(201, 127, 61, 0.28), rgba(107, 26, 17, 0.24), rgba(255, 220, 170, 0.1));
+  box-shadow: 0 0 28px rgba(201, 127, 61, 0.22);
+}
+
+body[data-page="spiralism"] .brand-copy span,
+body[data-page="spiralism"] .site-nav a,
+body[data-page="spiralism"] .terminal-title,
+body[data-page="spiralism"] .tiny-note,
+body[data-page="spiralism"] .list li,
+body[data-page="spiralism"] .panel p,
+body[data-page="spiralism"] .footer-shell p {
+  color: rgba(245, 238, 229, 0.72);
+}
+
+body[data-page="spiralism"] .site-nav a:hover,
+body[data-page="spiralism"] .site-nav a:focus-visible,
+body[data-page="spiralism"] .site-nav a.active {
+  background: rgba(255, 220, 170, 0.1);
+}
+
+body[data-page="spiralism"] .button,
+body[data-page="spiralism"] .chip-link {
+  border-color: rgba(255, 220, 170, 0.18);
+  background: linear-gradient(180deg, rgba(255, 245, 225, 0.05), rgba(73, 31, 17, 0.08));
+}
+
+body[data-page="spiralism"] .button.primary {
+  background: linear-gradient(135deg, rgba(255, 220, 170, 0.16), rgba(201, 127, 61, 0.2));
+  border-color: rgba(255, 220, 170, 0.28);
+}
+
+.spiral-stage {
+  min-height: calc(100svh - 84px);
+  display: flex;
+  align-items: center;
+  padding: 56px 0 24px;
+}
+
+.spiral-stage-shell,
+.spiral-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(20px, 4vw, 48px);
+}
+
+.spiral-stage-shell {
+  align-items: center;
+}
+
+.spiral-sigil {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 220, 170, 0.22);
+  background:
+    radial-gradient(circle at center, rgba(255, 236, 206, 0.16), transparent 22%),
+    repeating-radial-gradient(circle at center, rgba(255, 222, 179, 0.12) 0 2px, transparent 2px 36px),
+    linear-gradient(180deg, rgba(96, 26, 11, 0.56), rgba(8, 5, 4, 0.94));
+  box-shadow:
+    inset 0 0 80px rgba(255, 220, 170, 0.06),
+    0 34px 90px rgba(0, 0, 0, 0.42);
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.spiral-sigil::before,
+.spiral-sigil::after {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 225, 188, 0.18);
+}
+
+.spiral-sigil::after {
+  inset: 24%;
+  border-style: dashed;
+  opacity: 0.66;
+}
+
+.spiral-sigil-core {
+  width: 26%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 228, 193, 0.36);
+  background: radial-gradient(circle, rgba(255, 241, 221, 0.92), rgba(201, 127, 61, 0.16));
+  color: #2d130c;
+  font: 700 clamp(1rem, 2vw, 1.4rem)/1 "Georgia", "Times New Roman", serif;
+  letter-spacing: 0.14em;
+}
+
+.spiral-intro h1,
+.spiral-block h2,
+.spiral-manifest p {
+  font-family: "Georgia", "Times New Roman", serif;
+  letter-spacing: -0.03em;
+}
+
+.spiral-intro h1 {
+  margin: 0;
+  font-size: clamp(3rem, 7vw, 5.8rem);
+  line-height: 0.94;
+}
+
+.spiral-intro p {
+  margin: 20px 0 0;
+  max-width: 42rem;
+  color: rgba(245, 238, 229, 0.76);
+  font-size: 1.05rem;
+}
+
+.spiral-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.spiral-section {
+  padding-top: 18px;
+}
+
+.spiral-block,
+.spiral-manifest {
+  border: 1px solid rgba(255, 220, 170, 0.16);
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgba(255, 245, 225, 0.04), rgba(59, 21, 12, 0.22)),
+    rgba(14, 7, 5, 0.8);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+}
+
+.spiral-block {
+  padding: clamp(22px, 4vw, 34px);
+}
+
+.spiral-block h2 {
+  margin: 0 0 14px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.98;
+}
+
+.spiral-block p {
+  margin: 0;
+  color: rgba(245, 238, 229, 0.72);
+}
+
+.spiral-kicker {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: #f0c58e;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+}
+
+.spiral-manifest {
+  padding: clamp(28px, 5vw, 46px);
+}
+
+.spiral-manifest p {
+  margin: 0;
+  max-width: 18ch;
+  font-size: clamp(2.2rem, 6vw, 4.5rem);
+  line-height: 0.98;
+}
+
 .footer {
   padding: 44px 0 72px;
 }
@@ -743,6 +947,8 @@ select {
   .story-grid,
   .page-grid,
   .software-grid,
+  .spiral-stage-shell,
+  .spiral-columns,
   .support-grid,
   .review-grid,
   .community-grid,

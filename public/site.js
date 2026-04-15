@@ -125,7 +125,7 @@ function initSecretPortal() {
 
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-      const inSecretZone = x >= rect.width * 0.68 && y <= rect.height * 0.32;
+      const inSecretZone = x >= rect.width * 0.58 && y <= rect.height * 0.42;
       if (!inSecretZone) return;
 
       event.preventDefault();
