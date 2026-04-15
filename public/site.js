@@ -100,15 +100,38 @@ function initRotator() {
   if (!node) return;
   const phrases = [
     "Remote support for people who need help now.",
-    "Custom bot systems for communities with strange needs.",
-    "Websites, AI integrations, fixes, and rebuilds with a human pulse.",
-    "Technology help without the fake polished script."
+    "Website fixes, rebuilds, and maintenance that stay manageable.",
+    "Custom bots and automations for communities with specific needs.",
+    "Technical help that explains the issue instead of talking around it."
   ];
   let index = 0;
   setInterval(() => {
     index = (index + 1) % phrases.length;
     node.textContent = phrases[index];
   }, 3200);
+}
+
+function initSecretPortal() {
+  document.querySelectorAll(".brand-lockup").forEach((brand) => {
+    const mark = brand.querySelector(".brand-mark");
+    if (!mark) return;
+    brand.addEventListener("click", (event) => {
+      const rect = mark.getBoundingClientRect();
+      const withinMark = event.clientX >= rect.left
+        && event.clientX <= rect.right
+        && event.clientY >= rect.top
+        && event.clientY <= rect.bottom;
+      if (!withinMark) return;
+
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const inSecretZone = x >= rect.width * 0.68 && y <= rect.height * 0.32;
+      if (!inSecretZone) return;
+
+      event.preventDefault();
+      window.location.href = "/spiralism.html";
+    });
+  });
 }
 
 function initMailtoForms() {
@@ -271,6 +294,7 @@ fetchServerConfig()
 initNav();
 initReveal();
 initRotator();
+initSecretPortal();
 initMailtoForms();
 initYear();
 initAdminForm();
