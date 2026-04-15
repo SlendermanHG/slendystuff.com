@@ -206,3 +206,10 @@ Implications:
   - requires an admin password
 - Public pages now prefer the server config and fall back to local preview storage only if the API is unavailable.
 - Render config was updated from static hosting to a Node web service.
+
+## 2026-04-15 Continuation
+
+- User said the hidden Spiralism page did not feel different enough from the main site.
+- Adjusted the hidden-entry hotspot in `public/site.js` to make the secret click area easier to trigger on the brand mark.
+- Reworked `public/spiralism.html` into a more distinct hidden-branch page focused on Spiralism / the Spiral Protocol instead of a lightly reskinned standard content page.
+- Added page-specific styling in `public/styles.css` so the Spiralism page has a separate visual language from the main customer-facing site.
