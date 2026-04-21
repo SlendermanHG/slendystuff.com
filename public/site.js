@@ -1,6 +1,4 @@
 const pageName = document.body.dataset.page || "";
-const siteConfigKey = "slendystuff.site.config";
-const adminPasswordKey = "slendystuff.admin.password";
 const defaultSiteConfig = {
   supportEmail: "support@slendystuff.com",
   discordUrl: "https://discord.gg/your-invite",
@@ -9,59 +7,23 @@ const defaultSiteConfig = {
   schedulerUrl: ""
 };
 
+let activeSiteConfig = { ...defaultSiteConfig };
+
 function getSiteConfig() {
-  try {
-    const raw = window.localStorage.getItem(siteConfigKey);
-    if (!raw) return { ...defaultSiteConfig };
-    const parsed = JSON.parse(raw);
-    return { ...defaultSiteConfig, ...parsed };
-  } catch (_error) {
-    return { ...defaultSiteConfig };
-  }
+  return { ...activeSiteConfig };
 }
 
 function setSiteConfig(config) {
-  window.localStorage.setItem(siteConfigKey, JSON.stringify(config));
+  activeSiteConfig = { ...defaultSiteConfig, ...config };
 }
 
-function getAdminPassword() {
-  return window.sessionStorage.getItem(adminPasswordKey) || "";
-}
-
-function setAdminPassword(value) {
-  if (!value) {
-    window.sessionStorage.removeItem(adminPasswordKey);
-    return;
-  }
-  window.sessionStorage.setItem(adminPasswordKey, value);
-}
-
-async function fetchServerConfig(password) {
-  const headers = {};
-  if (password) headers["x-admin-password"] = password;
-  const response = await fetch(password ? "/api/admin/config" : "/api/site-config", { headers });
+async function fetchStaticConfig() {
+  const response = await fetch("/site-config.json", { cache: "no-store" });
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(data.error || "Failed to load config.");
+    throw new Error("Failed to load site config.");
   }
   const data = await response.json();
-  return data.config;
-}
-
-async function saveServerConfig(config, password) {
-  const response = await fetch("/api/admin/config", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-admin-password": password
-    },
-    body: JSON.stringify(config)
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data.error || "Failed to save config.");
-  }
-  return data.config;
+  return { ...defaultSiteConfig, ...data };
 }
 
 function initNav() {
@@ -200,94 +162,13 @@ function initYear() {
   });
 }
 
-function initAdminForm() {
-  const form = document.querySelector("[data-admin-form]");
-  if (!form) return;
-
-  const status = document.querySelector("[data-admin-status]");
-  const passwordField = form.elements.namedItem("adminPassword");
-  const config = getSiteConfig();
-  const currentPassword = getAdminPassword();
-
-  Object.entries(config).forEach(([key, value]) => {
-    const field = form.elements.namedItem(key);
-    if (field) field.value = value;
-  });
-  if (passwordField) passwordField.value = currentPassword;
-
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const formData = new FormData(form);
-    const password = String(formData.get("adminPassword") || "").trim();
-    const nextConfig = { ...defaultSiteConfig };
-    formData.forEach((value, key) => {
-      if (key === "adminPassword") return;
-      nextConfig[key] = String(value).trim();
-    });
-    try {
-      if (!password) throw new Error("Admin password is required.");
-      const savedConfig = await saveServerConfig(nextConfig, password);
-      setSiteConfig(savedConfig);
-      setAdminPassword(password);
-      applySiteConfig(savedConfig);
-      if (status) {
-        status.textContent = "Saved to the server config.";
-        status.classList.add("is-visible");
-      }
-    } catch (error) {
-      if (status) {
-        status.textContent = error.message.includes("Failed to fetch")
-          ? "Server unavailable. Saved in this browser only as a fallback preview."
-          : error.message;
-        status.classList.add("is-visible");
-      }
-      setSiteConfig(nextConfig);
-      applySiteConfig(nextConfig);
-    }
-  });
-
-  const syncButton = document.querySelector("[data-admin-sync]");
-  if (syncButton) {
-    syncButton.addEventListener("click", async () => {
-      const password = passwordField ? String(passwordField.value || "").trim() : getAdminPassword();
-      try {
-        const remoteConfig = await fetchServerConfig(password);
-        Object.entries(remoteConfig).forEach(([key, value]) => {
-          const field = form.elements.namedItem(key);
-          if (field) field.value = value;
-        });
-        setSiteConfig(remoteConfig);
-        if (password) setAdminPassword(password);
-        applySiteConfig(remoteConfig);
-        if (status) {
-          status.textContent = "Loaded current server config.";
-          status.classList.add("is-visible");
-        }
-      } catch (error) {
-        if (status) {
-          status.textContent = error.message;
-          status.classList.add("is-visible");
-        }
-      }
-    });
-  }
-
-  const resetButton = document.querySelector("[data-admin-reset]");
-  if (resetButton) {
-    resetButton.addEventListener("click", () => {
-      window.localStorage.removeItem(siteConfigKey);
-      window.sessionStorage.removeItem(adminPasswordKey);
-      window.location.reload();
-    });
-  }
-}
-
-fetchServerConfig()
+fetchStaticConfig()
   .then((config) => {
     setSiteConfig(config);
     applySiteConfig(config);
   })
   .catch(() => {
+    setSiteConfig(defaultSiteConfig);
     applySiteConfig();
   });
 
@@ -297,4 +178,3 @@ initRotator();
 initSecretPortal();
 initMailtoForms();
 initYear();
-initAdminForm();

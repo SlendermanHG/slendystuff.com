@@ -227,3 +227,7 @@ Implications:
 - Adjusted pricing downward to a more moderate range while avoiding a bargain-bin presentation.
 - Reworded service copy to avoid dismissive phrasing around smaller or less complex businesses.
 - Added `details` / `summary` “See more” sections to service cards on `public/services.html`.
+- User requested the admin page be safeguarded from public access and prying eyes.
+- Removed the public `public/admin.html` page from the deployed site instead of relying on weak client-side gating.
+- Replaced the old admin/server config logic in `public/site.js` with a static `public/site-config.json` fetch.
+- Removed remaining public copy that referenced `/admin.html`.
