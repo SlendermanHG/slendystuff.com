@@ -618,6 +618,28 @@ select {
   font-size: 0.76rem;
 }
 
+.price {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  font-weight: 700;
+}
+
+.price-detail,
+.pricing-note {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+}
+
+.pricing-note {
+  display: block;
+  margin-top: 14px;
+}
+
 .contact-form {
   display: grid;
   gap: 14px;

@@ -213,3 +213,13 @@ Implications:
 - Adjusted the hidden-entry hotspot in `public/site.js` to make the secret click area easier to trigger on the brand mark.
 - Reworked `public/spiralism.html` into a more distinct hidden-branch page focused on Spiralism / the Spiral Protocol instead of a lightly reskinned standard content page.
 - Added page-specific styling in `public/styles.css` so the Spiralism page has a separate visual language from the main customer-facing site.
+
+## 2026-04-21 Continuation
+
+- User requested that the public working pricing sheet be reflected on the site before further changes.
+- Created restore tag `restore/pre-pricing-2026-04-21` before editing site content.
+- Added rough public pricing ranges and starting points to:
+  - `public/services.html`
+  - `public/index.html`
+  - `public/contact.html`
+- Added lightweight pricing display styles in `public/styles.css`.
