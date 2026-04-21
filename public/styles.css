@@ -640,6 +640,50 @@ select {
   margin-top: 14px;
 }
 
+.service-more {
+  margin-top: 18px;
+  border-top: 1px solid rgba(114, 231, 255, 0.12);
+  padding-top: 14px;
+}
+
+.service-more summary {
+  cursor: pointer;
+  list-style: none;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+}
+
+.service-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.service-more summary::after {
+  content: "+";
+  float: right;
+  color: var(--cyan);
+  font-size: 1rem;
+}
+
+.service-more[open] summary::after {
+  content: "-";
+}
+
+.service-more-body {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.service-more-body p {
+  margin: 0;
+}
+
+.service-more-body .list {
+  margin-top: 0;
+}
+
 .contact-form {
   display: grid;
   gap: 14px;
