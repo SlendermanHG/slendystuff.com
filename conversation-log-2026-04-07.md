@@ -223,3 +223,7 @@ Implications:
   - `public/index.html`
   - `public/contact.html`
 - Added lightweight pricing display styles in `public/styles.css`.
+- User requested softer wording, more moderate pricing, and expandable extra detail for each service.
+- Adjusted pricing downward to a more moderate range while avoiding a bargain-bin presentation.
+- Reworded service copy to avoid dismissive phrasing around smaller or less complex businesses.
+- Added `details` / `summary` “See more” sections to service cards on `public/services.html`.
