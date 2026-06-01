@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>QwertyLock Secure | SlendyStuff</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f6f0;
+      --panel: #ffffff;
+      --ink: #151a20;
+      --muted: #5c6672;
+      --line: #cfc8bb;
+      --accent: #17745e;
+      --warn: #9a3f48;
+      --focus: #0b63ce;
+      --shadow: 0 18px 40px rgba(28, 24, 18, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(980px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 34px 0 44px;
+    }
+
+    header {
+      margin-bottom: 20px;
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 4rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 760px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-top: 16px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f2f0e8;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      padding: 12px 14px;
+    }
+
+    .tab[aria-selected="true"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      font: 1rem/1.4 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      padding: 12px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+    }
+
+    input {
+      min-height: 46px;
+    }
+
+    textarea:focus,
+    input:focus,
+    button:focus-visible {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.16);
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .inline-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .inline-actions input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      min-height: 44px;
+      padding: 10px 14px;
+    }
+
+    .primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .status {
+      min-height: 24px;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .status.error {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .output-meta {
+      margin-top: 8px;
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .output-meta.warn {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .strength {
+      margin-top: 8px;
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .strength.weak {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .strength.strong {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .note {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .note strong {
+      color: var(--ink);
+    }
+
+    @media (max-width: 760px) {
+      main {
+        width: min(100vw - 20px, 560px);
+        padding-top: 18px;
+      }
+
+      .panel {
+        padding: 14px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>QwertyLock Secure</h1>
+      <p class="subtitle">SlendyStuff hidden-page encryption with TXT/MMS-safe output. The password is the decoder key.</p>
+    </header>
+
+    <section class="panel" aria-label="Encrypt and decrypt tool">
+      <div class="tabs" role="tablist" aria-label="Mode">
+        <button class="tab" id="encryptTab" type="button" role="tab" aria-selected="true">Encrypt</button>
+        <button class="tab" id="decryptTab" type="button" role="tab" aria-selected="false">Decrypt</button>
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="field">
+            <label for="message">Message</label>
+            <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Type the private message here"></textarea>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="inline-actions">
+              <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="20+ character shared password">
+              <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
+            </div>
+            <div class="strength" id="strength">Use 4+ random words or 20+ mixed characters.</div>
+          </div>
+          <div class="actions">
+            <button class="primary" id="runBtn" type="button">Encrypt</button>
+            <button id="generatePasswordBtn" type="button">Make Password</button>
+            <button id="swapBtn" type="button">Use Output</button>
+            <button id="clearBtn" type="button">Clear</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="field">
+            <label for="output">Output</label>
+            <textarea id="output" autocomplete="off" spellcheck="false" readonly placeholder="Encrypted or decrypted result appears here"></textarea>
+            <div class="output-meta" id="outputMeta">Encrypted blocks are plain ASCII for TXT/MMS copy-paste.</div>
+          </div>
+          <div class="actions">
+            <button id="copyBtn" type="button">Copy Output</button>
+            <span class="status" id="status" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Rules">
+      <p class="note"><strong>Encrypted format:</strong> new messages start with <code>QL2</code>, then grouped QWERTY-safe text. No cover output, no hidden characters.</p>
+      <p class="note"><strong>TXT/MMS:</strong> send the encrypted block as text, not as a screenshot. If the phone splits it into multiple SMS messages, the recipient needs the complete block in order.</p>
+      <p class="note"><strong>Security:</strong> AES-GCM with a 256-bit key, random 32-byte salt, random 12-byte IV, and PBKDF2-SHA256. Old <code>QL1</code> blocks still decrypt.</p>
+      <p class="note"><strong>Decode rule:</strong> paste the encrypted block, enter the same password, press Decrypt. Without the password, the block is not recoverable.</p>
+    </section>
+  </main>
+
+  <script>
+    const enc = new TextEncoder();
+    const dec = new TextDecoder();
+    const alphabet = "abcdefghijklmnopqrstuvwxyz234567";
+    const ql1Iterations = 310000;
+    const ql2Iterations = 900000;
+    const mode = { value: "encrypt" };
+
+    const els = {
+      encryptTab: document.getElementById("encryptTab"),
+      decryptTab: document.getElementById("decryptTab"),
+      message: document.getElementById("message"),
+      password: document.getElementById("password"),
+      strength: document.getElementById("strength"),
+      output: document.getElementById("output"),
+      outputMeta: document.getElementById("outputMeta"),
+      runBtn: document.getElementById("runBtn"),
+      generatePasswordBtn: document.getElementById("generatePasswordBtn"),
+      showPasswordBtn: document.getElementById("showPasswordBtn"),
+      swapBtn: document.getElementById("swapBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+      copyBtn: document.getElementById("copyBtn"),
+      status: document.getElementById("status")
+    };
+
+    function setStatus(text, isError = false) {
+      els.status.textContent = text;
+      els.status.classList.toggle("error", isError);
+    }
+
+    function estimateSmsSegments(text) {
+      const length = text.length;
+      if (!length) return 0;
+      if (length <= 160) return 1;
+      return Math.ceil(length / 153);
+    }
+
+    function updateOutputMeta(kind = mode.value) {
+      const text = els.output.value;
+      els.outputMeta.classList.remove("warn");
+      if (!text) {
+        els.outputMeta.textContent = "Encrypted blocks are plain ASCII for TXT/MMS copy-paste.";
+        return;
+      }
+      if (kind === "decrypt") {
+        els.outputMeta.textContent = `${text.length.toLocaleString()} plaintext characters. Do not forward plaintext unless intended.`;
+        return;
+      }
+      const segments = estimateSmsSegments(text);
+      const segmentText = segments === 1 ? "1 SMS segment" : `${segments} SMS segments`;
+      els.outputMeta.textContent = `${text.length.toLocaleString()} characters, about ${segmentText}. Send the full block in order.`;
+      if (segments > 6) {
+        els.outputMeta.classList.add("warn");
+        els.outputMeta.textContent += " For long messages, MMS/RCS/iMessage is more reliable than manual SMS splitting.";
+      }
+    }
+
+    function setMode(nextMode) {
+      mode.value = nextMode;
+      const encrypting = nextMode === "encrypt";
+      els.encryptTab.setAttribute("aria-selected", String(encrypting));
+      els.decryptTab.setAttribute("aria-selected", String(!encrypting));
+      els.runBtn.textContent = encrypting ? "Encrypt" : "Decrypt";
+      els.message.placeholder = encrypting ? "Type the private message here" : "Paste the encrypted QL2 or QL1 block here";
+      els.output.placeholder = encrypting ? "Encrypted block appears here" : "Plain message appears here";
+      setStatus("");
+    }
+
+    function ratePassword(password) {
+      const words = password.trim().split(/\s+/).filter(Boolean);
+      let score = 0;
+      if (password.length >= 20) score += 2;
+      if (password.length >= 28) score += 2;
+      if (words.length >= 4) score += 3;
+      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
+      if (/\d/.test(password)) score += 1;
+      if (/[^A-Za-z0-9\s]/.test(password)) score += 1;
+      if (/(.)\1{3,}/.test(password)) score -= 2;
+      if (/password|qwerty|letmein|secret/i.test(password)) score -= 3;
+      return score;
+    }
+
+    function updateStrength() {
+      const password = els.password.value;
+      const score = ratePassword(password);
+      els.strength.classList.remove("weak", "strong");
+      if (!password) {
+        els.strength.textContent = "Use 4+ random words or 20+ mixed characters.";
+      } else if (password.length < 20) {
+        els.strength.textContent = "Too short for hardened encryption. Use at least 20 characters.";
+        els.strength.classList.add("weak");
+      } else if (score >= 6) {
+        els.strength.textContent = "Strong password shape.";
+        els.strength.classList.add("strong");
+      } else {
+        els.strength.textContent = "Usable length, but a 4+ word random phrase is stronger.";
+      }
+    }
+
+    function toBase32(bytes) {
+      let bits = 0;
+      let value = 0;
+      let out = "";
+      for (const byte of bytes) {
+        value = (value << 8) | byte;
+        bits += 8;
+        while (bits >= 5) {
+          out += alphabet[(value >>> (bits - 5)) & 31];
+          bits -= 5;
+        }
+      }
+      if (bits > 0) {
+        out += alphabet[(value << (5 - bits)) & 31];
+      }
+      return out.replace(/(.{5})/g, "$1 ").trim();
+    }
+
+    function fromBase32(text) {
+      const clean = text.toLowerCase().replace(/^ql[12]\s*/i, "").replace(/[^a-z2-7]/g, "");
+      let bits = 0;
+      let value = 0;
+      const out = [];
+      for (const ch of clean) {
+        const idx = alphabet.indexOf(ch);
+        if (idx < 0) {
+          throw new Error("Encrypted text contains a non-QWERTY code character.");
+        }
+        value = (value << 5) | idx;
+        bits += 5;
+        if (bits >= 8) {
+          out.push((value >>> (bits - 8)) & 255);
+          bits -= 8;
+        }
+      }
+      return new Uint8Array(out);
+    }
+
+    function writeUint32(target, offset, value) {
+      target[offset] = (value >>> 24) & 255;
+      target[offset + 1] = (value >>> 16) & 255;
+      target[offset + 2] = (value >>> 8) & 255;
+      target[offset + 3] = value & 255;
+    }
+
+    function readUint32(source, offset) {
+      return ((source[offset] << 24) | (source[offset + 1] << 16) | (source[offset + 2] << 8) | source[offset + 3]) >>> 0;
+    }
+
+    async function deriveKey(password, salt, iterations) {
+      const baseKey = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(password),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+        baseKey,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    }
+
+    function packV2(salt, iv, ciphertext) {
+      const packed = new Uint8Array(1 + 4 + salt.length + iv.length + ciphertext.length);
+      packed[0] = 2;
+      writeUint32(packed, 1, ql2Iterations);
+      packed.set(salt, 5);
+      packed.set(iv, 37);
+      packed.set(ciphertext, 49);
+      return `QL2 ${toBase32(packed)}`;
+    }
+
+    function unpack(text) {
+      const packed = fromBase32(text);
+      if (packed[0] === 2 && packed.length >= 66) {
+        return {
+          version: 2,
+          iterations: readUint32(packed, 1),
+          salt: packed.slice(5, 37),
+          iv: packed.slice(37, 49),
+          ciphertext: packed.slice(49)
+        };
+      }
+      if (packed[0] === 1 && packed.length >= 46) {
+        return {
+          version: 1,
+          iterations: ql1Iterations,
+          salt: packed.slice(1, 17),
+          iv: packed.slice(17, 29),
+          ciphertext: packed.slice(29)
+        };
+      }
+      throw new Error("This is not a valid QL2 or QL1 encrypted block.");
+    }
+
+    async function encryptMessage() {
+      const message = els.message.value;
+      const password = els.password.value;
+      if (!message.trim()) throw new Error("Type a message first.");
+      if (password.length < 20) throw new Error("Use a password with at least 20 characters.");
+
+      const salt = crypto.getRandomValues(new Uint8Array(32));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const key = await deriveKey(password, salt, ql2Iterations);
+      const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(message)));
+      els.output.value = packV2(salt, iv, ciphertext);
+      updateOutputMeta("encrypt");
+      setStatus(`Encrypted locally as QL2 with ${ql2Iterations.toLocaleString()} PBKDF2 rounds.`);
+    }
+
+    async function decryptMessage() {
+      const password = els.password.value;
+      if (!els.message.value.trim()) throw new Error("Paste a QL1 block first.");
+      if (!password) throw new Error("Enter the password.");
+
+      const { version, iterations, salt, iv, ciphertext } = unpack(els.message.value);
+      const key = await deriveKey(password, salt, iterations);
+      const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+      els.output.value = dec.decode(plaintext);
+      updateOutputMeta("decrypt");
+      setStatus(`Decrypted locally from QL${version}.`);
+    }
+
+    els.encryptTab.addEventListener("click", () => setMode("encrypt"));
+    els.decryptTab.addEventListener("click", () => setMode("decrypt"));
+    els.password.addEventListener("input", updateStrength);
+
+    els.showPasswordBtn.addEventListener("click", () => {
+      const showing = els.password.type === "text";
+      els.password.type = showing ? "password" : "text";
+      els.showPasswordBtn.textContent = showing ? "Show" : "Hide";
+      els.showPasswordBtn.setAttribute("aria-pressed", String(!showing));
+      els.password.focus();
+    });
+
+    els.generatePasswordBtn.addEventListener("click", () => {
+      const words = [
+        "anchor", "basket", "canyon", "delta", "ember", "forest", "galaxy", "harbor",
+        "island", "jacket", "kernel", "lantern", "magnet", "nectar", "orbit", "prairie",
+        "quartz", "ribbon", "summit", "temple", "velvet", "window", "yellow", "zephyr",
+        "apricot", "bridge", "copper", "desktop", "engine", "fossil", "garden", "honest",
+        "impact", "jungle", "keystone", "legend", "marble", "native", "oxygen", "planet",
+        "rocket", "silver", "timber", "uplift", "voyage", "wander", "xenon", "zipper"
+      ];
+      const chosen = [];
+      const bytes = crypto.getRandomValues(new Uint8Array(6));
+      for (let i = 0; i < 5; i++) {
+        chosen.push(words[bytes[i] % words.length]);
+      }
+      chosen.push(String(10 + (bytes[5] % 90)));
+      els.password.value = chosen.join("-");
+      updateStrength();
+      setStatus("Generated a strong local password. Share it separately.");
+    });
+
+    els.runBtn.addEventListener("click", async () => {
+      try {
+        setStatus("Working...");
+        if (!crypto.subtle) throw new Error("This browser does not support Web Crypto here. Open this file in Chrome, Edge, or Safari.");
+        if (mode.value === "encrypt") {
+          await encryptMessage();
+        } else {
+          await decryptMessage();
+        }
+      } catch (error) {
+        setStatus(error.message || "Something went wrong.", true);
+      }
+    });
+
+    els.copyBtn.addEventListener("click", async () => {
+      if (!els.output.value) return;
+      try {
+        await navigator.clipboard.writeText(els.output.value);
+        setStatus("Copied.");
+      } catch {
+        els.output.select();
+        document.execCommand("copy");
+        setStatus("Copied.");
+      }
+    });
+
+    els.swapBtn.addEventListener("click", () => {
+      els.message.value = els.output.value;
+      els.output.value = "";
+      updateOutputMeta();
+      setMode("decrypt");
+    });
+
+    els.clearBtn.addEventListener("click", () => {
+      els.message.value = "";
+      els.password.value = "";
+      els.output.value = "";
+      updateStrength();
+      updateOutputMeta();
+      setStatus("");
+    });
+
+    updateStrength();
+  </script>
+</body>
+</html>
