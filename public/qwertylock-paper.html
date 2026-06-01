@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>QwertyLock Paper | SlendyStuff</title>
+  <style>
+    :root {
+      --bg: #f7f6f0;
+      --panel: #ffffff;
+      --ink: #151a20;
+      --muted: #5c6672;
+      --line: #cfc8bb;
+      --accent: #17745e;
+      --warn: #9a3f48;
+      --focus: #0b63ce;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(1060px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 34px 0 44px;
+    }
+
+    header {
+      margin-bottom: 18px;
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 4rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    h2,
+    h3 {
+      margin: 0 0 10px;
+    }
+
+    .subtitle,
+    .note {
+      color: var(--muted);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      margin-top: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f2f0e8;
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      padding: 12px 14px;
+    }
+
+    .tab[aria-selected="true"],
+    .primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      font: 1rem/1.4 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      padding: 12px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 170px;
+      resize: vertical;
+    }
+
+    textarea:focus,
+    input:focus,
+    button:focus-visible,
+    a:focus-visible {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.16);
+      outline: none;
+    }
+
+    button,
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font: inherit;
+      font-weight: 700;
+      min-height: 44px;
+      padding: 10px 14px;
+      text-decoration: none;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .status {
+      min-height: 24px;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .status.error,
+    .warning {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .alphabet {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .cell {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfaf7;
+      padding: 8px 6px;
+      text-align: center;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    }
+
+    .cell strong {
+      display: block;
+      font-size: 1.1rem;
+    }
+
+    .cell span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    .steps li {
+      margin: 8px 0;
+    }
+
+    .pad-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .pad-options .field {
+      width: 180px;
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 780px) {
+      main {
+        width: min(100vw - 20px, 560px);
+        padding-top: 18px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .alphabet {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      main {
+        width: auto;
+        padding: 0;
+      }
+
+      .no-print {
+        display: none;
+      }
+
+      .panel {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>QwertyLock Paper</h1>
+      <p class="subtitle">Paper-and-pen one-time pad companion for TXT/MMS. Use <a href="/qwertylock-7m4r.html">QwertyLock Secure</a> for normal AES encryption.</p>
+    </header>
+
+    <section class="panel">
+      <h2>Security Rule</h2>
+      <p class="warning">This is only extremely secure if the pad numbers are truly random, kept secret, used once, and crossed off forever. Reusing pad numbers breaks the system.</p>
+      <p class="note">The encrypted `QLP` block is SMS-safe visible text. The pad sheet is the secret key and must be shared separately before use, not in the same text thread.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Manual Alphabet</h2>
+      <p class="note">Write spaces as `_`. Supported paper text: A-Z, 0-9, space, period, comma, question mark.</p>
+      <div class="alphabet" id="alphabetGrid" aria-label="Paper cipher alphabet"></div>
+    </section>
+
+    <section class="panel no-print" aria-label="Paper cipher helper">
+      <div class="tabs" role="tablist" aria-label="Mode">
+        <button class="tab" id="encryptTab" type="button" role="tab" aria-selected="true">Paper Encrypt</button>
+        <button class="tab" id="decryptTab" type="button" role="tab" aria-selected="false">Paper Decrypt</button>
+      </div>
+
+      <div class="grid">
+        <div>
+          <div class="field">
+            <label for="message">Message or QLP Block</label>
+            <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Type message for paper encryption"></textarea>
+          </div>
+          <div class="field">
+            <label for="pad">Pad Numbers</label>
+            <textarea id="pad" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste pad numbers like 04 39 12 00 ..."></textarea>
+          </div>
+          <div class="actions">
+            <button class="primary" id="runBtn" type="button">Paper Encrypt</button>
+            <button id="copyBtn" type="button">Copy Output</button>
+            <button id="clearBtn" type="button">Clear</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="field">
+            <label for="output">Output</label>
+            <textarea id="output" autocomplete="off" spellcheck="false" readonly placeholder="QLP output or plaintext appears here"></textarea>
+          </div>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>By Hand</h2>
+      <div class="grid">
+        <article>
+          <h3>Encrypt</h3>
+          <ol class="steps">
+            <li>Uppercase the message. Change spaces to `_`.</li>
+            <li>Find each plain character number in the alphabet table.</li>
+            <li>Take the next unused pad number.</li>
+            <li>Add them. If the result is 40 or more, subtract 40.</li>
+            <li>Write the result as two digits after `QLP`.</li>
+          </ol>
+        </article>
+        <article>
+          <h3>Decrypt</h3>
+          <ol class="steps">
+            <li>Read each two-digit QLP number.</li>
+            <li>Take the same pad numbers in the same order.</li>
+            <li>Subtract the pad number. If negative, add 40.</li>
+            <li>Look up the result in the alphabet table.</li>
+            <li>Change `_` back to a space.</li>
+          </ol>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel no-print">
+      <h2>Make Local Pad Sheet</h2>
+      <p class="note">Generated in this browser with `crypto.getRandomValues`. Print or write down two matching copies. Do not send the pad with the encrypted message.</p>
+      <div class="pad-options">
+        <div class="field">
+          <label for="padCount">Pad length</label>
+          <input id="padCount" type="number" min="20" max="1000" step="10" value="120">
+        </div>
+        <button id="makePadBtn" class="primary" type="button">Make Pad</button>
+        <button id="printBtn" type="button">Print Page</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.,?";
+    const mode = { value: "encrypt" };
+
+    const els = {
+      alphabetGrid: document.getElementById("alphabetGrid"),
+      encryptTab: document.getElementById("encryptTab"),
+      decryptTab: document.getElementById("decryptTab"),
+      message: document.getElementById("message"),
+      pad: document.getElementById("pad"),
+      output: document.getElementById("output"),
+      status: document.getElementById("status"),
+      runBtn: document.getElementById("runBtn"),
+      copyBtn: document.getElementById("copyBtn"),
+      clearBtn: document.getElementById("clearBtn"),
+      padCount: document.getElementById("padCount"),
+      makePadBtn: document.getElementById("makePadBtn"),
+      printBtn: document.getElementById("printBtn")
+    };
+
+    function setStatus(text, isError = false) {
+      els.status.textContent = text;
+      els.status.classList.toggle("error", isError);
+    }
+
+    function setMode(nextMode) {
+      mode.value = nextMode;
+      const encrypting = nextMode === "encrypt";
+      els.encryptTab.setAttribute("aria-selected", String(encrypting));
+      els.decryptTab.setAttribute("aria-selected", String(!encrypting));
+      els.runBtn.textContent = encrypting ? "Paper Encrypt" : "Paper Decrypt";
+      els.message.placeholder = encrypting ? "Type message for paper encryption" : "Paste QLP numbers here";
+      els.output.placeholder = encrypting ? "QLP output appears here" : "Plaintext appears here";
+      setStatus("");
+    }
+
+    function drawAlphabet() {
+      els.alphabetGrid.innerHTML = "";
+      [...alphabet].forEach((char, index) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.innerHTML = `<strong>${char === "_" ? "SPACE" : char}</strong><span>${String(index).padStart(2, "0")}</span>`;
+        els.alphabetGrid.appendChild(cell);
+      });
+    }
+
+    function parsePad(text) {
+      const nums = (text.match(/\d{2}/g) || []).map((part) => Number(part));
+      if (!nums.length) throw new Error("Paste or generate pad numbers first.");
+      const bad = nums.find((num) => !Number.isInteger(num) || num < 0 || num > 39);
+      if (bad !== undefined) throw new Error("Pad numbers must be between 00 and 39.");
+      return nums;
+    }
+
+    function parseCipher(text) {
+      const nums = text.replace(/^QLP\s*/i, "").match(/\d{2}/g) || [];
+      if (!nums.length) throw new Error("Paste a QLP block first.");
+      const parsed = nums.map((part) => Number(part));
+      const bad = parsed.find((num) => !Number.isInteger(num) || num < 0 || num > 39);
+      if (bad !== undefined) throw new Error("QLP numbers must be between 00 and 39.");
+      return parsed;
+    }
+
+    function normalizePlain(text) {
+      return text.toUpperCase().replace(/ /g, "_");
+    }
+
+    function groupPairs(nums) {
+      return nums.map((num) => String(num).padStart(2, "0")).join(" ").replace(/((?:\d{2} ){9}\d{2}) /g, "$1\n");
+    }
+
+    function encryptPaper() {
+      const plain = normalizePlain(els.message.value);
+      if (!plain) throw new Error("Type a message first.");
+      const pad = parsePad(els.pad.value);
+      if (pad.length < plain.length) throw new Error(`Need ${plain.length} pad numbers. You only have ${pad.length}.`);
+
+      const out = [];
+      for (let i = 0; i < plain.length; i++) {
+        const p = alphabet.indexOf(plain[i]);
+        if (p < 0) throw new Error(`Unsupported character: ${plain[i]}`);
+        out.push((p + pad[i]) % 40);
+      }
+      els.output.value = `QLP ${groupPairs(out)}`;
+      setStatus(`Encrypted ${plain.length} characters. Cross off the first ${plain.length} pad numbers.`);
+    }
+
+    function decryptPaper() {
+      const cipher = parseCipher(els.message.value);
+      const pad = parsePad(els.pad.value);
+      if (pad.length < cipher.length) throw new Error(`Need ${cipher.length} pad numbers. You only have ${pad.length}.`);
+
+      let plain = "";
+      for (let i = 0; i < cipher.length; i++) {
+        const p = (cipher[i] - pad[i] + 40) % 40;
+        plain += alphabet[p];
+      }
+      els.output.value = plain.replace(/_/g, " ");
+      setStatus(`Decrypted ${cipher.length} characters. Cross off the first ${cipher.length} pad numbers.`);
+    }
+
+    function randomPadNumber() {
+      const byte = new Uint8Array(1);
+      do {
+        crypto.getRandomValues(byte);
+      } while (byte[0] >= 240);
+      return byte[0] % 40;
+    }
+
+    function makePad() {
+      const count = Math.max(20, Math.min(1000, Number(els.padCount.value) || 120));
+      const nums = [];
+      for (let i = 0; i < count; i++) {
+        nums.push(randomPadNumber());
+      }
+      els.pad.value = groupPairs(nums);
+      setStatus(`Made ${count} pad numbers locally. Print two copies and use each number once.`);
+    }
+
+    els.encryptTab.addEventListener("click", () => setMode("encrypt"));
+    els.decryptTab.addEventListener("click", () => setMode("decrypt"));
+    els.runBtn.addEventListener("click", () => {
+      try {
+        mode.value === "encrypt" ? encryptPaper() : decryptPaper();
+      } catch (error) {
+        setStatus(error.message || "Something went wrong.", true);
+      }
+    });
+    els.copyBtn.addEventListener("click", async () => {
+      if (!els.output.value) return;
+      try {
+        await navigator.clipboard.writeText(els.output.value);
+        setStatus("Copied.");
+      } catch {
+        els.output.select();
+        document.execCommand("copy");
+        setStatus("Copied.");
+      }
+    });
+    els.clearBtn.addEventListener("click", () => {
+      els.message.value = "";
+      els.output.value = "";
+      setStatus("");
+    });
+    els.makePadBtn.addEventListener("click", makePad);
+    els.printBtn.addEventListener("click", () => window.print());
+
+    drawAlphabet();
+  </script>
+</body>
+</html>

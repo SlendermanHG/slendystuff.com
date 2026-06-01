@@ -239,3 +239,7 @@ Implications:
 - Added the matching TXT/MMS instruction image at `public/qwertylock-secure-card.png`.
 - Kept the page out of navigation and set `noindex,nofollow,noarchive` metadata so it is not advertised as a public site page.
 - The tool remains client-side only: no messages, passwords, or encrypted blocks are sent to a server by the page itself.
+- User then asked whether a paper-and-pen version could exist or be compatible.
+- Added `public/qwertylock-paper.html` as a paper one-time-pad companion using `QLP` blocks.
+- Linked the paper mode from `public/qwertylock-7m4r.html` while keeping the AES `QL2` mode unchanged.
+- The paper mode is compatible at workflow level, not ciphertext level: `QL2` remains browser AES, while `QLP` is manual one-time-pad math.
