@@ -249,3 +249,6 @@ Implications:
 - The SMS body includes the encrypted output plus the correct decode page link, but does not include passwords or ring keys.
 - User described the desired ring flow: receive random TXT/MMS text plus a link, tap the link, have the ring page load the block, animate decode, clear, reply, and locally prevent repeat decode.
 - Updated `public/qwertylock-paper.html` so `Text Output` embeds the `QLR` block into the URL fragment, auto-loads linked blocks into decrypt mode, marks decoded blocks as used in browser storage, clears the URL fragment after successful decode, and refuses repeat local decode of the same block.
+- User confirmed the ring is the primary goal, with the browser/AES version possibly becoming an app-style companion later.
+- Added privacy wording to both QwertyLock pages stating that messages, passwords, keys, plaintext, and encrypted blocks are not sent or server-saved.
+- Changed ring decode-once tracking to store only a local SHA-256 hash marker of decoded `QLR` blocks, and added a migration so older full-block local markers are converted to hashes.

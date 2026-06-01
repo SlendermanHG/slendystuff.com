@@ -260,7 +260,7 @@
   <main>
     <header>
       <h1>QwertyLock Secure</h1>
-      <p class="subtitle">SlendyStuff hidden-page encryption with TXT/MMS-safe output. The password is the decoder key.</p>
+      <p class="subtitle">Browser/app-style companion to QwertyLock Ring, with TXT/MMS-safe AES output. The password is the decoder key.</p>
     </header>
 
     <section class="panel" aria-label="Encrypt and decrypt tool">
@@ -308,9 +308,10 @@
 
     <section class="panel" aria-label="Rules">
       <p class="note"><strong>Encrypted format:</strong> new messages start with <code>QL2</code>, then grouped QWERTY-safe text. No cover output, no hidden characters.</p>
+      <p class="note"><strong>Privacy:</strong> this page does not send, upload, or server-save messages, passwords, decrypted text, or encrypted blocks. Encryption and decryption happen in your browser.</p>
       <p class="note"><strong>TXT/MMS:</strong> send the encrypted block as text, not as a screenshot. If the phone splits it into multiple SMS messages, the recipient needs the complete block in order.</p>
       <p class="note"><strong>Security:</strong> AES-GCM with a 256-bit key, random 32-byte salt, random 12-byte IV, and PBKDF2-SHA256. Old <code>QL1</code> blocks still decrypt.</p>
-      <p class="note"><strong>Paper mode:</strong> use <a href="/qwertylock-paper.html">QwertyLock Paper</a> when you need a paper-and-pen one-time pad version. It uses <code>QLP</code> blocks, not <code>QL2</code>.</p>
+      <p class="note"><strong>Ring mode:</strong> use <a href="/qwertylock-paper.html">QwertyLock Ring</a> for the touch/paper decrypter-ring workflow. It uses <code>QLR</code> blocks, not <code>QL2</code>.</p>
       <p class="note"><strong>Decode rule:</strong> paste the encrypted block, enter the same password, press Decrypt. Without the password, the block is not recoverable.</p>
     </section>
   </main>
