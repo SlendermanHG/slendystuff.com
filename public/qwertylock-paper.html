@@ -355,13 +355,14 @@
   <main>
     <header>
       <h1>QwertyLock Ring</h1>
-      <p class="subtitle">Paper-and-pen decrypter ring companion for TXT/MMS. Use <a href="/qwertylock-7m4r.html">QwertyLock Secure</a> for normal AES encryption.</p>
+      <p class="subtitle">The primary QwertyLock decrypter-ring workflow for TXT/MMS. Use <a href="/qwertylock-7m4r.html">QwertyLock Secure</a> for the browser/app-style AES companion.</p>
     </header>
 
     <section class="panel">
       <h2>Security Rule</h2>
       <p class="warning">The ring is only secure when each key/pad symbol is random, secret, used once, and crossed off forever. Reusing a key stream breaks the paper system.</p>
       <p class="note">This page outputs <code>QLR</code> blocks. The ring replaces number math: align the current key symbol, then read the matching symbol on the ring.</p>
+      <p class="note">Privacy: this page does not send, upload, or server-save messages, ring keys, plaintext, or encrypted blocks. Decode-once tracking stores only a local SHA-256 hash marker of a decoded block on that browser.</p>
     </section>
 
     <section class="panel">
@@ -542,7 +543,15 @@
       return `QLR ${groupSymbols(cipher)}`;
     }
 
-    function getUsedBlocks() {
+    async function hashBlock(block) {
+      const bytes = new TextEncoder().encode(block);
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      return [...new Uint8Array(digest)]
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function getUsedHashes() {
       try {
         const parsed = JSON.parse(localStorage.getItem(usedStoreKey) || "[]");
         return Array.isArray(parsed) ? parsed : [];
@@ -551,27 +560,50 @@
       }
     }
 
-    function saveUsedBlocks(blocks) {
-      localStorage.setItem(usedStoreKey, JSON.stringify(blocks.slice(-200)));
+    function saveUsedHashes(hashes) {
+      localStorage.setItem(usedStoreKey, JSON.stringify(hashes.slice(-200)));
     }
 
-    function isUsedBlock(block) {
-      return getUsedBlocks().includes(block);
+    async function migrateUsedStore() {
+      const entries = getUsedHashes();
+      let changed = false;
+      const migrated = [];
+      for (const entry of entries) {
+        if (typeof entry !== "string") {
+          changed = true;
+          continue;
+        }
+        if (entry.trim().toUpperCase().startsWith("QLR")) {
+          migrated.push(await hashBlock(entry));
+          changed = true;
+        } else {
+          migrated.push(entry);
+        }
+      }
+      const unique = [...new Set(migrated)];
+      if (changed || unique.length !== entries.length) {
+        saveUsedHashes(unique);
+      }
     }
 
-    function markUsedBlock(block) {
+    async function isUsedBlock(block) {
+      return getUsedHashes().includes(await hashBlock(block));
+    }
+
+    async function markUsedBlock(block) {
       if (!block) return;
-      const blocks = getUsedBlocks();
-      if (!blocks.includes(block)) {
-        blocks.push(block);
-        saveUsedBlocks(blocks);
+      const hash = await hashBlock(block);
+      const hashes = getUsedHashes();
+      if (!hashes.includes(hash)) {
+        hashes.push(hash);
+        saveUsedHashes(hashes);
       }
       if (linkedMessage.block === block && location.hash) {
         history.replaceState(null, "", location.pathname);
       }
     }
 
-    function loadLinkedMessage() {
+    async function loadLinkedMessage() {
       if (!location.hash) return;
       const params = new URLSearchParams(location.hash.slice(1));
       const block = params.get("qlr");
@@ -581,7 +613,7 @@
       linkedMessage.active = true;
       linkedMessage.block = canonicalBlockFromCipher(parseCipher(block));
       els.decodeLine.textContent = "Linked QLR message loaded. Paste the matching ring key, then tap Animate Decode.";
-      if (isUsedBlock(linkedMessage.block)) {
+      if (await isUsedBlock(linkedMessage.block)) {
         els.message.value = "";
         linkedMessage.active = false;
         setStatus("This linked QLR block was already decoded on this browser and has been cleared.", true);
@@ -722,10 +754,10 @@
       setStatus(`Encrypted ${plain.length} symbols. Cross off the first ${plain.length} key symbols.`);
     }
 
-    function decryptRing() {
+    async function decryptRing() {
       const cipher = parseCipher(els.message.value);
       const canonicalBlock = canonicalBlockFromCipher(cipher);
-      if (isUsedBlock(canonicalBlock)) {
+      if (await isUsedBlock(canonicalBlock)) {
         els.message.value = "";
         throw new Error("This QLR block was already decoded on this browser and has been cleared.");
       }
@@ -741,16 +773,16 @@
         setRingKey(alphabet.indexOf(key[0]));
         setActivePair(cipher[0], plain[0]);
       }
-      markUsedBlock(canonicalBlock);
+      await markUsedBlock(canonicalBlock);
       els.message.value = "";
       setStatus(`Decrypted ${cipher.length} symbols. Cross off the first ${cipher.length} key symbols.`);
     }
 
-    function animateDecode() {
+    async function animateDecode() {
       stopAnimation();
       const cipher = parseCipher(els.message.value);
       const canonicalBlock = canonicalBlockFromCipher(cipher);
-      if (isUsedBlock(canonicalBlock)) {
+      if (await isUsedBlock(canonicalBlock)) {
         els.message.value = "";
         throw new Error("This QLR block was already decoded on this browser and has been cleared.");
       }
@@ -812,17 +844,21 @@
 
     els.encryptTab.addEventListener("click", () => setMode("encrypt"));
     els.decryptTab.addEventListener("click", () => setMode("decrypt"));
-    els.runBtn.addEventListener("click", () => {
+    els.runBtn.addEventListener("click", async () => {
       stopAnimation();
       try {
-        mode.value === "encrypt" ? encryptRing() : decryptRing();
+        if (mode.value === "encrypt") {
+          encryptRing();
+        } else {
+          await decryptRing();
+        }
       } catch (error) {
         setStatus(error.message || "Something went wrong.", true);
       }
     });
-    els.animateBtn.addEventListener("click", () => {
+    els.animateBtn.addEventListener("click", async () => {
       try {
-        animateDecode();
+        await animateDecode();
       } catch (error) {
         setStatus(error.message || "Something went wrong.", true);
       }
@@ -875,12 +911,12 @@
       setRingKey(ringIndexFromPointer(event));
     });
     els.message.addEventListener("paste", () => {
-      window.setTimeout(() => {
+      window.setTimeout(async () => {
         if (!els.message.value.trim().toUpperCase().startsWith("QLR")) return;
         setMode("decrypt");
         if (els.keyStream.value.trim()) {
           try {
-            animateDecode();
+            await animateDecode();
           } catch (error) {
             setStatus(error.message || "Something went wrong.", true);
           }
@@ -893,7 +929,9 @@
     drawRing();
     drawAlphabet();
     updateRingDisplay();
-    loadLinkedMessage();
+    migrateUsedStore()
+      .then(() => loadLinkedMessage())
+      .catch((error) => setStatus(error.message || "Could not load linked QLR message.", true));
   </script>
 </body>
 </html>
