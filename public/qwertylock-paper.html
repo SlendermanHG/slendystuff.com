@@ -91,6 +91,11 @@
       text-decoration: none;
     }
 
+    .button[aria-disabled="true"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
     .tab[aria-selected="true"], .primary {
       background: var(--accent);
       border-color: var(--accent);
@@ -409,6 +414,7 @@
             <button class="primary" id="runBtn" type="button">Ring Encrypt</button>
             <button id="animateBtn" type="button">Animate Decode</button>
             <button id="copyBtn" type="button">Copy Output</button>
+            <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fqwertylock-paper.html" aria-disabled="true">Text Output</a>
             <button id="clearBtn" type="button">Clear</button>
           </div>
         </div>
@@ -484,11 +490,14 @@
       runBtn: document.getElementById("runBtn"),
       animateBtn: document.getElementById("animateBtn"),
       copyBtn: document.getElementById("copyBtn"),
+      smsLink: document.getElementById("smsLink"),
       clearBtn: document.getElementById("clearBtn"),
       keyCount: document.getElementById("keyCount"),
       makeKeyBtn: document.getElementById("makeKeyBtn"),
       printBtn: document.getElementById("printBtn")
     };
+
+    const toolUrl = "https://slendystuff.com/qwertylock-paper.html";
 
     const ringState = {
       keyIndex: 0,
@@ -512,6 +521,18 @@
       els.message.placeholder = encrypting ? "Type message for ring encryption" : "Paste QLR text here";
       els.output.placeholder = encrypting ? "QLR output appears here" : "Plaintext appears here";
       setStatus("");
+    }
+
+    function updateSmsLink(sendable = mode.value === "encrypt") {
+      const text = els.output.value.trim();
+      if (!text || !sendable) {
+        els.smsLink.setAttribute("aria-disabled", "true");
+        els.smsLink.href = `sms:?&body=${encodeURIComponent(toolUrl)}`;
+        return;
+      }
+      const body = `${text}\n\nDecode ring: ${toolUrl}`;
+      els.smsLink.removeAttribute("aria-disabled");
+      els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
     }
 
     function displaySymbol(symbol) {
@@ -641,6 +662,7 @@
         cipher += transformSymbol(plain[i], key[i], "encrypt");
       }
       els.output.value = `QLR ${groupSymbols(cipher)}`;
+      updateSmsLink(true);
       setStatus(`Encrypted ${plain.length} symbols. Cross off the first ${plain.length} key symbols.`);
     }
 
@@ -653,6 +675,7 @@
         plain += transformSymbol(cipher[i], key[i], "decrypt");
       }
       els.output.value = plain.replace(/_/g, " ");
+      updateSmsLink(false);
       if (cipher.length) {
         setRingKey(alphabet.indexOf(key[0]));
         setActivePair(cipher[0], plain[0]);
@@ -677,6 +700,7 @@
         if (!ringState.animating) return;
         if (index >= cipher.length) {
           els.output.value = plain.replace(/_/g, " ");
+          updateSmsLink(false);
           els.decodeLine.textContent = plain.replace(/_/g, " ");
           setStatus(`Animated ${cipher.length} symbols. Cross off the first ${cipher.length} key symbols.`);
           ringState.animating = false;
@@ -690,6 +714,7 @@
         setRingKey(alphabet.indexOf(keySymbol));
         setActivePair(cipherSymbol, plainSymbol);
         els.output.value = plain.replace(/_/g, " ");
+        updateSmsLink(false);
         els.decodeLine.textContent = plain.replace(/_/g, " ");
         setStatus(`Decoding ${index + 1} of ${cipher.length}: key ${displaySymbol(keySymbol)}, cipher ${displaySymbol(cipherSymbol)}, plain ${displaySymbol(plainSymbol)}.`);
         index += 1;
@@ -743,10 +768,17 @@
         setStatus("Copied.");
       }
     });
+    els.smsLink.addEventListener("click", (event) => {
+      if (els.smsLink.getAttribute("aria-disabled") === "true") {
+        event.preventDefault();
+        setStatus("Encrypt a ring message first, then use Text Output.", true);
+      }
+    });
     els.clearBtn.addEventListener("click", () => {
       stopAnimation();
       els.message.value = "";
       els.output.value = "";
+      updateSmsLink();
       els.decodeLine.textContent = "";
       setActivePair("", "");
       setStatus("");
