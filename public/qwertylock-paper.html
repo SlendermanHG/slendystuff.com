@@ -7,15 +7,16 @@
   <title>QwertyLock Ring | SlendyStuff</title>
   <style>
     :root {
-      --bg: #f7f6f0;
-      --panel: #ffffff;
-      --ink: #151a20;
-      --muted: #5c6672;
-      --line: #cfc8bb;
-      --accent: #17745e;
-      --warn: #9a3f48;
+      --bg: #f6f4ee;
+      --panel: #fffefa;
+      --ink: #14191f;
+      --muted: #5f6873;
+      --line: #d1c8bb;
+      --accent: #16745d;
+      --warn: #9b3d48;
+      --soft: #e7f2ee;
       --focus: #0b63ce;
-      --soft: #e8f2ee;
+      --shadow: 0 18px 48px rgba(28, 24, 18, 0.12);
     }
 
     * { box-sizing: border-box; }
@@ -26,19 +27,22 @@
       background: var(--bg);
       color: var(--ink);
       font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      line-height: 1.45;
+      line-height: 1.4;
     }
 
     main {
-      width: min(1100px, calc(100vw - 28px));
+      width: min(1180px, calc(100vw - 24px));
       margin: 0 auto;
-      padding: 34px 0 44px;
+      padding: 18px 0 24px;
     }
 
     header {
-      margin-bottom: 18px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
       border-bottom: 3px solid var(--accent);
-      padding-bottom: 18px;
+      padding: 0 0 14px;
     }
 
     h1 {
@@ -48,153 +52,92 @@
       letter-spacing: 0;
     }
 
-    h2, h3 { margin: 0 0 10px; }
+    .local-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: right;
+    }
 
-    a { color: var(--accent); }
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(360px, 1fr) minmax(340px, 0.92fr);
+      gap: 18px;
+      align-items: stretch;
+      padding-top: 18px;
+    }
 
-    .subtitle, .note { color: var(--muted); }
-
-    .panel {
+    .ring-stage,
+    .stream-panel {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 18px;
-      margin-top: 16px;
+      box-shadow: var(--shadow);
+      min-width: 0;
     }
 
-    .grid {
+    .ring-stage {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      grid-template-rows: auto 1fr auto;
+      padding: 16px;
     }
 
-    .tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .tab, button, .button {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: white;
-      color: var(--ink);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font: inherit;
-      font-weight: 700;
-      min-height: 44px;
-      padding: 10px 14px;
-      text-decoration: none;
-    }
-
-    .button[aria-disabled="true"] {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    .tab[aria-selected="true"], .primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: white;
-    }
-
-    label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    textarea, input {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: white;
-      color: var(--ink);
-      font: 1rem/1.4 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-      padding: 12px;
-      outline: none;
-    }
-
-    textarea {
-      min-height: 150px;
-      resize: vertical;
-    }
-
-    textarea:focus, input:focus, button:focus-visible, a:focus-visible {
-      border-color: var(--focus);
-      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.16);
-      outline: none;
-    }
-
-    .field { margin-bottom: 14px; }
-
-    .actions, .pad-options {
+    .stage-head {
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
       align-items: center;
-      margin-top: 12px;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 38px;
     }
 
-    .pad-options { align-items: end; }
-    .pad-options .field { width: 180px; margin-bottom: 0; }
+    .stage-title {
+      margin: 0;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
 
     .status {
-      min-height: 24px;
       color: var(--muted);
-      font-size: 0.96rem;
+      font-size: 0.95rem;
+      min-height: 22px;
     }
 
-    .status.error, .warning {
+    .status.error {
       color: var(--warn);
       font-weight: 700;
-    }
-
-    .alphabet {
-      display: grid;
-      grid-template-columns: repeat(10, minmax(0, 1fr));
-      gap: 6px;
-      margin-top: 12px;
-    }
-
-    .cell {
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: #fbfaf7;
-      padding: 8px 6px;
-      text-align: center;
-      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
     }
 
     .ring-wrap {
       display: grid;
       place-items: center;
-      min-height: 480px;
+      min-height: 500px;
     }
 
     .ring {
       position: relative;
-      width: min(78vw, 430px);
+      width: min(82vw, 500px);
       aspect-ratio: 1;
       border: 2px solid var(--line);
       border-radius: 50%;
-      touch-action: none;
       background:
-        radial-gradient(circle at center, white 0 34%, transparent 35%),
-        repeating-conic-gradient(from -4.5deg, rgba(23,116,94,0.08) 0 9deg, transparent 9deg 18deg);
+        radial-gradient(circle at center, white 0 33%, transparent 34%),
+        repeating-conic-gradient(from -4.5deg, rgba(22, 116, 93, 0.09) 0 9deg, transparent 9deg 18deg);
+      touch-action: none;
+      user-select: none;
     }
 
-    .ring::before, .ring::after {
+    .ring::before,
+    .ring::after {
       content: "";
       position: absolute;
-      inset: 16%;
       border: 2px solid var(--line);
       border-radius: 50%;
     }
+
+    .ring::before { inset: 16%; }
 
     .ring::after {
       inset: 36%;
@@ -202,55 +145,55 @@
       background: var(--soft);
     }
 
+    .ring-pointer {
+      position: absolute;
+      left: 50%;
+      top: 4px;
+      z-index: 5;
+      width: 0;
+      height: 0;
+      border-left: 13px solid transparent;
+      border-right: 13px solid transparent;
+      border-top: 24px solid var(--warn);
+      transform: translateX(-50%);
+    }
+
     .ring-center {
       position: absolute;
-      inset: 40%;
-      z-index: 3;
+      inset: 39%;
+      z-index: 4;
       display: grid;
       place-items: center;
       border-radius: 50%;
       color: var(--accent);
-      font-weight: 800;
+      font-weight: 900;
       text-align: center;
-      font-size: 0.9rem;
-    }
-
-    .ring-pointer {
-      position: absolute;
-      left: 50%;
-      top: 2px;
-      z-index: 4;
-      width: 0;
-      height: 0;
-      border-left: 12px solid transparent;
-      border-right: 12px solid transparent;
-      border-top: 22px solid var(--warn);
-      transform: translateX(-50%);
+      font-size: 0.95rem;
     }
 
     .mark {
       position: absolute;
       left: 50%;
       top: 50%;
-      z-index: 2;
-      width: 32px;
+      z-index: 3;
+      width: 34px;
       height: 24px;
-      margin-left: -16px;
+      margin-left: -17px;
       margin-top: -12px;
       text-align: center;
       font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-      font-weight: 800;
+      font-weight: 900;
       transform: rotate(var(--angle)) translateY(var(--radius)) rotate(calc(-1 * var(--angle)));
     }
 
-    .outer { --radius: -190px; color: var(--ink); }
-    .inner { --radius: -128px; color: var(--accent); }
+    .outer { --radius: -220px; color: var(--ink); }
+    .inner { --radius: -146px; color: var(--accent); }
 
     .mark.active-outer,
     .mark.active-inner,
     .mark.active-key {
       color: var(--warn);
-      text-shadow: 0 0 12px rgba(154, 63, 72, 0.3);
+      text-shadow: 0 0 14px rgba(155, 61, 72, 0.35);
     }
 
     .mark.active-inner,
@@ -259,23 +202,10 @@
         rotate(var(--angle))
         translateY(var(--radius))
         rotate(calc(-1 * var(--angle)))
-        scale(1.25);
+        scale(1.28);
     }
 
-    .ring-caption {
-      margin-top: 14px;
-      color: var(--muted);
-      text-align: center;
-    }
-
-    .ring-controls {
-      display: grid;
-      gap: 10px;
-      margin: 16px auto 0;
-      max-width: 520px;
-    }
-
-    .ring-readout {
+    .readout {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
@@ -285,16 +215,17 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fbfaf7;
-      padding: 10px;
+      padding: 9px;
       text-align: center;
     }
 
     .readout-box span {
       display: block;
       color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 700;
+      font-size: 0.75rem;
+      font-weight: 800;
       text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
     .readout-box strong {
@@ -304,175 +235,177 @@
       line-height: 1.1;
     }
 
-    .ring-buttons {
+    .stream-panel {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
+      gap: 12px;
+      padding: 16px;
     }
 
-    .decode-line {
-      min-height: 52px;
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 0.83rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      font: 1rem/1.45 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      outline: none;
+      padding: 11px;
+    }
+
+    textarea:focus,
+    input:focus,
+    button:focus-visible,
+    a:focus-visible {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.16);
+      outline: none;
+    }
+
+    #message { min-height: 118px; resize: vertical; }
+    #keyStream { min-height: 72px; resize: vertical; }
+
+    .stream-output {
+      min-height: 156px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fbfaf7;
-      padding: 10px;
-      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      padding: 12px;
+      font: 1.05rem/1.5 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
       overflow-wrap: anywhere;
+      white-space: pre-wrap;
     }
 
-    .steps { margin: 0; padding-left: 22px; }
-    .steps li { margin: 8px 0; }
-
-    code {
-      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    .stream-output:empty::before {
+      content: "Decoded text streams here.";
+      color: var(--muted);
     }
 
-    @media (max-width: 780px) {
-      main {
-        width: min(100vw - 20px, 560px);
-        padding-top: 18px;
-      }
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
 
-      .grid { grid-template-columns: 1fr; }
-      .alphabet { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    button,
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font: inherit;
+      font-weight: 800;
+      min-height: 44px;
+      padding: 10px 12px;
+      text-decoration: none;
+    }
+
+    .primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .button[aria-disabled="true"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .micro {
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin: 0;
+    }
+
+    @media (max-width: 860px) {
+      main { width: min(100vw - 18px, 560px); padding-top: 12px; }
+      header { align-items: start; flex-direction: column; }
+      .local-note { text-align: left; }
+      .workspace { grid-template-columns: 1fr; }
       .ring-wrap { min-height: 390px; }
-      .outer { --radius: -162px; }
-      .inner { --radius: -108px; }
-    }
-
-    @media print {
-      body { background: white; }
-      main { width: auto; padding: 0; }
-      .no-print { display: none; }
-      .panel { break-inside: avoid; }
-      .ring { width: 430px; }
-      .outer { --radius: -190px; }
-      .inner { --radius: -128px; }
+      .outer { --radius: -164px; }
+      .inner { --radius: -109px; }
+      .ring { width: min(92vw, 380px); }
     }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <h1>QwertyLock Ring</h1>
-      <p class="subtitle">The primary QwertyLock decrypter-ring workflow for TXT/MMS. Use <a href="/qwertylock-7m4r.html">QwertyLock Secure</a> for the browser/app-style AES companion.</p>
+      <div>
+        <h1>QwertyLock Ring</h1>
+      </div>
+      <p class="local-note">Local browser only. Nothing is server-saved.</p>
     </header>
 
-    <section class="panel">
-      <h2>Security Rule</h2>
-      <p class="warning">The ring is only secure when each key/pad symbol is random, secret, used once, and crossed off forever. Reusing a key stream breaks the paper system.</p>
-      <p class="note">This page outputs <code>QLR</code> blocks. The ring replaces number math: align the current key symbol, then read the matching symbol on the ring.</p>
-      <p class="note">Privacy: this page does not send, upload, or server-save messages, ring keys, plaintext, or encrypted blocks. Decode-once tracking stores only a local SHA-256 hash marker of a decoded block on that browser.</p>
-    </section>
-
-    <section class="panel">
-      <h2>Printable Decrypter Ring</h2>
-      <div class="ring-wrap">
-        <div class="ring" id="ring" aria-label="QwertyLock cipher ring">
-          <div class="ring-pointer" aria-hidden="true"></div>
-          <div class="ring-center" id="ringCenter">A over<br>A</div>
+    <section class="workspace" aria-label="QwertyLock Ring workspace">
+      <div class="ring-stage">
+        <div class="stage-head">
+          <p class="stage-title">Touch Ring</p>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
         </div>
-      </div>
-      <div class="ring-controls no-print">
-        <div class="ring-readout">
+
+        <div class="ring-wrap">
+          <div class="ring" id="ring" aria-label="Interactive QwertyLock decrypter ring">
+            <div class="ring-pointer" aria-hidden="true"></div>
+            <div class="ring-center" id="ringCenter">A over<br>A</div>
+          </div>
+        </div>
+
+        <div class="readout" aria-label="Ring readout">
           <div class="readout-box"><span>Key</span><strong id="keyReadout">A</strong></div>
           <div class="readout-box"><span>Cipher</span><strong id="cipherReadout">-</strong></div>
           <div class="readout-box"><span>Plain</span><strong id="plainReadout">-</strong></div>
         </div>
-        <div class="ring-buttons">
-          <button id="prevKeyBtn" type="button">Rotate Left</button>
-          <button id="resetKeyBtn" type="button">Set A</button>
-          <button id="nextKeyBtn" type="button">Rotate Right</button>
-        </div>
-        <div class="decode-line" id="decodeLine" aria-live="polite"></div>
-      </div>
-      <p class="ring-caption">Outer black ring is plaintext. Inner green ring is the rotating cipher ring. Touch or drag the ring to set the key symbol under outer <strong>A</strong>.</p>
-    </section>
-
-    <section class="panel">
-      <h2>Ring Alphabet</h2>
-      <p class="note">Use `_` for a space. Supported symbols: A-Z, 0-9, underscore, period, comma, question mark.</p>
-      <div class="alphabet" id="alphabetGrid" aria-label="Ring alphabet"></div>
-    </section>
-
-    <section class="panel no-print" aria-label="Ring helper">
-      <div class="tabs" role="tablist" aria-label="Mode">
-        <button class="tab" id="encryptTab" type="button" role="tab" aria-selected="true">Ring Encrypt</button>
-        <button class="tab" id="decryptTab" type="button" role="tab" aria-selected="false">Ring Decrypt</button>
       </div>
 
-      <div class="grid">
+      <div class="stream-panel">
         <div>
-          <div class="field">
-            <label for="message">Message or QLR Block</label>
-            <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Type message for ring encryption"></textarea>
-          </div>
-          <div class="field">
-            <label for="keyStream">Ring Key / Pad Symbols</label>
-            <textarea id="keyStream" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste random key symbols like X7H_QK..."></textarea>
-          </div>
-          <div class="actions">
-            <button class="primary" id="runBtn" type="button">Ring Encrypt</button>
-            <button id="animateBtn" type="button">Animate Decode</button>
-            <button id="copyBtn" type="button">Copy Output</button>
-            <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fqwertylock-paper.html" aria-disabled="true">Text Output</a>
-            <button id="clearBtn" type="button">Clear</button>
-          </div>
+          <label for="message">Text Stream</label>
+          <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste QLR link text, or type a reply to encrypt"></textarea>
         </div>
 
         <div>
-          <div class="field">
-            <label for="output">Output</label>
-            <textarea id="output" autocomplete="off" spellcheck="false" readonly placeholder="QLR output or plaintext appears here"></textarea>
-          </div>
-          <p class="status" id="status" role="status" aria-live="polite"></p>
+          <label for="keyStream">Ring Key</label>
+          <textarea id="keyStream" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste matching ring key symbols"></textarea>
         </div>
-      </div>
-    </section>
 
-    <section class="panel">
-      <h2>By Hand</h2>
-      <div class="grid">
-        <article>
-          <h3>Encrypt</h3>
-          <ol class="steps">
-            <li>Uppercase the message. Change spaces to `_`.</li>
-            <li>Take the next unused key symbol.</li>
-            <li>Rotate the inner ring so that key symbol sits under outer <strong>A</strong>.</li>
-            <li>Find the plaintext symbol on the outer ring.</li>
-            <li>Write the inner-ring symbol below it into the <code>QLR</code> block.</li>
-          </ol>
-        </article>
-        <article>
-          <h3>Decrypt</h3>
-          <ol class="steps">
-            <li>Take the same key symbols in the same order.</li>
-            <li>Rotate the inner ring so the key symbol sits under outer <strong>A</strong>.</li>
-            <li>Find the encrypted symbol on the inner ring.</li>
-            <li>Read the plaintext symbol from the outer ring.</li>
-            <li>Change `_` back to a space.</li>
-          </ol>
-        </article>
-      </div>
-    </section>
-
-    <section class="panel no-print">
-      <h2>Make Local Ring Key</h2>
-      <p class="note">Generated in this browser with <code>crypto.getRandomValues</code>. Print or write down two matching copies. Never send the key with the encrypted TXT/MMS message.</p>
-      <div class="pad-options">
-        <div class="field">
-          <label for="keyCount">Key length</label>
-          <input id="keyCount" type="number" min="20" max="1000" step="10" value="120">
+        <div>
+          <label for="streamOutput">Stream</label>
+          <div class="stream-output" id="streamOutput" aria-live="polite"></div>
         </div>
-        <button id="makeKeyBtn" class="primary" type="button">Make Ring Key</button>
-        <button id="printBtn" type="button">Print Ring</button>
+
+        <div class="actions">
+          <button class="primary" id="animateBtn" type="button">Animate Decode</button>
+          <button id="decodeBtn" type="button">Decode Now</button>
+          <button id="encryptBtn" type="button">Encrypt Reply</button>
+          <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fqwertylock-paper.html" aria-disabled="true">Text Output</a>
+          <button id="makeKeyBtn" type="button">Make Key</button>
+          <button id="clearBtn" type="button">Clear</button>
+        </div>
+
+        <p class="micro">Do not send the ring key in the same text. Decoded QLR blocks are locally marked by hash so the same block is refused on this browser.</p>
       </div>
     </section>
   </main>
 
   <script>
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.,?";
-    const mode = { value: "encrypt" };
+    const toolUrl = "https://slendystuff.com/qwertylock-paper.html";
+    const usedStoreKey = "qwertylock.used.qlr.v1";
 
     const els = {
       ring: document.getElementById("ring"),
@@ -480,27 +413,17 @@
       keyReadout: document.getElementById("keyReadout"),
       cipherReadout: document.getElementById("cipherReadout"),
       plainReadout: document.getElementById("plainReadout"),
-      decodeLine: document.getElementById("decodeLine"),
-      alphabetGrid: document.getElementById("alphabetGrid"),
-      encryptTab: document.getElementById("encryptTab"),
-      decryptTab: document.getElementById("decryptTab"),
       message: document.getElementById("message"),
       keyStream: document.getElementById("keyStream"),
-      output: document.getElementById("output"),
+      streamOutput: document.getElementById("streamOutput"),
       status: document.getElementById("status"),
-      runBtn: document.getElementById("runBtn"),
       animateBtn: document.getElementById("animateBtn"),
-      copyBtn: document.getElementById("copyBtn"),
+      decodeBtn: document.getElementById("decodeBtn"),
+      encryptBtn: document.getElementById("encryptBtn"),
       smsLink: document.getElementById("smsLink"),
-      clearBtn: document.getElementById("clearBtn"),
-      keyCount: document.getElementById("keyCount"),
       makeKeyBtn: document.getElementById("makeKeyBtn"),
-      printBtn: document.getElementById("printBtn")
+      clearBtn: document.getElementById("clearBtn")
     };
-
-    const toolUrl = "https://slendystuff.com/qwertylock-paper.html";
-    const usedStoreKey = "qwertylock.used.qlr.v1";
-    const linkedMessage = { active: false, block: "" };
 
     const ringState = {
       keyIndex: 0,
@@ -515,40 +438,57 @@
       els.status.classList.toggle("error", isError);
     }
 
-    function setMode(nextMode) {
-      mode.value = nextMode;
-      const encrypting = nextMode === "encrypt";
-      els.encryptTab.setAttribute("aria-selected", String(encrypting));
-      els.decryptTab.setAttribute("aria-selected", String(!encrypting));
-      els.runBtn.textContent = encrypting ? "Ring Encrypt" : "Ring Decrypt";
-      els.message.placeholder = encrypting ? "Type message for ring encryption" : "Paste QLR text here";
-      els.output.placeholder = encrypting ? "QLR output appears here" : "Plaintext appears here";
-      setStatus("");
+    function displaySymbol(symbol) {
+      return symbol === "_" ? "SP" : symbol;
     }
 
-    function updateSmsLink(sendable = mode.value === "encrypt") {
-      const text = els.output.value.trim();
-      if (!text || !sendable) {
-        els.smsLink.setAttribute("aria-disabled", "true");
-        els.smsLink.href = `sms:?&body=${encodeURIComponent(toolUrl)}`;
-        return;
+    function normalizeText(text) {
+      return text.toUpperCase().replace(/ /g, "_");
+    }
+
+    function onlyRingSymbols(text) {
+      const symbols = [];
+      for (const raw of normalizeText(text)) {
+        if (alphabet.includes(raw)) symbols.push(raw);
       }
-      const linkedToolUrl = `${toolUrl}#qlr=${encodeURIComponent(text)}`;
-      const body = `${text}\n\nTap to decode: ${linkedToolUrl}\n\nDo not send the ring key in this text.`;
-      els.smsLink.removeAttribute("aria-disabled");
-      els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
+      return symbols.join("");
+    }
+
+    function groupSymbols(text) {
+      return text.replace(/(.{5})/g, "$1 ").trim();
     }
 
     function canonicalBlockFromCipher(cipher) {
       return `QLR ${groupSymbols(cipher)}`;
     }
 
+    function parseCipher(text) {
+      const clean = onlyRingSymbols(String(text || "").replace(/^QLR\s*/i, ""));
+      if (!clean) throw new Error("Paste a QLR block first.");
+      return clean;
+    }
+
+    function parseKey(text) {
+      const key = onlyRingSymbols(text);
+      if (!key) throw new Error("Paste or make a ring key first.");
+      return key;
+    }
+
+    function transformSymbol(symbol, keySymbol, direction) {
+      const s = alphabet.indexOf(symbol);
+      const k = alphabet.indexOf(keySymbol);
+      if (s < 0) throw new Error(`Unsupported symbol: ${symbol}`);
+      if (k < 0) throw new Error(`Unsupported key symbol: ${keySymbol}`);
+      const index = direction === "encrypt"
+        ? (s + k) % alphabet.length
+        : (s - k + alphabet.length) % alphabet.length;
+      return alphabet[index];
+    }
+
     async function hashBlock(block) {
       const bytes = new TextEncoder().encode(block);
       const digest = await crypto.subtle.digest("SHA-256", bytes);
-      return [...new Uint8Array(digest)]
-        .map((byte) => byte.toString(16).padStart(2, "0"))
-        .join("");
+      return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
     }
 
     function getUsedHashes() {
@@ -581,9 +521,7 @@
         }
       }
       const unique = [...new Set(migrated)];
-      if (changed || unique.length !== entries.length) {
-        saveUsedHashes(unique);
-      }
+      if (changed || unique.length !== entries.length) saveUsedHashes(unique);
     }
 
     async function isUsedBlock(block) {
@@ -591,40 +529,26 @@
     }
 
     async function markUsedBlock(block) {
-      if (!block) return;
       const hash = await hashBlock(block);
       const hashes = getUsedHashes();
       if (!hashes.includes(hash)) {
         hashes.push(hash);
         saveUsedHashes(hashes);
       }
-      if (linkedMessage.block === block && location.hash) {
-        history.replaceState(null, "", location.pathname);
-      }
+      if (location.hash) history.replaceState(null, "", location.pathname);
     }
 
-    async function loadLinkedMessage() {
-      if (!location.hash) return;
-      const params = new URLSearchParams(location.hash.slice(1));
-      const block = params.get("qlr");
-      if (!block || !block.trim().toUpperCase().startsWith("QLR")) return;
-      setMode("decrypt");
-      els.message.value = block;
-      linkedMessage.active = true;
-      linkedMessage.block = canonicalBlockFromCipher(parseCipher(block));
-      els.decodeLine.textContent = "Linked QLR message loaded. Paste the matching ring key, then tap Animate Decode.";
-      if (await isUsedBlock(linkedMessage.block)) {
-        els.message.value = "";
-        linkedMessage.active = false;
-        setStatus("This linked QLR block was already decoded on this browser and has been cleared.", true);
-        history.replaceState(null, "", location.pathname);
+    function updateSmsLink(sendable = true) {
+      const text = els.streamOutput.textContent.trim();
+      if (!sendable || !text.startsWith("QLR")) {
+        els.smsLink.setAttribute("aria-disabled", "true");
+        els.smsLink.href = `sms:?&body=${encodeURIComponent(toolUrl)}`;
         return;
       }
-      setStatus("Linked QLR message loaded. Paste the matching ring key to decode.");
-    }
-
-    function displaySymbol(symbol) {
-      return symbol === "_" ? "SP" : symbol;
+      const linkedToolUrl = `${toolUrl}#qlr=${encodeURIComponent(text)}`;
+      const body = `${text}\n\nTap to decode: ${linkedToolUrl}\n\nDo not send the ring key in this text.`;
+      els.smsLink.removeAttribute("aria-disabled");
+      els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
     }
 
     function setRingKey(index) {
@@ -632,7 +556,7 @@
       updateRingDisplay();
     }
 
-    function setActivePair(cipherSymbol, plainSymbol) {
+    function setActivePair(cipherSymbol = "", plainSymbol = "") {
       ringState.cipherIndex = cipherSymbol ? alphabet.indexOf(cipherSymbol) : -1;
       ringState.plainIndex = plainSymbol ? alphabet.indexOf(plainSymbol) : -1;
       updateRingDisplay();
@@ -647,8 +571,7 @@
 
       document.querySelectorAll(".inner").forEach((mark) => {
         const index = Number(mark.dataset.index || 0);
-        const angle = `${(index - ringState.keyIndex) * 9}deg`;
-        mark.style.setProperty("--angle", angle);
+        mark.style.setProperty("--angle", `${(index - ringState.keyIndex) * 9}deg`);
         mark.classList.toggle("active-key", index === ringState.keyIndex);
         mark.classList.toggle("active-inner", index === ringState.cipherIndex);
       });
@@ -667,160 +590,101 @@
       return Math.round(angle / 9) % alphabet.length;
     }
 
-    function stopAnimation() {
-      ringState.animating = false;
-      window.clearTimeout(ringState.timer);
-    }
-
     function drawRing() {
       [...alphabet].forEach((char, index) => {
-        const angle = `${index * 9}deg`;
         const outer = document.createElement("span");
         outer.className = "mark outer";
         outer.dataset.index = String(index);
-        outer.style.setProperty("--angle", angle);
+        outer.style.setProperty("--angle", `${index * 9}deg`);
         outer.textContent = char;
         els.ring.appendChild(outer);
 
         const inner = document.createElement("span");
         inner.className = "mark inner";
         inner.dataset.index = String(index);
-        inner.style.setProperty("--angle", angle);
+        inner.style.setProperty("--angle", `${index * 9}deg`);
         inner.textContent = char;
         els.ring.appendChild(inner);
       });
     }
 
-    function drawAlphabet() {
-      els.alphabetGrid.innerHTML = "";
-      [...alphabet].forEach((char, index) => {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.innerHTML = `<strong>${char === "_" ? "SPACE" : char}</strong><span>${String(index).padStart(2, "0")}</span>`;
-        els.alphabetGrid.appendChild(cell);
-      });
+    function stopAnimation() {
+      ringState.animating = false;
+      window.clearTimeout(ringState.timer);
     }
 
-    function normalizeText(text) {
-      return text.toUpperCase().replace(/ /g, "_");
-    }
-
-    function onlyRingSymbols(text) {
-      const symbols = [];
-      for (const raw of normalizeText(text)) {
-        if (alphabet.includes(raw)) symbols.push(raw);
-      }
-      return symbols.join("");
-    }
-
-    function parseKey(text) {
-      const key = onlyRingSymbols(text);
-      if (!key.length) throw new Error("Paste or generate a ring key first.");
-      return key;
-    }
-
-    function parseCipher(text) {
-      const clean = onlyRingSymbols(text.replace(/^QLR\s*/i, ""));
-      if (!clean.length) throw new Error("Paste a QLR block first.");
-      return clean;
-    }
-
-    function groupSymbols(text) {
-      return text.replace(/(.{5})/g, "$1 ").trim();
-    }
-
-    function transformSymbol(symbol, keySymbol, direction) {
-      const s = alphabet.indexOf(symbol);
-      const k = alphabet.indexOf(keySymbol);
-      if (s < 0) throw new Error(`Unsupported symbol: ${symbol}`);
-      if (k < 0) throw new Error(`Unsupported key symbol: ${keySymbol}`);
-      const index = direction === "encrypt"
-        ? (s + k) % alphabet.length
-        : (s - k + alphabet.length) % alphabet.length;
-      return alphabet[index];
-    }
-
-    function encryptRing() {
+    function encryptReply() {
+      stopAnimation();
       const plain = onlyRingSymbols(els.message.value);
-      if (!plain) throw new Error("Type a message first.");
+      if (!plain) throw new Error("Type a reply first.");
       const key = parseKey(els.keyStream.value);
       if (key.length < plain.length) throw new Error(`Need ${plain.length} key symbols. You only have ${key.length}.`);
       let cipher = "";
-      for (let i = 0; i < plain.length; i++) {
-        cipher += transformSymbol(plain[i], key[i], "encrypt");
-      }
-      els.output.value = `QLR ${groupSymbols(cipher)}`;
+      for (let i = 0; i < plain.length; i++) cipher += transformSymbol(plain[i], key[i], "encrypt");
+      const block = canonicalBlockFromCipher(cipher);
+      els.streamOutput.textContent = block;
       updateSmsLink(true);
-      setStatus(`Encrypted ${plain.length} symbols. Cross off the first ${plain.length} key symbols.`);
+      setActivePair(cipher[0], plain[0]);
+      setRingKey(alphabet.indexOf(key[0]));
+      setStatus(`Reply encrypted. Cross off ${plain.length} key symbols.`);
     }
 
-    async function decryptRing() {
+    async function decodeNow() {
+      stopAnimation();
       const cipher = parseCipher(els.message.value);
-      const canonicalBlock = canonicalBlockFromCipher(cipher);
-      if (await isUsedBlock(canonicalBlock)) {
-        els.message.value = "";
-        throw new Error("This QLR block was already decoded on this browser and has been cleared.");
+      const block = canonicalBlockFromCipher(cipher);
+      if (await isUsedBlock(block)) {
+        clearIncoming();
+        throw new Error("This QLR block was already decoded on this browser.");
       }
       const key = parseKey(els.keyStream.value);
       if (key.length < cipher.length) throw new Error(`Need ${cipher.length} key symbols. You only have ${key.length}.`);
       let plain = "";
-      for (let i = 0; i < cipher.length; i++) {
-        plain += transformSymbol(cipher[i], key[i], "decrypt");
-      }
-      els.output.value = plain.replace(/_/g, " ");
+      for (let i = 0; i < cipher.length; i++) plain += transformSymbol(cipher[i], key[i], "decrypt");
+      els.streamOutput.textContent = plain.replace(/_/g, " ");
       updateSmsLink(false);
-      if (cipher.length) {
-        setRingKey(alphabet.indexOf(key[0]));
-        setActivePair(cipher[0], plain[0]);
-      }
-      await markUsedBlock(canonicalBlock);
-      els.message.value = "";
-      setStatus(`Decrypted ${cipher.length} symbols. Cross off the first ${cipher.length} key symbols.`);
+      setActivePair(cipher[0], plain[0]);
+      setRingKey(alphabet.indexOf(key[0]));
+      await markUsedBlock(block);
+      clearIncoming(false);
+      setStatus(`Decoded once. Cross off ${cipher.length} key symbols.`);
     }
 
     async function animateDecode() {
       stopAnimation();
       const cipher = parseCipher(els.message.value);
-      const canonicalBlock = canonicalBlockFromCipher(cipher);
-      if (await isUsedBlock(canonicalBlock)) {
-        els.message.value = "";
-        throw new Error("This QLR block was already decoded on this browser and has been cleared.");
+      const block = canonicalBlockFromCipher(cipher);
+      if (await isUsedBlock(block)) {
+        clearIncoming();
+        throw new Error("This QLR block was already decoded on this browser.");
       }
       const key = parseKey(els.keyStream.value);
       if (key.length < cipher.length) throw new Error(`Need ${cipher.length} key symbols. You only have ${key.length}.`);
-
-      setMode("decrypt");
-      els.output.value = "";
-      els.decodeLine.textContent = "";
+      els.streamOutput.textContent = "";
+      updateSmsLink(false);
+      ringState.animating = true;
       let plain = "";
       let index = 0;
-      ringState.animating = true;
 
-      const step = () => {
+      const step = async () => {
         if (!ringState.animating) return;
         if (index >= cipher.length) {
-          els.output.value = plain.replace(/_/g, " ");
-          updateSmsLink(false);
-          els.decodeLine.textContent = plain.replace(/_/g, " ");
-          markUsedBlock(canonicalBlock);
-          els.message.value = "";
-          setStatus(`Animated ${cipher.length} symbols. Cross off the first ${cipher.length} key symbols.`);
+          await markUsedBlock(block);
+          clearIncoming(false);
           ringState.animating = false;
+          setStatus(`Decoded once. Cross off ${cipher.length} key symbols.`);
           return;
         }
-
         const keySymbol = key[index];
         const cipherSymbol = cipher[index];
         const plainSymbol = transformSymbol(cipherSymbol, keySymbol, "decrypt");
         plain += plainSymbol;
         setRingKey(alphabet.indexOf(keySymbol));
         setActivePair(cipherSymbol, plainSymbol);
-        els.output.value = plain.replace(/_/g, " ");
-        updateSmsLink(false);
-        els.decodeLine.textContent = plain.replace(/_/g, " ");
-        setStatus(`Decoding ${index + 1} of ${cipher.length}: key ${displaySymbol(keySymbol)}, cipher ${displaySymbol(cipherSymbol)}, plain ${displaySymbol(plainSymbol)}.`);
+        els.streamOutput.textContent = plain.replace(/_/g, " ");
+        setStatus(`${index + 1}/${cipher.length}  key ${displaySymbol(keySymbol)}  cipher ${displaySymbol(cipherSymbol)}  plain ${displaySymbol(plainSymbol)}`);
         index += 1;
-        ringState.timer = window.setTimeout(step, 650);
+        ringState.timer = window.setTimeout(step, 620);
       };
 
       step();
@@ -835,72 +699,74 @@
     }
 
     function makeKey() {
-      const count = Math.max(20, Math.min(1000, Number(els.keyCount.value) || 120));
       let key = "";
-      for (let i = 0; i < count; i++) key += randomSymbol();
+      for (let i = 0; i < 180; i++) key += randomSymbol();
       els.keyStream.value = groupSymbols(key);
-      setStatus(`Made ${count} random ring key symbols locally. Print two copies and use each symbol once.`);
+      setStatus("Local ring key made. Share it separately, never in the same text.");
     }
 
-    els.encryptTab.addEventListener("click", () => setMode("encrypt"));
-    els.decryptTab.addEventListener("click", () => setMode("decrypt"));
-    els.runBtn.addEventListener("click", async () => {
+    function clearIncoming(clearOutput = true) {
+      els.message.value = "";
+      if (location.hash) history.replaceState(null, "", location.pathname);
+      if (clearOutput) {
+        els.streamOutput.textContent = "";
+        updateSmsLink(false);
+      }
+    }
+
+    function clearAll() {
       stopAnimation();
-      try {
-        if (mode.value === "encrypt") {
-          encryptRing();
-        } else {
-          await decryptRing();
-        }
-      } catch (error) {
-        setStatus(error.message || "Something went wrong.", true);
+      els.message.value = "";
+      els.keyStream.value = "";
+      els.streamOutput.textContent = "";
+      setActivePair();
+      updateSmsLink(false);
+      if (location.hash) history.replaceState(null, "", location.pathname);
+      setStatus("");
+    }
+
+    async function loadLinkedMessage() {
+      if (!location.hash) return;
+      const params = new URLSearchParams(location.hash.slice(1));
+      const block = params.get("qlr");
+      if (!block || !block.trim().toUpperCase().startsWith("QLR")) return;
+      const canonical = canonicalBlockFromCipher(parseCipher(block));
+      if (await isUsedBlock(canonical)) {
+        clearIncoming();
+        setStatus("This linked QLR block was already decoded on this browser.", true);
+        return;
       }
-    });
+      els.message.value = canonical;
+      els.streamOutput.textContent = "QLR loaded. Paste ring key, then Animate Decode.";
+      updateSmsLink(false);
+      setStatus("Linked message loaded.");
+    }
+
     els.animateBtn.addEventListener("click", async () => {
-      try {
-        await animateDecode();
-      } catch (error) {
-        setStatus(error.message || "Something went wrong.", true);
-      }
+      try { await animateDecode(); } catch (error) { setStatus(error.message || "Decode failed.", true); }
     });
-    els.copyBtn.addEventListener("click", async () => {
-      if (!els.output.value) return;
-      try {
-        await navigator.clipboard.writeText(els.output.value);
-        setStatus("Copied.");
-      } catch {
-        els.output.select();
-        document.execCommand("copy");
-        setStatus("Copied.");
-      }
+    els.decodeBtn.addEventListener("click", async () => {
+      try { await decodeNow(); } catch (error) { setStatus(error.message || "Decode failed.", true); }
+    });
+    els.encryptBtn.addEventListener("click", () => {
+      try { encryptReply(); } catch (error) { setStatus(error.message || "Encrypt failed.", true); }
     });
     els.smsLink.addEventListener("click", (event) => {
       if (els.smsLink.getAttribute("aria-disabled") === "true") {
         event.preventDefault();
-        setStatus("Encrypt a ring message first, then use Text Output.", true);
+        setStatus("Encrypt a reply first, then tap Text Output.", true);
       }
     });
-    els.clearBtn.addEventListener("click", () => {
-      stopAnimation();
-      els.message.value = "";
-      els.output.value = "";
-      updateSmsLink();
-      els.decodeLine.textContent = "";
-      setActivePair("", "");
-      linkedMessage.active = false;
-      linkedMessage.block = "";
-      if (location.hash) history.replaceState(null, "", location.pathname);
-      setStatus("");
-    });
     els.makeKeyBtn.addEventListener("click", makeKey);
-    els.printBtn.addEventListener("click", () => window.print());
-
-    els.prevKeyBtn = document.getElementById("prevKeyBtn");
-    els.resetKeyBtn = document.getElementById("resetKeyBtn");
-    els.nextKeyBtn = document.getElementById("nextKeyBtn");
-    els.prevKeyBtn.addEventListener("click", () => setRingKey(ringState.keyIndex - 1));
-    els.resetKeyBtn.addEventListener("click", () => setRingKey(0));
-    els.nextKeyBtn.addEventListener("click", () => setRingKey(ringState.keyIndex + 1));
+    els.clearBtn.addEventListener("click", clearAll);
+    els.message.addEventListener("paste", () => {
+      window.setTimeout(() => {
+        if (els.message.value.trim().toUpperCase().startsWith("QLR")) {
+          els.streamOutput.textContent = "QLR loaded. Paste ring key, then Animate Decode.";
+          setStatus("Pasted QLR message loaded.");
+        }
+      }, 80);
+    });
     els.ring.addEventListener("pointerdown", (event) => {
       els.ring.setPointerCapture(event.pointerId);
       stopAnimation();
@@ -910,28 +776,12 @@
       if (event.buttons !== 1) return;
       setRingKey(ringIndexFromPointer(event));
     });
-    els.message.addEventListener("paste", () => {
-      window.setTimeout(async () => {
-        if (!els.message.value.trim().toUpperCase().startsWith("QLR")) return;
-        setMode("decrypt");
-        if (els.keyStream.value.trim()) {
-          try {
-            await animateDecode();
-          } catch (error) {
-            setStatus(error.message || "Something went wrong.", true);
-          }
-        } else {
-          setStatus("QLR block detected. Paste the matching ring key, then tap Animate Decode.");
-        }
-      }, 80);
-    });
 
     drawRing();
-    drawAlphabet();
     updateRingDisplay();
     migrateUsedStore()
       .then(() => loadLinkedMessage())
-      .catch((error) => setStatus(error.message || "Could not load linked QLR message.", true));
+      .catch((error) => setStatus(error.message || "Could not load linked message.", true));
   </script>
 </body>
 </html>

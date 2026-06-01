@@ -252,3 +252,5 @@ Implications:
 - User confirmed the ring is the primary goal, with the browser/AES version possibly becoming an app-style companion later.
 - Added privacy wording to both QwertyLock pages stating that messages, passwords, keys, plaintext, and encrypted blocks are not sent or server-saved.
 - Changed ring decode-once tracking to store only a local SHA-256 hash marker of decoded `QLR` blocks, and added a migration so older full-block local markers are converted to hashes.
+- User requested removing distractions from the ring page and focusing it around the ring plus streamed text.
+- Reworked `public/qwertylock-paper.html` into a two-zone interface: interactive ring on one side, text stream/key/actions on the other, removing the alphabet table, instruction sections, print controls, and other non-core UI.
