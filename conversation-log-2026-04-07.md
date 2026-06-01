@@ -247,3 +247,5 @@ Implications:
 - Reworked `public/qwertylock-paper.html` into `QwertyLock Ring` with `QLR` blocks, random ring-key symbols, a touch/drag inner ring, and animated symbol-by-symbol decode for pasted messages.
 - Added `Text Output` SMS links to both `public/qwertylock-7m4r.html` and `public/qwertylock-paper.html`.
 - The SMS body includes the encrypted output plus the correct decode page link, but does not include passwords or ring keys.
+- User described the desired ring flow: receive random TXT/MMS text plus a link, tap the link, have the ring page load the block, animate decode, clear, reply, and locally prevent repeat decode.
+- Updated `public/qwertylock-paper.html` so `Text Output` embeds the `QLR` block into the URL fragment, auto-loads linked blocks into decrypt mode, marks decoded blocks as used in browser storage, clears the URL fragment after successful decode, and refuses repeat local decode of the same block.

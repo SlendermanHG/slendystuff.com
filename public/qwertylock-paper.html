@@ -498,6 +498,8 @@
     };
 
     const toolUrl = "https://slendystuff.com/qwertylock-paper.html";
+    const usedStoreKey = "qwertylock.used.qlr.v1";
+    const linkedMessage = { active: false, block: "" };
 
     const ringState = {
       keyIndex: 0,
@@ -530,9 +532,63 @@
         els.smsLink.href = `sms:?&body=${encodeURIComponent(toolUrl)}`;
         return;
       }
-      const body = `${text}\n\nDecode ring: ${toolUrl}`;
+      const linkedToolUrl = `${toolUrl}#qlr=${encodeURIComponent(text)}`;
+      const body = `${text}\n\nTap to decode: ${linkedToolUrl}\n\nDo not send the ring key in this text.`;
       els.smsLink.removeAttribute("aria-disabled");
       els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
+    }
+
+    function canonicalBlockFromCipher(cipher) {
+      return `QLR ${groupSymbols(cipher)}`;
+    }
+
+    function getUsedBlocks() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(usedStoreKey) || "[]");
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_error) {
+        return [];
+      }
+    }
+
+    function saveUsedBlocks(blocks) {
+      localStorage.setItem(usedStoreKey, JSON.stringify(blocks.slice(-200)));
+    }
+
+    function isUsedBlock(block) {
+      return getUsedBlocks().includes(block);
+    }
+
+    function markUsedBlock(block) {
+      if (!block) return;
+      const blocks = getUsedBlocks();
+      if (!blocks.includes(block)) {
+        blocks.push(block);
+        saveUsedBlocks(blocks);
+      }
+      if (linkedMessage.block === block && location.hash) {
+        history.replaceState(null, "", location.pathname);
+      }
+    }
+
+    function loadLinkedMessage() {
+      if (!location.hash) return;
+      const params = new URLSearchParams(location.hash.slice(1));
+      const block = params.get("qlr");
+      if (!block || !block.trim().toUpperCase().startsWith("QLR")) return;
+      setMode("decrypt");
+      els.message.value = block;
+      linkedMessage.active = true;
+      linkedMessage.block = canonicalBlockFromCipher(parseCipher(block));
+      els.decodeLine.textContent = "Linked QLR message loaded. Paste the matching ring key, then tap Animate Decode.";
+      if (isUsedBlock(linkedMessage.block)) {
+        els.message.value = "";
+        linkedMessage.active = false;
+        setStatus("This linked QLR block was already decoded on this browser and has been cleared.", true);
+        history.replaceState(null, "", location.pathname);
+        return;
+      }
+      setStatus("Linked QLR message loaded. Paste the matching ring key to decode.");
     }
 
     function displaySymbol(symbol) {
@@ -668,6 +724,11 @@
 
     function decryptRing() {
       const cipher = parseCipher(els.message.value);
+      const canonicalBlock = canonicalBlockFromCipher(cipher);
+      if (isUsedBlock(canonicalBlock)) {
+        els.message.value = "";
+        throw new Error("This QLR block was already decoded on this browser and has been cleared.");
+      }
       const key = parseKey(els.keyStream.value);
       if (key.length < cipher.length) throw new Error(`Need ${cipher.length} key symbols. You only have ${key.length}.`);
       let plain = "";
@@ -680,12 +741,19 @@
         setRingKey(alphabet.indexOf(key[0]));
         setActivePair(cipher[0], plain[0]);
       }
+      markUsedBlock(canonicalBlock);
+      els.message.value = "";
       setStatus(`Decrypted ${cipher.length} symbols. Cross off the first ${cipher.length} key symbols.`);
     }
 
     function animateDecode() {
       stopAnimation();
       const cipher = parseCipher(els.message.value);
+      const canonicalBlock = canonicalBlockFromCipher(cipher);
+      if (isUsedBlock(canonicalBlock)) {
+        els.message.value = "";
+        throw new Error("This QLR block was already decoded on this browser and has been cleared.");
+      }
       const key = parseKey(els.keyStream.value);
       if (key.length < cipher.length) throw new Error(`Need ${cipher.length} key symbols. You only have ${key.length}.`);
 
@@ -702,6 +770,8 @@
           els.output.value = plain.replace(/_/g, " ");
           updateSmsLink(false);
           els.decodeLine.textContent = plain.replace(/_/g, " ");
+          markUsedBlock(canonicalBlock);
+          els.message.value = "";
           setStatus(`Animated ${cipher.length} symbols. Cross off the first ${cipher.length} key symbols.`);
           ringState.animating = false;
           return;
@@ -781,6 +851,9 @@
       updateSmsLink();
       els.decodeLine.textContent = "";
       setActivePair("", "");
+      linkedMessage.active = false;
+      linkedMessage.block = "";
+      if (location.hash) history.replaceState(null, "", location.pathname);
       setStatus("");
     });
     els.makeKeyBtn.addEventListener("click", makeKey);
@@ -820,6 +893,7 @@
     drawRing();
     drawAlphabet();
     updateRingDisplay();
+    loadLinkedMessage();
   </script>
 </body>
 </html>
