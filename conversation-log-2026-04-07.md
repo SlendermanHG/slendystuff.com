@@ -231,3 +231,11 @@ Implications:
 - Removed the public `public/admin.html` page from the deployed site instead of relying on weak client-side gating.
 - Replaced the old admin/server config logic in `public/site.js` with a static `public/site-config.json` fetch.
 - Removed remaining public copy that referenced `/admin.html`.
+
+## 2026-06-01 Continuation
+
+- User requested using the existing `slendystuff.com` site connection for the QwertyLock Secure browser tool.
+- Added an unlinked hidden page at `public/qwertylock-7m4r.html`.
+- Added the matching TXT/MMS instruction image at `public/qwertylock-secure-card.png`.
+- Kept the page out of navigation and set `noindex,nofollow,noarchive` metadata so it is not advertised as a public site page.
+- The tool remains client-side only: no messages, passwords, or encrypted blocks are sent to a server by the page itself.
