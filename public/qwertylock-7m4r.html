@@ -165,6 +165,26 @@
       padding: 10px 14px;
     }
 
+    a.button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font: inherit;
+      font-weight: 700;
+      min-height: 44px;
+      padding: 10px 14px;
+      text-decoration: none;
+    }
+
+    a.button[aria-disabled="true"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
     .primary {
       background: var(--accent);
       border-color: var(--accent);
@@ -279,6 +299,7 @@
           </div>
           <div class="actions">
             <button id="copyBtn" type="button">Copy Output</button>
+            <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fqwertylock-7m4r.html" aria-disabled="true">Text Output</a>
             <span class="status" id="status" role="status" aria-live="polite"></span>
           </div>
         </div>
@@ -316,8 +337,11 @@
       swapBtn: document.getElementById("swapBtn"),
       clearBtn: document.getElementById("clearBtn"),
       copyBtn: document.getElementById("copyBtn"),
+      smsLink: document.getElementById("smsLink"),
       status: document.getElementById("status")
     };
+
+    const toolUrl = "https://slendystuff.com/qwertylock-7m4r.html";
 
     function setStatus(text, isError = false) {
       els.status.textContent = text;
@@ -333,6 +357,7 @@
 
     function updateOutputMeta(kind = mode.value) {
       const text = els.output.value;
+      updateSmsLink(kind);
       els.outputMeta.classList.remove("warn");
       if (!text) {
         els.outputMeta.textContent = "Encrypted blocks are plain ASCII for TXT/MMS copy-paste.";
@@ -349,6 +374,18 @@
         els.outputMeta.classList.add("warn");
         els.outputMeta.textContent += " For long messages, MMS/RCS/iMessage is more reliable than manual SMS splitting.";
       }
+    }
+
+    function updateSmsLink(kind = mode.value) {
+      const text = els.output.value.trim();
+      if (!text || kind === "decrypt") {
+        els.smsLink.setAttribute("aria-disabled", "true");
+        els.smsLink.href = `sms:?&body=${encodeURIComponent(toolUrl)}`;
+        return;
+      }
+      const body = `${text}\n\nDecrypt: ${toolUrl}`;
+      els.smsLink.removeAttribute("aria-disabled");
+      els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
     }
 
     function setMode(nextMode) {
@@ -575,6 +612,12 @@
         els.output.select();
         document.execCommand("copy");
         setStatus("Copied.");
+      }
+    });
+    els.smsLink.addEventListener("click", (event) => {
+      if (els.smsLink.getAttribute("aria-disabled") === "true") {
+        event.preventDefault();
+        setStatus("Encrypt a message first, then use Text Output.", true);
       }
     });
 

@@ -245,3 +245,5 @@ Implications:
 - The paper mode is compatible at workflow level, not ciphertext level: `QL2` remains browser AES, while `QLP` is manual one-time-pad math.
 - User clarified the paper mode should be a decrypter ring rather than a number-pad worksheet.
 - Reworked `public/qwertylock-paper.html` into `QwertyLock Ring` with `QLR` blocks, random ring-key symbols, a touch/drag inner ring, and animated symbol-by-symbol decode for pasted messages.
+- Added `Text Output` SMS links to both `public/qwertylock-7m4r.html` and `public/qwertylock-paper.html`.
+- The SMS body includes the encrypted output plus the correct decode page link, but does not include passwords or ring keys.
