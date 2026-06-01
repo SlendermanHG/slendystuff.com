@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <title>QwertyLock Paper | SlendyStuff</title>
+  <title>QwertyLock Ring | SlendyStuff</title>
   <style>
     :root {
       --bg: #f7f6f0;
@@ -15,11 +15,10 @@
       --accent: #17745e;
       --warn: #9a3f48;
       --focus: #0b63ce;
+      --soft: #e8f2ee;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -31,7 +30,7 @@
     }
 
     main {
-      width: min(1060px, calc(100vw - 28px));
+      width: min(1100px, calc(100vw - 28px));
       margin: 0 auto;
       padding: 34px 0 44px;
     }
@@ -49,15 +48,11 @@
       letter-spacing: 0;
     }
 
-    h2,
-    h3 {
-      margin: 0 0 10px;
-    }
+    h2, h3 { margin: 0 0 10px; }
 
-    .subtitle,
-    .note {
-      color: var(--muted);
-    }
+    a { color: var(--accent); }
+
+    .subtitle, .note { color: var(--muted); }
 
     .panel {
       background: var(--panel);
@@ -80,58 +75,7 @@
       margin-bottom: 16px;
     }
 
-    .tab {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #f2f0e8;
-      color: var(--ink);
-      cursor: pointer;
-      font: inherit;
-      font-weight: 700;
-      padding: 12px 14px;
-    }
-
-    .tab[aria-selected="true"],
-    .primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: white;
-    }
-
-    label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    textarea,
-    input {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: white;
-      color: var(--ink);
-      font: 1rem/1.4 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-      padding: 12px;
-      outline: none;
-    }
-
-    textarea {
-      min-height: 170px;
-      resize: vertical;
-    }
-
-    textarea:focus,
-    input:focus,
-    button:focus-visible,
-    a:focus-visible {
-      border-color: var(--focus);
-      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.16);
-      outline: none;
-    }
-
-    button,
-    .button {
+    .tab, button, .button {
       border: 1px solid var(--line);
       border-radius: 8px;
       background: white;
@@ -147,7 +91,43 @@
       text-decoration: none;
     }
 
-    .actions {
+    .tab[aria-selected="true"], .primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    textarea, input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      font: 1rem/1.4 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      padding: 12px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    textarea:focus, input:focus, button:focus-visible, a:focus-visible {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.16);
+      outline: none;
+    }
+
+    .field { margin-bottom: 14px; }
+
+    .actions, .pad-options {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -155,9 +135,8 @@
       margin-top: 12px;
     }
 
-    .field {
-      margin-bottom: 14px;
-    }
+    .pad-options { align-items: end; }
+    .pad-options .field { width: 180px; margin-bottom: 0; }
 
     .status {
       min-height: 24px;
@@ -165,15 +144,14 @@
       font-size: 0.96rem;
     }
 
-    .status.error,
-    .warning {
+    .status.error, .warning {
       color: var(--warn);
       font-weight: 700;
     }
 
     .alphabet {
       display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
+      grid-template-columns: repeat(10, minmax(0, 1fr));
       gap: 6px;
       margin-top: 12px;
     }
@@ -187,35 +165,161 @@
       font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
     }
 
-    .cell strong {
-      display: block;
-      font-size: 1.1rem;
+    .ring-wrap {
+      display: grid;
+      place-items: center;
+      min-height: 480px;
     }
 
-    .cell span {
-      color: var(--muted);
+    .ring {
+      position: relative;
+      width: min(78vw, 430px);
+      aspect-ratio: 1;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      touch-action: none;
+      background:
+        radial-gradient(circle at center, white 0 34%, transparent 35%),
+        repeating-conic-gradient(from -4.5deg, rgba(23,116,94,0.08) 0 9deg, transparent 9deg 18deg);
+    }
+
+    .ring::before, .ring::after {
+      content: "";
+      position: absolute;
+      inset: 16%;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+    }
+
+    .ring::after {
+      inset: 36%;
+      border-color: var(--accent);
+      background: var(--soft);
+    }
+
+    .ring-center {
+      position: absolute;
+      inset: 40%;
+      z-index: 3;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--accent);
+      font-weight: 800;
+      text-align: center;
       font-size: 0.9rem;
     }
 
-    .steps {
-      margin: 0;
-      padding-left: 22px;
+    .ring-pointer {
+      position: absolute;
+      left: 50%;
+      top: 2px;
+      z-index: 4;
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 22px solid var(--warn);
+      transform: translateX(-50%);
     }
 
-    .steps li {
-      margin: 8px 0;
+    .mark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 2;
+      width: 32px;
+      height: 24px;
+      margin-left: -16px;
+      margin-top: -12px;
+      text-align: center;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-weight: 800;
+      transform: rotate(var(--angle)) translateY(var(--radius)) rotate(calc(-1 * var(--angle)));
     }
 
-    .pad-options {
-      display: flex;
-      flex-wrap: wrap;
+    .outer { --radius: -190px; color: var(--ink); }
+    .inner { --radius: -128px; color: var(--accent); }
+
+    .mark.active-outer,
+    .mark.active-inner,
+    .mark.active-key {
+      color: var(--warn);
+      text-shadow: 0 0 12px rgba(154, 63, 72, 0.3);
+    }
+
+    .mark.active-inner,
+    .mark.active-key {
+      transform:
+        rotate(var(--angle))
+        translateY(var(--radius))
+        rotate(calc(-1 * var(--angle)))
+        scale(1.25);
+    }
+
+    .ring-caption {
+      margin-top: 14px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .ring-controls {
+      display: grid;
       gap: 10px;
-      align-items: end;
+      margin: 16px auto 0;
+      max-width: 520px;
     }
 
-    .pad-options .field {
-      width: 180px;
-      margin-bottom: 0;
+    .ring-readout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .readout-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfaf7;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .readout-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .readout-box strong {
+      display: block;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 1.7rem;
+      line-height: 1.1;
+    }
+
+    .ring-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .decode-line {
+      min-height: 52px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfaf7;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      overflow-wrap: anywhere;
+    }
+
+    .steps { margin: 0; padding-left: 22px; }
+    .steps li { margin: 8px 0; }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
     }
 
     @media (max-width: 780px) {
@@ -224,73 +328,86 @@
         padding-top: 18px;
       }
 
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .alphabet {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-      }
+      .grid { grid-template-columns: 1fr; }
+      .alphabet { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .ring-wrap { min-height: 390px; }
+      .outer { --radius: -162px; }
+      .inner { --radius: -108px; }
     }
 
     @media print {
-      body {
-        background: white;
-      }
-
-      main {
-        width: auto;
-        padding: 0;
-      }
-
-      .no-print {
-        display: none;
-      }
-
-      .panel {
-        break-inside: avoid;
-        box-shadow: none;
-      }
+      body { background: white; }
+      main { width: auto; padding: 0; }
+      .no-print { display: none; }
+      .panel { break-inside: avoid; }
+      .ring { width: 430px; }
+      .outer { --radius: -190px; }
+      .inner { --radius: -128px; }
     }
   </style>
 </head>
 <body>
   <main>
     <header>
-      <h1>QwertyLock Paper</h1>
-      <p class="subtitle">Paper-and-pen one-time pad companion for TXT/MMS. Use <a href="/qwertylock-7m4r.html">QwertyLock Secure</a> for normal AES encryption.</p>
+      <h1>QwertyLock Ring</h1>
+      <p class="subtitle">Paper-and-pen decrypter ring companion for TXT/MMS. Use <a href="/qwertylock-7m4r.html">QwertyLock Secure</a> for normal AES encryption.</p>
     </header>
 
     <section class="panel">
       <h2>Security Rule</h2>
-      <p class="warning">This is only extremely secure if the pad numbers are truly random, kept secret, used once, and crossed off forever. Reusing pad numbers breaks the system.</p>
-      <p class="note">The encrypted `QLP` block is SMS-safe visible text. The pad sheet is the secret key and must be shared separately before use, not in the same text thread.</p>
+      <p class="warning">The ring is only secure when each key/pad symbol is random, secret, used once, and crossed off forever. Reusing a key stream breaks the paper system.</p>
+      <p class="note">This page outputs <code>QLR</code> blocks. The ring replaces number math: align the current key symbol, then read the matching symbol on the ring.</p>
     </section>
 
     <section class="panel">
-      <h2>Manual Alphabet</h2>
-      <p class="note">Write spaces as `_`. Supported paper text: A-Z, 0-9, space, period, comma, question mark.</p>
-      <div class="alphabet" id="alphabetGrid" aria-label="Paper cipher alphabet"></div>
+      <h2>Printable Decrypter Ring</h2>
+      <div class="ring-wrap">
+        <div class="ring" id="ring" aria-label="QwertyLock cipher ring">
+          <div class="ring-pointer" aria-hidden="true"></div>
+          <div class="ring-center" id="ringCenter">A over<br>A</div>
+        </div>
+      </div>
+      <div class="ring-controls no-print">
+        <div class="ring-readout">
+          <div class="readout-box"><span>Key</span><strong id="keyReadout">A</strong></div>
+          <div class="readout-box"><span>Cipher</span><strong id="cipherReadout">-</strong></div>
+          <div class="readout-box"><span>Plain</span><strong id="plainReadout">-</strong></div>
+        </div>
+        <div class="ring-buttons">
+          <button id="prevKeyBtn" type="button">Rotate Left</button>
+          <button id="resetKeyBtn" type="button">Set A</button>
+          <button id="nextKeyBtn" type="button">Rotate Right</button>
+        </div>
+        <div class="decode-line" id="decodeLine" aria-live="polite"></div>
+      </div>
+      <p class="ring-caption">Outer black ring is plaintext. Inner green ring is the rotating cipher ring. Touch or drag the ring to set the key symbol under outer <strong>A</strong>.</p>
     </section>
 
-    <section class="panel no-print" aria-label="Paper cipher helper">
+    <section class="panel">
+      <h2>Ring Alphabet</h2>
+      <p class="note">Use `_` for a space. Supported symbols: A-Z, 0-9, underscore, period, comma, question mark.</p>
+      <div class="alphabet" id="alphabetGrid" aria-label="Ring alphabet"></div>
+    </section>
+
+    <section class="panel no-print" aria-label="Ring helper">
       <div class="tabs" role="tablist" aria-label="Mode">
-        <button class="tab" id="encryptTab" type="button" role="tab" aria-selected="true">Paper Encrypt</button>
-        <button class="tab" id="decryptTab" type="button" role="tab" aria-selected="false">Paper Decrypt</button>
+        <button class="tab" id="encryptTab" type="button" role="tab" aria-selected="true">Ring Encrypt</button>
+        <button class="tab" id="decryptTab" type="button" role="tab" aria-selected="false">Ring Decrypt</button>
       </div>
 
       <div class="grid">
         <div>
           <div class="field">
-            <label for="message">Message or QLP Block</label>
-            <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Type message for paper encryption"></textarea>
+            <label for="message">Message or QLR Block</label>
+            <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Type message for ring encryption"></textarea>
           </div>
           <div class="field">
-            <label for="pad">Pad Numbers</label>
-            <textarea id="pad" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste pad numbers like 04 39 12 00 ..."></textarea>
+            <label for="keyStream">Ring Key / Pad Symbols</label>
+            <textarea id="keyStream" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste random key symbols like X7H_QK..."></textarea>
           </div>
           <div class="actions">
-            <button class="primary" id="runBtn" type="button">Paper Encrypt</button>
+            <button class="primary" id="runBtn" type="button">Ring Encrypt</button>
+            <button id="animateBtn" type="button">Animate Decode</button>
             <button id="copyBtn" type="button">Copy Output</button>
             <button id="clearBtn" type="button">Clear</button>
           </div>
@@ -299,7 +416,7 @@
         <div>
           <div class="field">
             <label for="output">Output</label>
-            <textarea id="output" autocomplete="off" spellcheck="false" readonly placeholder="QLP output or plaintext appears here"></textarea>
+            <textarea id="output" autocomplete="off" spellcheck="false" readonly placeholder="QLR output or plaintext appears here"></textarea>
           </div>
           <p class="status" id="status" role="status" aria-live="polite"></p>
         </div>
@@ -313,19 +430,19 @@
           <h3>Encrypt</h3>
           <ol class="steps">
             <li>Uppercase the message. Change spaces to `_`.</li>
-            <li>Find each plain character number in the alphabet table.</li>
-            <li>Take the next unused pad number.</li>
-            <li>Add them. If the result is 40 or more, subtract 40.</li>
-            <li>Write the result as two digits after `QLP`.</li>
+            <li>Take the next unused key symbol.</li>
+            <li>Rotate the inner ring so that key symbol sits under outer <strong>A</strong>.</li>
+            <li>Find the plaintext symbol on the outer ring.</li>
+            <li>Write the inner-ring symbol below it into the <code>QLR</code> block.</li>
           </ol>
         </article>
         <article>
           <h3>Decrypt</h3>
           <ol class="steps">
-            <li>Read each two-digit QLP number.</li>
-            <li>Take the same pad numbers in the same order.</li>
-            <li>Subtract the pad number. If negative, add 40.</li>
-            <li>Look up the result in the alphabet table.</li>
+            <li>Take the same key symbols in the same order.</li>
+            <li>Rotate the inner ring so the key symbol sits under outer <strong>A</strong>.</li>
+            <li>Find the encrypted symbol on the inner ring.</li>
+            <li>Read the plaintext symbol from the outer ring.</li>
             <li>Change `_` back to a space.</li>
           </ol>
         </article>
@@ -333,15 +450,15 @@
     </section>
 
     <section class="panel no-print">
-      <h2>Make Local Pad Sheet</h2>
-      <p class="note">Generated in this browser with `crypto.getRandomValues`. Print or write down two matching copies. Do not send the pad with the encrypted message.</p>
+      <h2>Make Local Ring Key</h2>
+      <p class="note">Generated in this browser with <code>crypto.getRandomValues</code>. Print or write down two matching copies. Never send the key with the encrypted TXT/MMS message.</p>
       <div class="pad-options">
         <div class="field">
-          <label for="padCount">Pad length</label>
-          <input id="padCount" type="number" min="20" max="1000" step="10" value="120">
+          <label for="keyCount">Key length</label>
+          <input id="keyCount" type="number" min="20" max="1000" step="10" value="120">
         </div>
-        <button id="makePadBtn" class="primary" type="button">Make Pad</button>
-        <button id="printBtn" type="button">Print Page</button>
+        <button id="makeKeyBtn" class="primary" type="button">Make Ring Key</button>
+        <button id="printBtn" type="button">Print Ring</button>
       </div>
     </section>
   </main>
@@ -351,19 +468,34 @@
     const mode = { value: "encrypt" };
 
     const els = {
+      ring: document.getElementById("ring"),
+      ringCenter: document.getElementById("ringCenter"),
+      keyReadout: document.getElementById("keyReadout"),
+      cipherReadout: document.getElementById("cipherReadout"),
+      plainReadout: document.getElementById("plainReadout"),
+      decodeLine: document.getElementById("decodeLine"),
       alphabetGrid: document.getElementById("alphabetGrid"),
       encryptTab: document.getElementById("encryptTab"),
       decryptTab: document.getElementById("decryptTab"),
       message: document.getElementById("message"),
-      pad: document.getElementById("pad"),
+      keyStream: document.getElementById("keyStream"),
       output: document.getElementById("output"),
       status: document.getElementById("status"),
       runBtn: document.getElementById("runBtn"),
+      animateBtn: document.getElementById("animateBtn"),
       copyBtn: document.getElementById("copyBtn"),
       clearBtn: document.getElementById("clearBtn"),
-      padCount: document.getElementById("padCount"),
-      makePadBtn: document.getElementById("makePadBtn"),
+      keyCount: document.getElementById("keyCount"),
+      makeKeyBtn: document.getElementById("makeKeyBtn"),
       printBtn: document.getElementById("printBtn")
+    };
+
+    const ringState = {
+      keyIndex: 0,
+      cipherIndex: -1,
+      plainIndex: -1,
+      animating: false,
+      timer: 0
     };
 
     function setStatus(text, isError = false) {
@@ -376,10 +508,78 @@
       const encrypting = nextMode === "encrypt";
       els.encryptTab.setAttribute("aria-selected", String(encrypting));
       els.decryptTab.setAttribute("aria-selected", String(!encrypting));
-      els.runBtn.textContent = encrypting ? "Paper Encrypt" : "Paper Decrypt";
-      els.message.placeholder = encrypting ? "Type message for paper encryption" : "Paste QLP numbers here";
-      els.output.placeholder = encrypting ? "QLP output appears here" : "Plaintext appears here";
+      els.runBtn.textContent = encrypting ? "Ring Encrypt" : "Ring Decrypt";
+      els.message.placeholder = encrypting ? "Type message for ring encryption" : "Paste QLR text here";
+      els.output.placeholder = encrypting ? "QLR output appears here" : "Plaintext appears here";
       setStatus("");
+    }
+
+    function displaySymbol(symbol) {
+      return symbol === "_" ? "SP" : symbol;
+    }
+
+    function setRingKey(index) {
+      ringState.keyIndex = (index + alphabet.length) % alphabet.length;
+      updateRingDisplay();
+    }
+
+    function setActivePair(cipherSymbol, plainSymbol) {
+      ringState.cipherIndex = cipherSymbol ? alphabet.indexOf(cipherSymbol) : -1;
+      ringState.plainIndex = plainSymbol ? alphabet.indexOf(plainSymbol) : -1;
+      updateRingDisplay();
+    }
+
+    function updateRingDisplay() {
+      const keySymbol = alphabet[ringState.keyIndex];
+      els.ringCenter.innerHTML = `A over<br>${displaySymbol(keySymbol)}`;
+      els.keyReadout.textContent = displaySymbol(keySymbol);
+      els.cipherReadout.textContent = ringState.cipherIndex >= 0 ? displaySymbol(alphabet[ringState.cipherIndex]) : "-";
+      els.plainReadout.textContent = ringState.plainIndex >= 0 ? displaySymbol(alphabet[ringState.plainIndex]) : "-";
+
+      document.querySelectorAll(".inner").forEach((mark) => {
+        const index = Number(mark.dataset.index || 0);
+        const angle = `${(index - ringState.keyIndex) * 9}deg`;
+        mark.style.setProperty("--angle", angle);
+        mark.classList.toggle("active-key", index === ringState.keyIndex);
+        mark.classList.toggle("active-inner", index === ringState.cipherIndex);
+      });
+
+      document.querySelectorAll(".outer").forEach((mark) => {
+        const index = Number(mark.dataset.index || 0);
+        mark.classList.toggle("active-outer", index === ringState.plainIndex);
+      });
+    }
+
+    function ringIndexFromPointer(event) {
+      const rect = els.ring.getBoundingClientRect();
+      const x = event.clientX - rect.left - rect.width / 2;
+      const y = event.clientY - rect.top - rect.height / 2;
+      const angle = (Math.atan2(x, -y) * 180 / Math.PI + 360) % 360;
+      return Math.round(angle / 9) % alphabet.length;
+    }
+
+    function stopAnimation() {
+      ringState.animating = false;
+      window.clearTimeout(ringState.timer);
+    }
+
+    function drawRing() {
+      [...alphabet].forEach((char, index) => {
+        const angle = `${index * 9}deg`;
+        const outer = document.createElement("span");
+        outer.className = "mark outer";
+        outer.dataset.index = String(index);
+        outer.style.setProperty("--angle", angle);
+        outer.textContent = char;
+        els.ring.appendChild(outer);
+
+        const inner = document.createElement("span");
+        inner.className = "mark inner";
+        inner.dataset.index = String(index);
+        inner.style.setProperty("--angle", angle);
+        inner.textContent = char;
+        els.ring.appendChild(inner);
+      });
     }
 
     function drawAlphabet() {
@@ -392,84 +592,142 @@
       });
     }
 
-    function parsePad(text) {
-      const nums = (text.match(/\d{2}/g) || []).map((part) => Number(part));
-      if (!nums.length) throw new Error("Paste or generate pad numbers first.");
-      const bad = nums.find((num) => !Number.isInteger(num) || num < 0 || num > 39);
-      if (bad !== undefined) throw new Error("Pad numbers must be between 00 and 39.");
-      return nums;
-    }
-
-    function parseCipher(text) {
-      const nums = text.replace(/^QLP\s*/i, "").match(/\d{2}/g) || [];
-      if (!nums.length) throw new Error("Paste a QLP block first.");
-      const parsed = nums.map((part) => Number(part));
-      const bad = parsed.find((num) => !Number.isInteger(num) || num < 0 || num > 39);
-      if (bad !== undefined) throw new Error("QLP numbers must be between 00 and 39.");
-      return parsed;
-    }
-
-    function normalizePlain(text) {
+    function normalizeText(text) {
       return text.toUpperCase().replace(/ /g, "_");
     }
 
-    function groupPairs(nums) {
-      return nums.map((num) => String(num).padStart(2, "0")).join(" ").replace(/((?:\d{2} ){9}\d{2}) /g, "$1\n");
-    }
-
-    function encryptPaper() {
-      const plain = normalizePlain(els.message.value);
-      if (!plain) throw new Error("Type a message first.");
-      const pad = parsePad(els.pad.value);
-      if (pad.length < plain.length) throw new Error(`Need ${plain.length} pad numbers. You only have ${pad.length}.`);
-
-      const out = [];
-      for (let i = 0; i < plain.length; i++) {
-        const p = alphabet.indexOf(plain[i]);
-        if (p < 0) throw new Error(`Unsupported character: ${plain[i]}`);
-        out.push((p + pad[i]) % 40);
+    function onlyRingSymbols(text) {
+      const symbols = [];
+      for (const raw of normalizeText(text)) {
+        if (alphabet.includes(raw)) symbols.push(raw);
       }
-      els.output.value = `QLP ${groupPairs(out)}`;
-      setStatus(`Encrypted ${plain.length} characters. Cross off the first ${plain.length} pad numbers.`);
+      return symbols.join("");
     }
 
-    function decryptPaper() {
-      const cipher = parseCipher(els.message.value);
-      const pad = parsePad(els.pad.value);
-      if (pad.length < cipher.length) throw new Error(`Need ${cipher.length} pad numbers. You only have ${pad.length}.`);
+    function parseKey(text) {
+      const key = onlyRingSymbols(text);
+      if (!key.length) throw new Error("Paste or generate a ring key first.");
+      return key;
+    }
 
+    function parseCipher(text) {
+      const clean = onlyRingSymbols(text.replace(/^QLR\s*/i, ""));
+      if (!clean.length) throw new Error("Paste a QLR block first.");
+      return clean;
+    }
+
+    function groupSymbols(text) {
+      return text.replace(/(.{5})/g, "$1 ").trim();
+    }
+
+    function transformSymbol(symbol, keySymbol, direction) {
+      const s = alphabet.indexOf(symbol);
+      const k = alphabet.indexOf(keySymbol);
+      if (s < 0) throw new Error(`Unsupported symbol: ${symbol}`);
+      if (k < 0) throw new Error(`Unsupported key symbol: ${keySymbol}`);
+      const index = direction === "encrypt"
+        ? (s + k) % alphabet.length
+        : (s - k + alphabet.length) % alphabet.length;
+      return alphabet[index];
+    }
+
+    function encryptRing() {
+      const plain = onlyRingSymbols(els.message.value);
+      if (!plain) throw new Error("Type a message first.");
+      const key = parseKey(els.keyStream.value);
+      if (key.length < plain.length) throw new Error(`Need ${plain.length} key symbols. You only have ${key.length}.`);
+      let cipher = "";
+      for (let i = 0; i < plain.length; i++) {
+        cipher += transformSymbol(plain[i], key[i], "encrypt");
+      }
+      els.output.value = `QLR ${groupSymbols(cipher)}`;
+      setStatus(`Encrypted ${plain.length} symbols. Cross off the first ${plain.length} key symbols.`);
+    }
+
+    function decryptRing() {
+      const cipher = parseCipher(els.message.value);
+      const key = parseKey(els.keyStream.value);
+      if (key.length < cipher.length) throw new Error(`Need ${cipher.length} key symbols. You only have ${key.length}.`);
       let plain = "";
       for (let i = 0; i < cipher.length; i++) {
-        const p = (cipher[i] - pad[i] + 40) % 40;
-        plain += alphabet[p];
+        plain += transformSymbol(cipher[i], key[i], "decrypt");
       }
       els.output.value = plain.replace(/_/g, " ");
-      setStatus(`Decrypted ${cipher.length} characters. Cross off the first ${cipher.length} pad numbers.`);
+      if (cipher.length) {
+        setRingKey(alphabet.indexOf(key[0]));
+        setActivePair(cipher[0], plain[0]);
+      }
+      setStatus(`Decrypted ${cipher.length} symbols. Cross off the first ${cipher.length} key symbols.`);
     }
 
-    function randomPadNumber() {
+    function animateDecode() {
+      stopAnimation();
+      const cipher = parseCipher(els.message.value);
+      const key = parseKey(els.keyStream.value);
+      if (key.length < cipher.length) throw new Error(`Need ${cipher.length} key symbols. You only have ${key.length}.`);
+
+      setMode("decrypt");
+      els.output.value = "";
+      els.decodeLine.textContent = "";
+      let plain = "";
+      let index = 0;
+      ringState.animating = true;
+
+      const step = () => {
+        if (!ringState.animating) return;
+        if (index >= cipher.length) {
+          els.output.value = plain.replace(/_/g, " ");
+          els.decodeLine.textContent = plain.replace(/_/g, " ");
+          setStatus(`Animated ${cipher.length} symbols. Cross off the first ${cipher.length} key symbols.`);
+          ringState.animating = false;
+          return;
+        }
+
+        const keySymbol = key[index];
+        const cipherSymbol = cipher[index];
+        const plainSymbol = transformSymbol(cipherSymbol, keySymbol, "decrypt");
+        plain += plainSymbol;
+        setRingKey(alphabet.indexOf(keySymbol));
+        setActivePair(cipherSymbol, plainSymbol);
+        els.output.value = plain.replace(/_/g, " ");
+        els.decodeLine.textContent = plain.replace(/_/g, " ");
+        setStatus(`Decoding ${index + 1} of ${cipher.length}: key ${displaySymbol(keySymbol)}, cipher ${displaySymbol(cipherSymbol)}, plain ${displaySymbol(plainSymbol)}.`);
+        index += 1;
+        ringState.timer = window.setTimeout(step, 650);
+      };
+
+      step();
+    }
+
+    function randomSymbol() {
       const byte = new Uint8Array(1);
       do {
         crypto.getRandomValues(byte);
       } while (byte[0] >= 240);
-      return byte[0] % 40;
+      return alphabet[byte[0] % alphabet.length];
     }
 
-    function makePad() {
-      const count = Math.max(20, Math.min(1000, Number(els.padCount.value) || 120));
-      const nums = [];
-      for (let i = 0; i < count; i++) {
-        nums.push(randomPadNumber());
-      }
-      els.pad.value = groupPairs(nums);
-      setStatus(`Made ${count} pad numbers locally. Print two copies and use each number once.`);
+    function makeKey() {
+      const count = Math.max(20, Math.min(1000, Number(els.keyCount.value) || 120));
+      let key = "";
+      for (let i = 0; i < count; i++) key += randomSymbol();
+      els.keyStream.value = groupSymbols(key);
+      setStatus(`Made ${count} random ring key symbols locally. Print two copies and use each symbol once.`);
     }
 
     els.encryptTab.addEventListener("click", () => setMode("encrypt"));
     els.decryptTab.addEventListener("click", () => setMode("decrypt"));
     els.runBtn.addEventListener("click", () => {
+      stopAnimation();
       try {
-        mode.value === "encrypt" ? encryptPaper() : decryptPaper();
+        mode.value === "encrypt" ? encryptRing() : decryptRing();
+      } catch (error) {
+        setStatus(error.message || "Something went wrong.", true);
+      }
+    });
+    els.animateBtn.addEventListener("click", () => {
+      try {
+        animateDecode();
       } catch (error) {
         setStatus(error.message || "Something went wrong.", true);
       }
@@ -486,14 +744,50 @@
       }
     });
     els.clearBtn.addEventListener("click", () => {
+      stopAnimation();
       els.message.value = "";
       els.output.value = "";
+      els.decodeLine.textContent = "";
+      setActivePair("", "");
       setStatus("");
     });
-    els.makePadBtn.addEventListener("click", makePad);
+    els.makeKeyBtn.addEventListener("click", makeKey);
     els.printBtn.addEventListener("click", () => window.print());
 
+    els.prevKeyBtn = document.getElementById("prevKeyBtn");
+    els.resetKeyBtn = document.getElementById("resetKeyBtn");
+    els.nextKeyBtn = document.getElementById("nextKeyBtn");
+    els.prevKeyBtn.addEventListener("click", () => setRingKey(ringState.keyIndex - 1));
+    els.resetKeyBtn.addEventListener("click", () => setRingKey(0));
+    els.nextKeyBtn.addEventListener("click", () => setRingKey(ringState.keyIndex + 1));
+    els.ring.addEventListener("pointerdown", (event) => {
+      els.ring.setPointerCapture(event.pointerId);
+      stopAnimation();
+      setRingKey(ringIndexFromPointer(event));
+    });
+    els.ring.addEventListener("pointermove", (event) => {
+      if (event.buttons !== 1) return;
+      setRingKey(ringIndexFromPointer(event));
+    });
+    els.message.addEventListener("paste", () => {
+      window.setTimeout(() => {
+        if (!els.message.value.trim().toUpperCase().startsWith("QLR")) return;
+        setMode("decrypt");
+        if (els.keyStream.value.trim()) {
+          try {
+            animateDecode();
+          } catch (error) {
+            setStatus(error.message || "Something went wrong.", true);
+          }
+        } else {
+          setStatus("QLR block detected. Paste the matching ring key, then tap Animate Decode.");
+        }
+      }, 80);
+    });
+
+    drawRing();
     drawAlphabet();
+    updateRingDisplay();
   </script>
 </body>
 </html>
