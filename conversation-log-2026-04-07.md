@@ -243,3 +243,5 @@ Implications:
 - Added `public/qwertylock-paper.html` as a paper one-time-pad companion using `QLP` blocks.
 - Linked the paper mode from `public/qwertylock-7m4r.html` while keeping the AES `QL2` mode unchanged.
 - The paper mode is compatible at workflow level, not ciphertext level: `QL2` remains browser AES, while `QLP` is manual one-time-pad math.
+- User clarified the paper mode should be a decrypter ring rather than a number-pad worksheet.
+- Reworked `public/qwertylock-paper.html` into `QwertyLock Ring` with `QLR` blocks, random ring-key symbols, a touch/drag inner ring, and animated symbol-by-symbol decode for pasted messages.
