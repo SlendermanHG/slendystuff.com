@@ -1,4 +1,5 @@
 const http = require("http");
+const crypto = require("crypto");
 const fs = require("fs");
 const fsp = require("fs/promises");
 const path = require("path");
@@ -9,6 +10,11 @@ const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, "public");
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
 const CONFIG_FILE = path.join(DATA_DIR, "site-config.json");
+const QWERTYLOCK_FILE = path.join(DATA_DIR, "qwertylock-messages.json");
+const QWERTYLOCK_MAX_BLOCK = 8000;
+const QWERTYLOCK_DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
+const QWERTYLOCK_MAX_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const QWERTYLOCK_LEASE_MS = 10 * 60 * 1000;
 
 const defaultConfig = {
   supportEmail: "support@slendystuff.com",
@@ -64,12 +70,215 @@ function sendText(res, statusCode, payload) {
   res.end(payload);
 }
 
-async function readBody(req) {
+async function readBody(req, maxBytes = 64 * 1024) {
   const chunks = [];
+  let total = 0;
   for await (const chunk of req) {
+    total += chunk.length;
+    if (total > maxBytes) {
+      const error = new Error("Request body is too large.");
+      error.statusCode = 413;
+      throw error;
+    }
     chunks.push(chunk);
   }
   return Buffer.concat(chunks).toString("utf8");
+}
+
+function applyCors(req, res) {
+  const origin = String(req.headers.origin || "");
+  const allowed = new Set([
+    "https://slendystuff.com",
+    "https://www.slendystuff.com",
+    "https://slendystuff-site.onrender.com",
+    "http://localhost:4173",
+    "http://localhost:9010"
+  ]);
+  if (allowed.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Admin-Password");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  }
+}
+
+function randomBase32(byteCount = 12) {
+  const alphabet = "abcdefghijklmnopqrstuvwxyz234567";
+  let value = 0;
+  let bits = 0;
+  let out = "";
+  for (const byte of crypto.randomBytes(byteCount)) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      out += alphabet[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) out += alphabet[(value << (5 - bits)) & 31];
+  return out;
+}
+
+function randomToken(byteCount = 24) {
+  return crypto.randomBytes(byteCount).toString("base64url");
+}
+
+async function loadQwertylockMessages() {
+  await fsp.mkdir(DATA_DIR, { recursive: true });
+  try {
+    const raw = await fsp.readFile(QWERTYLOCK_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch (error) {
+    if (error.code === "ENOENT") return {};
+    throw error;
+  }
+}
+
+async function saveQwertylockMessages(messages) {
+  await fsp.mkdir(DATA_DIR, { recursive: true });
+  await fsp.writeFile(QWERTYLOCK_FILE, JSON.stringify(messages, null, 2), "utf8");
+}
+
+function cleanupQwertylockMessages(messages, now = Date.now()) {
+  let changed = false;
+  for (const [id, message] of Object.entries(messages)) {
+    if (!message || Number(message.expiresAt || 0) <= now || message.consumedAt) {
+      delete messages[id];
+      changed = true;
+      continue;
+    }
+    if (Number(message.leaseUntil || 0) <= now) {
+      if (message.leaseToken || message.leaseUntil) {
+        message.leaseToken = "";
+        message.leaseUntil = 0;
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
+function parseJsonBody(body) {
+  try {
+    return JSON.parse(body || "{}");
+  } catch (_error) {
+    return null;
+  }
+}
+
+function validateQwertylockBlock(block) {
+  const value = String(block || "").trim();
+  if (!value.startsWith("QLR1 ")) return "";
+  if (value.length > QWERTYLOCK_MAX_BLOCK) return "";
+  if (!/^QLR1\s+[a-z2-7]+\.[A-Z0-9_.,?\s]+$/i.test(value)) return "";
+  return value;
+}
+
+function qwertylockMessageUrl(req, id) {
+  const proto = req.headers["x-forwarded-proto"] || "https";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "slendystuff.com";
+  return `${proto}://${host}/r/#m=${encodeURIComponent(id)}`;
+}
+
+async function handleQwertylockApi(req, res, url) {
+  const createPath = "/api/qwertylock/messages";
+  const messageMatch = url.pathname.match(/^\/api\/qwertylock\/messages\/([a-z2-7]{16,32})$/);
+  const consumeMatch = url.pathname.match(/^\/api\/qwertylock\/messages\/([a-z2-7]{16,32})\/consume$/);
+
+  if (url.pathname === createPath && req.method === "POST") {
+    const parsed = parseJsonBody(await readBody(req, 16 * 1024));
+    if (!parsed) return sendJson(res, 400, { ok: false, error: "Invalid JSON payload." });
+
+    const block = validateQwertylockBlock(parsed.block);
+    if (!block) return sendJson(res, 400, { ok: false, error: "Invalid QLR1 block." });
+
+    const ttlMs = Math.min(
+      Math.max(Number(parsed.ttlMinutes || 0) * 60 * 1000 || QWERTYLOCK_DEFAULT_TTL_MS, 5 * 60 * 1000),
+      QWERTYLOCK_MAX_TTL_MS
+    );
+    const now = Date.now();
+    const messages = await loadQwertylockMessages();
+    cleanupQwertylockMessages(messages, now);
+
+    let id = randomBase32(10);
+    while (messages[id]) id = randomBase32(10);
+
+    messages[id] = {
+      id,
+      block,
+      createdAt: now,
+      expiresAt: now + ttlMs,
+      leaseToken: "",
+      leaseUntil: 0
+    };
+    await saveQwertylockMessages(messages);
+
+    return sendJson(res, 201, {
+      ok: true,
+      id,
+      url: qwertylockMessageUrl(req, id),
+      expiresAt: messages[id].expiresAt
+    });
+  }
+
+  if (messageMatch && req.method === "GET") {
+    const id = messageMatch[1];
+    const now = Date.now();
+    const messages = await loadQwertylockMessages();
+    const changed = cleanupQwertylockMessages(messages, now);
+    const message = messages[id];
+    if (!message) {
+      if (changed) await saveQwertylockMessages(messages);
+      return sendJson(res, 410, { ok: false, error: "This private message is gone." });
+    }
+
+    if (message.leaseUntil && message.leaseUntil > now) {
+      if (changed) await saveQwertylockMessages(messages);
+      return sendJson(res, 409, {
+        ok: false,
+        error: "This private message is already open in another browser tab.",
+        retryAfterSeconds: Math.ceil((message.leaseUntil - now) / 1000)
+      });
+    }
+
+    message.leaseToken = randomToken();
+    message.leaseUntil = now + QWERTYLOCK_LEASE_MS;
+    await saveQwertylockMessages(messages);
+
+    return sendJson(res, 200, {
+      ok: true,
+      id,
+      block: message.block,
+      leaseToken: message.leaseToken,
+      leaseUntil: message.leaseUntil,
+      expiresAt: message.expiresAt
+    });
+  }
+
+  if (consumeMatch && req.method === "POST") {
+    const id = consumeMatch[1];
+    const parsed = parseJsonBody(await readBody(req, 2048));
+    if (!parsed) return sendJson(res, 400, { ok: false, error: "Invalid JSON payload." });
+
+    const now = Date.now();
+    const messages = await loadQwertylockMessages();
+    cleanupQwertylockMessages(messages, now);
+    const message = messages[id];
+    if (!message) return sendJson(res, 410, { ok: false, error: "This private message is gone." });
+
+    const supplied = String(parsed.leaseToken || "");
+    if (!supplied || supplied !== message.leaseToken || Number(message.leaseUntil || 0) <= now) {
+      await saveQwertylockMessages(messages);
+      return sendJson(res, 409, { ok: false, error: "This private message session expired. Reopen the link." });
+    }
+
+    delete messages[id];
+    await saveQwertylockMessages(messages);
+    return sendJson(res, 200, { ok: true });
+  }
+
+  return false;
 }
 
 function sanitizeConfig(payload) {
@@ -88,6 +297,10 @@ function isAuthorized(req) {
 }
 
 async function handleApi(req, res) {
+  const url = new URL(req.url, "http://localhost");
+  const qwertylockHandled = await handleQwertylockApi(req, res, url);
+  if (qwertylockHandled !== false) return qwertylockHandled;
+
   if (req.url === "/api/site-config" && req.method === "GET") {
     const config = await loadConfig();
     return sendJson(res, 200, { ok: true, config });
@@ -154,6 +367,13 @@ async function handleStatic(req, res) {
     if (stat.isFile()) {
       return await serveFile(candidate, res);
     }
+    if (stat.isDirectory()) {
+      const indexCandidate = path.join(candidate, "index.html");
+      const indexStat = await fsp.stat(indexCandidate);
+      if (indexStat.isFile()) {
+        return await serveFile(indexCandidate, res);
+      }
+    }
   } catch (_error) {
     // Fall through to SPA-style page handling below.
   }
@@ -179,6 +399,11 @@ async function handleStatic(req, res) {
 const server = http.createServer(async (req, res) => {
   try {
     if (!req.url) return sendText(res, 400, "Bad request.");
+    applyCors(req, res);
+    if (req.method === "OPTIONS") {
+      res.writeHead(204);
+      return res.end();
+    }
     if (req.url.startsWith("/api/")) {
       const handled = await handleApi(req, res);
       if (handled !== false) return;
@@ -186,7 +411,7 @@ const server = http.createServer(async (req, res) => {
     await handleStatic(req, res);
   } catch (error) {
     console.error(error);
-    sendJson(res, 500, { ok: false, error: "Internal server error." });
+    sendJson(res, error.statusCode || 500, { ok: false, error: error.statusCode ? error.message : "Internal server error." });
   }
 });
 
