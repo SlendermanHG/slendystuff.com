@@ -254,3 +254,7 @@ Implications:
 - Changed ring decode-once tracking to store only a local SHA-256 hash marker of decoded `QLR` blocks, and added a migration so older full-block local markers are converted to hashes.
 - User requested removing distractions from the ring page and focusing it around the ring plus streamed text.
 - Reworked `public/qwertylock-paper.html` into a two-zone interface: interactive ring on one side, text stream/key/actions on the other, removing the alphabet table, instruction sections, print controls, and other non-core UI.
+- User reported the ring page was broken and requested changing from ring keys to passwords.
+- Replaced ring-key based `QLR` with password-based `QLR1`: the message block now carries a random salt plus ring ciphertext, while the shared password derives the ring stream locally in the browser.
+- Added wrong-password detection with an internal marker so mistyped passwords fail instead of marking a message used.
+- Added the short route `public/r/index.html`, making the easiest link `https://slendystuff.com/r/`.
