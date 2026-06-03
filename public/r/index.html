@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>QwertyLock Ring | SlendyStuff</title>
+  <style>
+    :root {
+      --bg: #f6f4ee;
+      --panel: #fffefa;
+      --ink: #14191f;
+      --muted: #5f6873;
+      --line: #d1c8bb;
+      --accent: #16745d;
+      --warn: #9b3d48;
+      --soft: #e7f2ee;
+      --focus: #0b63ce;
+      --shadow: 0 18px 48px rgba(28, 24, 18, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.4;
+    }
+
+    main {
+      width: min(1180px, calc(100vw - 24px));
+      margin: 0 auto;
+      padding: 18px 0 24px;
+    }
+
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 3px solid var(--accent);
+      padding: 0 0 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 4rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .local-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: right;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(360px, 1fr) minmax(340px, 0.92fr);
+      gap: 18px;
+      align-items: stretch;
+      padding-top: 18px;
+    }
+
+    .ring-stage,
+    .stream-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .ring-stage {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 16px;
+    }
+
+    .stage-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 38px;
+    }
+
+    .stage-title {
+      margin: 0;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 0.95rem;
+      min-height: 22px;
+    }
+
+    .status.error {
+      color: var(--warn);
+      font-weight: 700;
+    }
+
+    .ring-wrap {
+      display: grid;
+      place-items: center;
+      min-height: 500px;
+    }
+
+    .ring {
+      position: relative;
+      width: min(82vw, 500px);
+      aspect-ratio: 1;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at center, white 0 33%, transparent 34%),
+        repeating-conic-gradient(from -4.5deg, rgba(22, 116, 93, 0.09) 0 9deg, transparent 9deg 18deg);
+      touch-action: none;
+      user-select: none;
+    }
+
+    .ring::before,
+    .ring::after {
+      content: "";
+      position: absolute;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+    }
+
+    .ring::before { inset: 16%; }
+
+    .ring::after {
+      inset: 36%;
+      border-color: var(--accent);
+      background: var(--soft);
+    }
+
+    .ring-pointer {
+      position: absolute;
+      left: 50%;
+      top: 4px;
+      z-index: 5;
+      width: 0;
+      height: 0;
+      border-left: 13px solid transparent;
+      border-right: 13px solid transparent;
+      border-top: 24px solid var(--warn);
+      transform: translateX(-50%);
+    }
+
+    .ring-center {
+      position: absolute;
+      inset: 39%;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--accent);
+      font-weight: 900;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .mark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 3;
+      width: 34px;
+      height: 24px;
+      margin-left: -17px;
+      margin-top: -12px;
+      text-align: center;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-weight: 900;
+      transform: rotate(var(--angle)) translateY(var(--radius)) rotate(calc(-1 * var(--angle)));
+    }
+
+    .outer { --radius: -220px; color: var(--ink); }
+    .inner { --radius: -146px; color: var(--accent); }
+
+    .mark.active-outer,
+    .mark.active-inner,
+    .mark.active-key {
+      color: var(--warn);
+      text-shadow: 0 0 14px rgba(155, 61, 72, 0.35);
+    }
+
+    .mark.active-inner,
+    .mark.active-key {
+      transform:
+        rotate(var(--angle))
+        translateY(var(--radius))
+        rotate(calc(-1 * var(--angle)))
+        scale(1.28);
+    }
+
+    .readout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .readout-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfaf7;
+      padding: 9px;
+      text-align: center;
+    }
+
+    .readout-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .readout-box strong {
+      display: block;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 1.7rem;
+      line-height: 1.1;
+    }
+
+    .stream-panel {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 0.83rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      font: 1rem/1.45 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      outline: none;
+      padding: 11px;
+    }
+
+    textarea:focus,
+    input:focus,
+    button:focus-visible,
+    a:focus-visible {
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.16);
+      outline: none;
+    }
+
+    #message { min-height: 118px; resize: vertical; }
+    #password { min-height: 46px; }
+
+    .password-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: stretch;
+    }
+
+    .stream-output {
+      min-height: 156px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfaf7;
+      padding: 12px;
+      font: 1.05rem/1.5 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .stream-output:empty::before {
+      content: "Decoded text streams here.";
+      color: var(--muted);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    button,
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font: inherit;
+      font-weight: 800;
+      min-height: 44px;
+      padding: 10px 12px;
+      text-decoration: none;
+    }
+
+    .primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .button[aria-disabled="true"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .micro {
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin: 0;
+    }
+
+    @media (max-width: 860px) {
+      main { width: min(100vw - 18px, 560px); padding-top: 12px; }
+      header { align-items: start; flex-direction: column; }
+      .local-note { text-align: left; }
+      .workspace { grid-template-columns: 1fr; }
+      .ring-wrap { min-height: 390px; }
+      .outer { --radius: -164px; }
+      .inner { --radius: -109px; }
+      .ring { width: min(92vw, 380px); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>QwertyLock Ring</h1>
+      <p class="local-note">Open later at slendystuff.com/r</p>
+    </header>
+
+    <section class="workspace" aria-label="QwertyLock Ring workspace">
+      <div class="ring-stage">
+        <div class="stage-head">
+          <p class="stage-title">Touch Ring</p>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="ring-wrap">
+          <div class="ring" id="ring" aria-label="Interactive QwertyLock decrypter ring">
+            <div class="ring-pointer" aria-hidden="true"></div>
+            <div class="ring-center" id="ringCenter">A over<br>A</div>
+          </div>
+        </div>
+
+        <div class="readout" aria-label="Ring readout">
+          <div class="readout-box"><span>Password</span><strong id="keyReadout">A</strong></div>
+          <div class="readout-box"><span>Cipher</span><strong id="cipherReadout">-</strong></div>
+          <div class="readout-box"><span>Plain</span><strong id="plainReadout">-</strong></div>
+        </div>
+      </div>
+
+      <div class="stream-panel">
+        <div>
+          <label for="message">Text Stream</label>
+          <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste linked QLR text, or type a reply to encrypt"></textarea>
+        </div>
+
+        <div>
+          <label for="password">Password</label>
+          <div class="password-row">
+            <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Shared password">
+            <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
+          </div>
+        </div>
+
+        <div>
+          <label for="streamOutput">Stream</label>
+          <div class="stream-output" id="streamOutput" aria-live="polite"></div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="animateBtn" type="button">Animate Decode</button>
+          <button id="decodeBtn" type="button">Decode Now</button>
+          <button id="encryptBtn" type="button">Encrypt Reply</button>
+          <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fr" aria-disabled="true">Text Output</a>
+          <button id="makePasswordBtn" type="button">Make Password</button>
+          <button id="clearBtn" type="button">Clear</button>
+        </div>
+
+        <p class="micro">Nothing is server-saved. Do not send the password in the same text. Decoded blocks are locally marked by hash on this browser.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.,?";
+    const base32Alphabet = "abcdefghijklmnopqrstuvwxyz234567";
+    const toolUrl = "https://slendystuff.com/r/";
+    const usedStoreKey = "qwertylock.used.qlr.v2";
+    const pbkdf2Rounds = 450000;
+    const payloadMarker = "QLOCK_";
+
+    const els = {
+      ring: document.getElementById("ring"),
+      ringCenter: document.getElementById("ringCenter"),
+      keyReadout: document.getElementById("keyReadout"),
+      cipherReadout: document.getElementById("cipherReadout"),
+      plainReadout: document.getElementById("plainReadout"),
+      message: document.getElementById("message"),
+      password: document.getElementById("password"),
+      showPasswordBtn: document.getElementById("showPasswordBtn"),
+      streamOutput: document.getElementById("streamOutput"),
+      status: document.getElementById("status"),
+      animateBtn: document.getElementById("animateBtn"),
+      decodeBtn: document.getElementById("decodeBtn"),
+      encryptBtn: document.getElementById("encryptBtn"),
+      smsLink: document.getElementById("smsLink"),
+      makePasswordBtn: document.getElementById("makePasswordBtn"),
+      clearBtn: document.getElementById("clearBtn")
+    };
+
+    const ringState = {
+      keyIndex: 0,
+      cipherIndex: -1,
+      plainIndex: -1,
+      animating: false,
+      timer: 0
+    };
+
+    function setStatus(text, isError = false) {
+      els.status.textContent = text;
+      els.status.classList.toggle("error", isError);
+    }
+
+    function displaySymbol(symbol) {
+      return symbol === "_" ? "SP" : symbol;
+    }
+
+    function normalizeText(text) {
+      return text.toUpperCase().replace(/ /g, "_");
+    }
+
+    function onlyRingSymbols(text) {
+      const symbols = [];
+      for (const raw of normalizeText(text)) {
+        if (alphabet.includes(raw)) symbols.push(raw);
+      }
+      return symbols.join("");
+    }
+
+    function groupSymbols(text) {
+      return text.replace(/(.{5})/g, "$1 ").trim();
+    }
+
+    function toBase32(bytes) {
+      let bits = 0;
+      let value = 0;
+      let out = "";
+      for (const byte of bytes) {
+        value = (value << 8) | byte;
+        bits += 8;
+        while (bits >= 5) {
+          out += base32Alphabet[(value >>> (bits - 5)) & 31];
+          bits -= 5;
+        }
+      }
+      if (bits > 0) out += base32Alphabet[(value << (5 - bits)) & 31];
+      return out;
+    }
+
+    function fromBase32(text) {
+      const clean = text.toLowerCase().replace(/[^a-z2-7]/g, "");
+      let bits = 0;
+      let value = 0;
+      const out = [];
+      for (const ch of clean) {
+        const index = base32Alphabet.indexOf(ch);
+        if (index < 0) throw new Error("Invalid salt.");
+        value = (value << 5) | index;
+        bits += 5;
+        if (bits >= 8) {
+          out.push((value >>> (bits - 8)) & 255);
+          bits -= 8;
+        }
+      }
+      return new Uint8Array(out);
+    }
+
+    function canonicalBlock(saltText, cipherText) {
+      return `QLR1 ${saltText}.${groupSymbols(cipherText)}`;
+    }
+
+    function parseBlock(text) {
+      const source = String(text || "").trim();
+      const match = source.match(/QLR1\s+([a-z2-7]+)\.([A-Z0-9_.,?\s]+)/i);
+      if (!match) throw new Error("Paste a QLR1 block first.");
+      const saltText = match[1].toLowerCase();
+      const cipherText = onlyRingSymbols(match[2]);
+      if (!cipherText) throw new Error("QLR1 block has no cipher text.");
+      const salt = fromBase32(saltText).slice(0, 16);
+      if (salt.length !== 16) throw new Error("QLR1 salt is damaged.");
+      return { saltText, salt, cipherText, block: canonicalBlock(saltText, cipherText) };
+    }
+
+    async function deriveAesKey(password, salt) {
+      const baseKey = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(password),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt, iterations: pbkdf2Rounds, hash: "SHA-256" },
+        baseKey,
+        { name: "AES-CTR", length: 256 },
+        false,
+        ["encrypt"]
+      );
+    }
+
+    async function makeKeyStream(password, salt, count) {
+      if (!password || password.length < 8) throw new Error("Use the shared password. 8+ characters minimum.");
+      const key = await deriveAesKey(password, salt);
+      const stream = [];
+      let counterValue = 0;
+      while (stream.length < count) {
+        const counter = new Uint8Array(16);
+        counter[12] = (counterValue >>> 24) & 255;
+        counter[13] = (counterValue >>> 16) & 255;
+        counter[14] = (counterValue >>> 8) & 255;
+        counter[15] = counterValue & 255;
+        counterValue += 1;
+        const bytes = new Uint8Array(await crypto.subtle.encrypt(
+          { name: "AES-CTR", counter, length: 64 },
+          key,
+          new Uint8Array(Math.max(64, count * 2))
+        ));
+        for (const byte of bytes) {
+          if (byte < 240) stream.push(byte % alphabet.length);
+          if (stream.length >= count) break;
+        }
+      }
+      return stream;
+    }
+
+    async function hashBlock(block) {
+      const bytes = new TextEncoder().encode(block);
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    }
+
+    function getUsedHashes() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(usedStoreKey) || "[]");
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (_error) {
+        return [];
+      }
+    }
+
+    function saveUsedHashes(hashes) {
+      localStorage.setItem(usedStoreKey, JSON.stringify(hashes.slice(-200)));
+    }
+
+    async function isUsedBlock(block) {
+      return getUsedHashes().includes(await hashBlock(block));
+    }
+
+    async function markUsedBlock(block) {
+      const hash = await hashBlock(block);
+      const hashes = getUsedHashes();
+      if (!hashes.includes(hash)) {
+        hashes.push(hash);
+        saveUsedHashes(hashes);
+      }
+      if (location.hash) history.replaceState(null, "", location.pathname);
+    }
+
+    function updateSmsLink(sendable = true) {
+      const text = els.streamOutput.textContent.trim();
+      if (!sendable || !text.startsWith("QLR1")) {
+        els.smsLink.setAttribute("aria-disabled", "true");
+        els.smsLink.href = `sms:?&body=${encodeURIComponent(toolUrl)}`;
+        return;
+      }
+      const linkedToolUrl = `${toolUrl}#qlr=${encodeURIComponent(text)}`;
+      const body = `${text}\n\nTap to decode: ${linkedToolUrl}\n\nDo not send the password in this text.`;
+      els.smsLink.removeAttribute("aria-disabled");
+      els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
+    }
+
+    function setRingKey(index) {
+      ringState.keyIndex = (index + alphabet.length) % alphabet.length;
+      updateRingDisplay();
+    }
+
+    function setActivePair(cipherSymbol = "", plainSymbol = "") {
+      ringState.cipherIndex = cipherSymbol ? alphabet.indexOf(cipherSymbol) : -1;
+      ringState.plainIndex = plainSymbol ? alphabet.indexOf(plainSymbol) : -1;
+      updateRingDisplay();
+    }
+
+    function updateRingDisplay() {
+      const keySymbol = alphabet[ringState.keyIndex];
+      els.ringCenter.innerHTML = `A over<br>${displaySymbol(keySymbol)}`;
+      els.keyReadout.textContent = displaySymbol(keySymbol);
+      els.cipherReadout.textContent = ringState.cipherIndex >= 0 ? displaySymbol(alphabet[ringState.cipherIndex]) : "-";
+      els.plainReadout.textContent = ringState.plainIndex >= 0 ? displaySymbol(alphabet[ringState.plainIndex]) : "-";
+      document.querySelectorAll(".inner").forEach((mark) => {
+        const index = Number(mark.dataset.index || 0);
+        mark.style.setProperty("--angle", `${(index - ringState.keyIndex) * 9}deg`);
+        mark.classList.toggle("active-key", index === ringState.keyIndex);
+        mark.classList.toggle("active-inner", index === ringState.cipherIndex);
+      });
+      document.querySelectorAll(".outer").forEach((mark) => {
+        const index = Number(mark.dataset.index || 0);
+        mark.classList.toggle("active-outer", index === ringState.plainIndex);
+      });
+    }
+
+    function ringIndexFromPointer(event) {
+      const rect = els.ring.getBoundingClientRect();
+      const x = event.clientX - rect.left - rect.width / 2;
+      const y = event.clientY - rect.top - rect.height / 2;
+      const angle = (Math.atan2(x, -y) * 180 / Math.PI + 360) % 360;
+      return Math.round(angle / 9) % alphabet.length;
+    }
+
+    function drawRing() {
+      [...alphabet].forEach((char, index) => {
+        const outer = document.createElement("span");
+        outer.className = "mark outer";
+        outer.dataset.index = String(index);
+        outer.style.setProperty("--angle", `${index * 9}deg`);
+        outer.textContent = char;
+        els.ring.appendChild(outer);
+        const inner = document.createElement("span");
+        inner.className = "mark inner";
+        inner.dataset.index = String(index);
+        inner.style.setProperty("--angle", `${index * 9}deg`);
+        inner.textContent = char;
+        els.ring.appendChild(inner);
+      });
+    }
+
+    function stopAnimation() {
+      ringState.animating = false;
+      window.clearTimeout(ringState.timer);
+    }
+
+    async function encryptReply() {
+      stopAnimation();
+      const plain = onlyRingSymbols(els.message.value);
+      if (!plain) throw new Error("Type a reply first.");
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const saltText = toBase32(salt);
+      const payload = payloadMarker + plain;
+      const stream = await makeKeyStream(els.password.value, salt, payload.length);
+      let cipher = "";
+      for (let i = 0; i < payload.length; i++) {
+        cipher += alphabet[(alphabet.indexOf(payload[i]) + stream[i]) % alphabet.length];
+      }
+      const block = canonicalBlock(saltText, cipher);
+      els.streamOutput.textContent = block;
+      updateSmsLink(true);
+      setActivePair(cipher[payloadMarker.length], plain[0]);
+      setRingKey(stream[payloadMarker.length]);
+      setStatus(`Reply encrypted with password stream.`);
+    }
+
+    async function decryptPayload(parsed) {
+      const stream = await makeKeyStream(els.password.value, parsed.salt, parsed.cipherText.length);
+      let payload = "";
+      for (let i = 0; i < parsed.cipherText.length; i++) {
+        payload += alphabet[(alphabet.indexOf(parsed.cipherText[i]) - stream[i] + alphabet.length) % alphabet.length];
+      }
+      if (!payload.startsWith(payloadMarker)) {
+        throw new Error("Wrong password or damaged QLR1 block.");
+      }
+      return {
+        plain: payload.slice(payloadMarker.length),
+        stream,
+        offset: payloadMarker.length
+      };
+    }
+
+    async function decodeNow() {
+      stopAnimation();
+      const parsed = parseBlock(els.message.value);
+      if (await isUsedBlock(parsed.block)) {
+        clearIncoming();
+        throw new Error("This QLR1 block was already decoded on this browser.");
+      }
+      const { plain, stream, offset } = await decryptPayload(parsed);
+      els.streamOutput.textContent = plain.replace(/_/g, " ");
+      updateSmsLink(false);
+      setActivePair(parsed.cipherText[offset], plain[0]);
+      setRingKey(stream[offset]);
+      await markUsedBlock(parsed.block);
+      clearIncoming(false);
+      setStatus("Decoded once.");
+    }
+
+    async function animateDecode() {
+      stopAnimation();
+      const parsed = parseBlock(els.message.value);
+      if (await isUsedBlock(parsed.block)) {
+        clearIncoming();
+        throw new Error("This QLR1 block was already decoded on this browser.");
+      }
+      const { plain: decodedPlain, stream, offset } = await decryptPayload(parsed);
+      els.streamOutput.textContent = "";
+      updateSmsLink(false);
+      ringState.animating = true;
+      let plain = "";
+      let index = 0;
+      const step = async () => {
+        if (!ringState.animating) return;
+        if (index >= decodedPlain.length) {
+          await markUsedBlock(parsed.block);
+          clearIncoming(false);
+          ringState.animating = false;
+          setStatus("Decoded once.");
+          return;
+        }
+        const sourceIndex = index + offset;
+        const cipherSymbol = parsed.cipherText[sourceIndex];
+        const plainSymbol = decodedPlain[index];
+        plain += plainSymbol;
+        setRingKey(stream[sourceIndex]);
+        setActivePair(cipherSymbol, plainSymbol);
+        els.streamOutput.textContent = plain.replace(/_/g, " ");
+        setStatus(`${index + 1}/${decodedPlain.length}`);
+        index += 1;
+        ringState.timer = window.setTimeout(step, 620);
+      };
+      step();
+    }
+
+    function makePassword() {
+      const words = ["anchor", "basket", "canyon", "delta", "ember", "forest", "galaxy", "harbor", "island", "jacket", "kernel", "lantern", "magnet", "nectar", "orbit", "prairie", "quartz", "ribbon", "summit", "temple", "velvet", "window", "yellow", "zephyr", "apricot", "bridge", "copper", "desktop", "engine", "fossil", "garden", "honest", "impact", "jungle", "keystone", "legend", "marble", "native", "oxygen", "planet", "rocket", "silver", "timber", "uplift", "voyage", "wander", "xenon", "zipper"];
+      const bytes = crypto.getRandomValues(new Uint8Array(5));
+      els.password.value = bytes.map((byte) => words[byte % words.length]).join("-");
+      setStatus("Password made locally. Share separately.");
+    }
+
+    function clearIncoming(clearOutput = true) {
+      els.message.value = "";
+      if (location.hash) history.replaceState(null, "", location.pathname);
+      if (clearOutput) {
+        els.streamOutput.textContent = "";
+        updateSmsLink(false);
+      }
+    }
+
+    function clearAll() {
+      stopAnimation();
+      els.message.value = "";
+      els.password.value = "";
+      els.streamOutput.textContent = "";
+      setActivePair();
+      updateSmsLink(false);
+      if (location.hash) history.replaceState(null, "", location.pathname);
+      setStatus("");
+    }
+
+    async function loadLinkedMessage() {
+      if (!location.hash) return;
+      const params = new URLSearchParams(location.hash.slice(1));
+      const block = params.get("qlr");
+      if (!block || !block.trim().toUpperCase().startsWith("QLR1")) return;
+      const parsed = parseBlock(block);
+      if (await isUsedBlock(parsed.block)) {
+        clearIncoming();
+        setStatus("This linked QLR1 block was already decoded on this browser.", true);
+        return;
+      }
+      els.message.value = parsed.block;
+      els.streamOutput.textContent = "QLR1 loaded. Enter password, then Animate Decode.";
+      updateSmsLink(false);
+      setStatus("Linked message loaded.");
+    }
+
+    els.animateBtn.addEventListener("click", async () => {
+      try { await animateDecode(); } catch (error) { setStatus(error.message || "Decode failed.", true); }
+    });
+    els.decodeBtn.addEventListener("click", async () => {
+      try { await decodeNow(); } catch (error) { setStatus(error.message || "Decode failed.", true); }
+    });
+    els.encryptBtn.addEventListener("click", async () => {
+      try { await encryptReply(); } catch (error) { setStatus(error.message || "Encrypt failed.", true); }
+    });
+    els.smsLink.addEventListener("click", (event) => {
+      if (els.smsLink.getAttribute("aria-disabled") === "true") {
+        event.preventDefault();
+        setStatus("Encrypt a reply first, then tap Text Output.", true);
+      }
+    });
+    els.makePasswordBtn.addEventListener("click", makePassword);
+    els.clearBtn.addEventListener("click", clearAll);
+    els.showPasswordBtn.addEventListener("click", () => {
+      const showing = els.password.type === "text";
+      els.password.type = showing ? "password" : "text";
+      els.showPasswordBtn.textContent = showing ? "Show" : "Hide";
+      els.showPasswordBtn.setAttribute("aria-pressed", String(!showing));
+    });
+    els.message.addEventListener("paste", () => {
+      window.setTimeout(() => {
+        if (els.message.value.trim().toUpperCase().startsWith("QLR1")) {
+          els.streamOutput.textContent = "QLR1 loaded. Enter password, then Animate Decode.";
+          setStatus("Pasted message loaded.");
+        }
+      }, 80);
+    });
+    els.ring.addEventListener("pointerdown", (event) => {
+      els.ring.setPointerCapture(event.pointerId);
+      stopAnimation();
+      setRingKey(ringIndexFromPointer(event));
+    });
+    els.ring.addEventListener("pointermove", (event) => {
+      if (event.buttons !== 1) return;
+      setRingKey(ringIndexFromPointer(event));
+    });
+
+    drawRing();
+    updateRingDisplay();
+    loadLinkedMessage().catch((error) => setStatus(error.message || "Could not load linked message.", true));
+  </script>
+</body>
+</html>

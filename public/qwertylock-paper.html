@@ -272,7 +272,14 @@
     }
 
     #message { min-height: 118px; resize: vertical; }
-    #keyStream { min-height: 72px; resize: vertical; }
+    #password { min-height: 46px; }
+
+    .password-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: stretch;
+    }
 
     .stream-output {
       min-height: 156px;
@@ -345,10 +352,8 @@
 <body>
   <main>
     <header>
-      <div>
-        <h1>QwertyLock Ring</h1>
-      </div>
-      <p class="local-note">Local browser only. Nothing is server-saved.</p>
+      <h1>QwertyLock Ring</h1>
+      <p class="local-note">Open later at slendystuff.com/r</p>
     </header>
 
     <section class="workspace" aria-label="QwertyLock Ring workspace">
@@ -366,7 +371,7 @@
         </div>
 
         <div class="readout" aria-label="Ring readout">
-          <div class="readout-box"><span>Key</span><strong id="keyReadout">A</strong></div>
+          <div class="readout-box"><span>Password</span><strong id="keyReadout">A</strong></div>
           <div class="readout-box"><span>Cipher</span><strong id="cipherReadout">-</strong></div>
           <div class="readout-box"><span>Plain</span><strong id="plainReadout">-</strong></div>
         </div>
@@ -375,12 +380,15 @@
       <div class="stream-panel">
         <div>
           <label for="message">Text Stream</label>
-          <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste QLR link text, or type a reply to encrypt"></textarea>
+          <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste linked QLR text, or type a reply to encrypt"></textarea>
         </div>
 
         <div>
-          <label for="keyStream">Ring Key</label>
-          <textarea id="keyStream" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste matching ring key symbols"></textarea>
+          <label for="password">Password</label>
+          <div class="password-row">
+            <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Shared password">
+            <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
+          </div>
         </div>
 
         <div>
@@ -392,20 +400,23 @@
           <button class="primary" id="animateBtn" type="button">Animate Decode</button>
           <button id="decodeBtn" type="button">Decode Now</button>
           <button id="encryptBtn" type="button">Encrypt Reply</button>
-          <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fqwertylock-paper.html" aria-disabled="true">Text Output</a>
-          <button id="makeKeyBtn" type="button">Make Key</button>
+          <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fr" aria-disabled="true">Text Output</a>
+          <button id="makePasswordBtn" type="button">Make Password</button>
           <button id="clearBtn" type="button">Clear</button>
         </div>
 
-        <p class="micro">Do not send the ring key in the same text. Decoded QLR blocks are locally marked by hash so the same block is refused on this browser.</p>
+        <p class="micro">Nothing is server-saved. Do not send the password in the same text. Decoded blocks are locally marked by hash on this browser.</p>
       </div>
     </section>
   </main>
 
   <script>
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.,?";
-    const toolUrl = "https://slendystuff.com/qwertylock-paper.html";
-    const usedStoreKey = "qwertylock.used.qlr.v1";
+    const base32Alphabet = "abcdefghijklmnopqrstuvwxyz234567";
+    const toolUrl = "https://slendystuff.com/r/";
+    const usedStoreKey = "qwertylock.used.qlr.v2";
+    const pbkdf2Rounds = 450000;
+    const payloadMarker = "QLOCK_";
 
     const els = {
       ring: document.getElementById("ring"),
@@ -414,14 +425,15 @@
       cipherReadout: document.getElementById("cipherReadout"),
       plainReadout: document.getElementById("plainReadout"),
       message: document.getElementById("message"),
-      keyStream: document.getElementById("keyStream"),
+      password: document.getElementById("password"),
+      showPasswordBtn: document.getElementById("showPasswordBtn"),
       streamOutput: document.getElementById("streamOutput"),
       status: document.getElementById("status"),
       animateBtn: document.getElementById("animateBtn"),
       decodeBtn: document.getElementById("decodeBtn"),
       encryptBtn: document.getElementById("encryptBtn"),
       smsLink: document.getElementById("smsLink"),
-      makeKeyBtn: document.getElementById("makeKeyBtn"),
+      makePasswordBtn: document.getElementById("makePasswordBtn"),
       clearBtn: document.getElementById("clearBtn")
     };
 
@@ -458,31 +470,96 @@
       return text.replace(/(.{5})/g, "$1 ").trim();
     }
 
-    function canonicalBlockFromCipher(cipher) {
-      return `QLR ${groupSymbols(cipher)}`;
+    function toBase32(bytes) {
+      let bits = 0;
+      let value = 0;
+      let out = "";
+      for (const byte of bytes) {
+        value = (value << 8) | byte;
+        bits += 8;
+        while (bits >= 5) {
+          out += base32Alphabet[(value >>> (bits - 5)) & 31];
+          bits -= 5;
+        }
+      }
+      if (bits > 0) out += base32Alphabet[(value << (5 - bits)) & 31];
+      return out;
     }
 
-    function parseCipher(text) {
-      const clean = onlyRingSymbols(String(text || "").replace(/^QLR\s*/i, ""));
-      if (!clean) throw new Error("Paste a QLR block first.");
-      return clean;
+    function fromBase32(text) {
+      const clean = text.toLowerCase().replace(/[^a-z2-7]/g, "");
+      let bits = 0;
+      let value = 0;
+      const out = [];
+      for (const ch of clean) {
+        const index = base32Alphabet.indexOf(ch);
+        if (index < 0) throw new Error("Invalid salt.");
+        value = (value << 5) | index;
+        bits += 5;
+        if (bits >= 8) {
+          out.push((value >>> (bits - 8)) & 255);
+          bits -= 8;
+        }
+      }
+      return new Uint8Array(out);
     }
 
-    function parseKey(text) {
-      const key = onlyRingSymbols(text);
-      if (!key) throw new Error("Paste or make a ring key first.");
-      return key;
+    function canonicalBlock(saltText, cipherText) {
+      return `QLR1 ${saltText}.${groupSymbols(cipherText)}`;
     }
 
-    function transformSymbol(symbol, keySymbol, direction) {
-      const s = alphabet.indexOf(symbol);
-      const k = alphabet.indexOf(keySymbol);
-      if (s < 0) throw new Error(`Unsupported symbol: ${symbol}`);
-      if (k < 0) throw new Error(`Unsupported key symbol: ${keySymbol}`);
-      const index = direction === "encrypt"
-        ? (s + k) % alphabet.length
-        : (s - k + alphabet.length) % alphabet.length;
-      return alphabet[index];
+    function parseBlock(text) {
+      const source = String(text || "").trim();
+      const match = source.match(/QLR1\s+([a-z2-7]+)\.([A-Z0-9_.,?\s]+)/i);
+      if (!match) throw new Error("Paste a QLR1 block first.");
+      const saltText = match[1].toLowerCase();
+      const cipherText = onlyRingSymbols(match[2]);
+      if (!cipherText) throw new Error("QLR1 block has no cipher text.");
+      const salt = fromBase32(saltText).slice(0, 16);
+      if (salt.length !== 16) throw new Error("QLR1 salt is damaged.");
+      return { saltText, salt, cipherText, block: canonicalBlock(saltText, cipherText) };
+    }
+
+    async function deriveAesKey(password, salt) {
+      const baseKey = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(password),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt, iterations: pbkdf2Rounds, hash: "SHA-256" },
+        baseKey,
+        { name: "AES-CTR", length: 256 },
+        false,
+        ["encrypt"]
+      );
+    }
+
+    async function makeKeyStream(password, salt, count) {
+      if (!password || password.length < 8) throw new Error("Use the shared password. 8+ characters minimum.");
+      const key = await deriveAesKey(password, salt);
+      const stream = [];
+      let counterValue = 0;
+      while (stream.length < count) {
+        const counter = new Uint8Array(16);
+        counter[12] = (counterValue >>> 24) & 255;
+        counter[13] = (counterValue >>> 16) & 255;
+        counter[14] = (counterValue >>> 8) & 255;
+        counter[15] = counterValue & 255;
+        counterValue += 1;
+        const bytes = new Uint8Array(await crypto.subtle.encrypt(
+          { name: "AES-CTR", counter, length: 64 },
+          key,
+          new Uint8Array(Math.max(64, count * 2))
+        ));
+        for (const byte of bytes) {
+          if (byte < 240) stream.push(byte % alphabet.length);
+          if (stream.length >= count) break;
+        }
+      }
+      return stream;
     }
 
     async function hashBlock(block) {
@@ -504,26 +581,6 @@
       localStorage.setItem(usedStoreKey, JSON.stringify(hashes.slice(-200)));
     }
 
-    async function migrateUsedStore() {
-      const entries = getUsedHashes();
-      let changed = false;
-      const migrated = [];
-      for (const entry of entries) {
-        if (typeof entry !== "string") {
-          changed = true;
-          continue;
-        }
-        if (entry.trim().toUpperCase().startsWith("QLR")) {
-          migrated.push(await hashBlock(entry));
-          changed = true;
-        } else {
-          migrated.push(entry);
-        }
-      }
-      const unique = [...new Set(migrated)];
-      if (changed || unique.length !== entries.length) saveUsedHashes(unique);
-    }
-
     async function isUsedBlock(block) {
       return getUsedHashes().includes(await hashBlock(block));
     }
@@ -540,13 +597,13 @@
 
     function updateSmsLink(sendable = true) {
       const text = els.streamOutput.textContent.trim();
-      if (!sendable || !text.startsWith("QLR")) {
+      if (!sendable || !text.startsWith("QLR1")) {
         els.smsLink.setAttribute("aria-disabled", "true");
         els.smsLink.href = `sms:?&body=${encodeURIComponent(toolUrl)}`;
         return;
       }
       const linkedToolUrl = `${toolUrl}#qlr=${encodeURIComponent(text)}`;
-      const body = `${text}\n\nTap to decode: ${linkedToolUrl}\n\nDo not send the ring key in this text.`;
+      const body = `${text}\n\nTap to decode: ${linkedToolUrl}\n\nDo not send the password in this text.`;
       els.smsLink.removeAttribute("aria-disabled");
       els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
     }
@@ -568,14 +625,12 @@
       els.keyReadout.textContent = displaySymbol(keySymbol);
       els.cipherReadout.textContent = ringState.cipherIndex >= 0 ? displaySymbol(alphabet[ringState.cipherIndex]) : "-";
       els.plainReadout.textContent = ringState.plainIndex >= 0 ? displaySymbol(alphabet[ringState.plainIndex]) : "-";
-
       document.querySelectorAll(".inner").forEach((mark) => {
         const index = Number(mark.dataset.index || 0);
         mark.style.setProperty("--angle", `${(index - ringState.keyIndex) * 9}deg`);
         mark.classList.toggle("active-key", index === ringState.keyIndex);
         mark.classList.toggle("active-inner", index === ringState.cipherIndex);
       });
-
       document.querySelectorAll(".outer").forEach((mark) => {
         const index = Number(mark.dataset.index || 0);
         mark.classList.toggle("active-outer", index === ringState.plainIndex);
@@ -598,7 +653,6 @@
         outer.style.setProperty("--angle", `${index * 9}deg`);
         outer.textContent = char;
         els.ring.appendChild(outer);
-
         const inner = document.createElement("span");
         inner.className = "mark inner";
         inner.dataset.index = String(index);
@@ -613,96 +667,100 @@
       window.clearTimeout(ringState.timer);
     }
 
-    function encryptReply() {
+    async function encryptReply() {
       stopAnimation();
       const plain = onlyRingSymbols(els.message.value);
       if (!plain) throw new Error("Type a reply first.");
-      const key = parseKey(els.keyStream.value);
-      if (key.length < plain.length) throw new Error(`Need ${plain.length} key symbols. You only have ${key.length}.`);
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const saltText = toBase32(salt);
+      const payload = payloadMarker + plain;
+      const stream = await makeKeyStream(els.password.value, salt, payload.length);
       let cipher = "";
-      for (let i = 0; i < plain.length; i++) cipher += transformSymbol(plain[i], key[i], "encrypt");
-      const block = canonicalBlockFromCipher(cipher);
+      for (let i = 0; i < payload.length; i++) {
+        cipher += alphabet[(alphabet.indexOf(payload[i]) + stream[i]) % alphabet.length];
+      }
+      const block = canonicalBlock(saltText, cipher);
       els.streamOutput.textContent = block;
       updateSmsLink(true);
-      setActivePair(cipher[0], plain[0]);
-      setRingKey(alphabet.indexOf(key[0]));
-      setStatus(`Reply encrypted. Cross off ${plain.length} key symbols.`);
+      setActivePair(cipher[payloadMarker.length], plain[0]);
+      setRingKey(stream[payloadMarker.length]);
+      setStatus(`Reply encrypted with password stream.`);
+    }
+
+    async function decryptPayload(parsed) {
+      const stream = await makeKeyStream(els.password.value, parsed.salt, parsed.cipherText.length);
+      let payload = "";
+      for (let i = 0; i < parsed.cipherText.length; i++) {
+        payload += alphabet[(alphabet.indexOf(parsed.cipherText[i]) - stream[i] + alphabet.length) % alphabet.length];
+      }
+      if (!payload.startsWith(payloadMarker)) {
+        throw new Error("Wrong password or damaged QLR1 block.");
+      }
+      return {
+        plain: payload.slice(payloadMarker.length),
+        stream,
+        offset: payloadMarker.length
+      };
     }
 
     async function decodeNow() {
       stopAnimation();
-      const cipher = parseCipher(els.message.value);
-      const block = canonicalBlockFromCipher(cipher);
-      if (await isUsedBlock(block)) {
+      const parsed = parseBlock(els.message.value);
+      if (await isUsedBlock(parsed.block)) {
         clearIncoming();
-        throw new Error("This QLR block was already decoded on this browser.");
+        throw new Error("This QLR1 block was already decoded on this browser.");
       }
-      const key = parseKey(els.keyStream.value);
-      if (key.length < cipher.length) throw new Error(`Need ${cipher.length} key symbols. You only have ${key.length}.`);
-      let plain = "";
-      for (let i = 0; i < cipher.length; i++) plain += transformSymbol(cipher[i], key[i], "decrypt");
+      const { plain, stream, offset } = await decryptPayload(parsed);
       els.streamOutput.textContent = plain.replace(/_/g, " ");
       updateSmsLink(false);
-      setActivePair(cipher[0], plain[0]);
-      setRingKey(alphabet.indexOf(key[0]));
-      await markUsedBlock(block);
+      setActivePair(parsed.cipherText[offset], plain[0]);
+      setRingKey(stream[offset]);
+      await markUsedBlock(parsed.block);
       clearIncoming(false);
-      setStatus(`Decoded once. Cross off ${cipher.length} key symbols.`);
+      setStatus("Decoded once.");
     }
 
     async function animateDecode() {
       stopAnimation();
-      const cipher = parseCipher(els.message.value);
-      const block = canonicalBlockFromCipher(cipher);
-      if (await isUsedBlock(block)) {
+      const parsed = parseBlock(els.message.value);
+      if (await isUsedBlock(parsed.block)) {
         clearIncoming();
-        throw new Error("This QLR block was already decoded on this browser.");
+        throw new Error("This QLR1 block was already decoded on this browser.");
       }
-      const key = parseKey(els.keyStream.value);
-      if (key.length < cipher.length) throw new Error(`Need ${cipher.length} key symbols. You only have ${key.length}.`);
+      const { plain: decodedPlain, stream, offset } = await decryptPayload(parsed);
       els.streamOutput.textContent = "";
       updateSmsLink(false);
       ringState.animating = true;
       let plain = "";
       let index = 0;
-
       const step = async () => {
         if (!ringState.animating) return;
-        if (index >= cipher.length) {
-          await markUsedBlock(block);
+        if (index >= decodedPlain.length) {
+          await markUsedBlock(parsed.block);
           clearIncoming(false);
           ringState.animating = false;
-          setStatus(`Decoded once. Cross off ${cipher.length} key symbols.`);
+          setStatus("Decoded once.");
           return;
         }
-        const keySymbol = key[index];
-        const cipherSymbol = cipher[index];
-        const plainSymbol = transformSymbol(cipherSymbol, keySymbol, "decrypt");
+        const sourceIndex = index + offset;
+        const cipherSymbol = parsed.cipherText[sourceIndex];
+        const plainSymbol = decodedPlain[index];
         plain += plainSymbol;
-        setRingKey(alphabet.indexOf(keySymbol));
+        setRingKey(stream[sourceIndex]);
         setActivePair(cipherSymbol, plainSymbol);
         els.streamOutput.textContent = plain.replace(/_/g, " ");
-        setStatus(`${index + 1}/${cipher.length}  key ${displaySymbol(keySymbol)}  cipher ${displaySymbol(cipherSymbol)}  plain ${displaySymbol(plainSymbol)}`);
+        setStatus(`${index + 1}/${decodedPlain.length}`);
         index += 1;
         ringState.timer = window.setTimeout(step, 620);
       };
-
       step();
     }
 
-    function randomSymbol() {
-      const byte = new Uint8Array(1);
-      do {
-        crypto.getRandomValues(byte);
-      } while (byte[0] >= 240);
-      return alphabet[byte[0] % alphabet.length];
-    }
-
-    function makeKey() {
-      let key = "";
-      for (let i = 0; i < 180; i++) key += randomSymbol();
-      els.keyStream.value = groupSymbols(key);
-      setStatus("Local ring key made. Share it separately, never in the same text.");
+    function makePassword() {
+      const words = ["anchor", "basket", "canyon", "delta", "ember", "forest", "galaxy", "harbor", "island", "jacket", "kernel", "lantern", "magnet", "nectar", "orbit", "prairie", "quartz", "ribbon", "summit", "temple", "velvet", "window", "yellow", "zephyr", "apricot", "bridge", "copper", "desktop", "engine", "fossil", "garden", "honest", "impact", "jungle", "keystone", "legend", "marble", "native", "oxygen", "planet", "rocket", "silver", "timber", "uplift", "voyage", "wander", "xenon", "zipper"];
+      const bytes = crypto.getRandomValues(new Uint8Array(5));
+      els.password.value = bytes.map((byte) => words[byte % words.length]).join("-");
+      setStatus("Password made locally. Share separately.");
     }
 
     function clearIncoming(clearOutput = true) {
@@ -717,7 +775,7 @@
     function clearAll() {
       stopAnimation();
       els.message.value = "";
-      els.keyStream.value = "";
+      els.password.value = "";
       els.streamOutput.textContent = "";
       setActivePair();
       updateSmsLink(false);
@@ -729,15 +787,15 @@
       if (!location.hash) return;
       const params = new URLSearchParams(location.hash.slice(1));
       const block = params.get("qlr");
-      if (!block || !block.trim().toUpperCase().startsWith("QLR")) return;
-      const canonical = canonicalBlockFromCipher(parseCipher(block));
-      if (await isUsedBlock(canonical)) {
+      if (!block || !block.trim().toUpperCase().startsWith("QLR1")) return;
+      const parsed = parseBlock(block);
+      if (await isUsedBlock(parsed.block)) {
         clearIncoming();
-        setStatus("This linked QLR block was already decoded on this browser.", true);
+        setStatus("This linked QLR1 block was already decoded on this browser.", true);
         return;
       }
-      els.message.value = canonical;
-      els.streamOutput.textContent = "QLR loaded. Paste ring key, then Animate Decode.";
+      els.message.value = parsed.block;
+      els.streamOutput.textContent = "QLR1 loaded. Enter password, then Animate Decode.";
       updateSmsLink(false);
       setStatus("Linked message loaded.");
     }
@@ -748,8 +806,8 @@
     els.decodeBtn.addEventListener("click", async () => {
       try { await decodeNow(); } catch (error) { setStatus(error.message || "Decode failed.", true); }
     });
-    els.encryptBtn.addEventListener("click", () => {
-      try { encryptReply(); } catch (error) { setStatus(error.message || "Encrypt failed.", true); }
+    els.encryptBtn.addEventListener("click", async () => {
+      try { await encryptReply(); } catch (error) { setStatus(error.message || "Encrypt failed.", true); }
     });
     els.smsLink.addEventListener("click", (event) => {
       if (els.smsLink.getAttribute("aria-disabled") === "true") {
@@ -757,13 +815,19 @@
         setStatus("Encrypt a reply first, then tap Text Output.", true);
       }
     });
-    els.makeKeyBtn.addEventListener("click", makeKey);
+    els.makePasswordBtn.addEventListener("click", makePassword);
     els.clearBtn.addEventListener("click", clearAll);
+    els.showPasswordBtn.addEventListener("click", () => {
+      const showing = els.password.type === "text";
+      els.password.type = showing ? "password" : "text";
+      els.showPasswordBtn.textContent = showing ? "Show" : "Hide";
+      els.showPasswordBtn.setAttribute("aria-pressed", String(!showing));
+    });
     els.message.addEventListener("paste", () => {
       window.setTimeout(() => {
-        if (els.message.value.trim().toUpperCase().startsWith("QLR")) {
-          els.streamOutput.textContent = "QLR loaded. Paste ring key, then Animate Decode.";
-          setStatus("Pasted QLR message loaded.");
+        if (els.message.value.trim().toUpperCase().startsWith("QLR1")) {
+          els.streamOutput.textContent = "QLR1 loaded. Enter password, then Animate Decode.";
+          setStatus("Pasted message loaded.");
         }
       }, 80);
     });
@@ -779,9 +843,7 @@
 
     drawRing();
     updateRingDisplay();
-    migrateUsedStore()
-      .then(() => loadLinkedMessage())
-      .catch((error) => setStatus(error.message || "Could not load linked message.", true));
+    loadLinkedMessage().catch((error) => setStatus(error.message || "Could not load linked message.", true));
   </script>
 </body>
 </html>
