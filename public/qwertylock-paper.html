@@ -894,10 +894,11 @@
     }
 
     function makePassword() {
-      const words = ["anchor", "basket", "canyon", "delta", "ember", "forest", "galaxy", "harbor", "island", "jacket", "kernel", "lantern", "magnet", "nectar", "orbit", "prairie", "quartz", "ribbon", "summit", "temple", "velvet", "window", "yellow", "zephyr", "apricot", "bridge", "copper", "desktop", "engine", "fossil", "garden", "honest", "impact", "jungle", "keystone", "legend", "marble", "native", "oxygen", "planet", "rocket", "silver", "timber", "uplift", "voyage", "wander", "xenon", "zipper"];
-      const bytes = crypto.getRandomValues(new Uint8Array(5));
-      els.password.value = bytes.map((byte) => words[byte % words.length]).join("-");
-      setStatus("Password made locally. Share separately.");
+      const passwordAlphabet = "abcdefghijkmnpqrstuvwxyz23456789";
+      const bytes = crypto.getRandomValues(new Uint8Array(20));
+      const chars = [...bytes].map((byte) => passwordAlphabet[byte & 31]);
+      els.password.value = chars.join("").replace(/(.{4})/g, "$1-").slice(0, -1);
+      setStatus("100-bit password made locally. Share separately.");
     }
 
     function clearIncoming(clearOutput = true) {
