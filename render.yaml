@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: slendystuff-site
-    runtime: node
-    rootDir: .
-    buildCommand: npm install
-    startCommand: npm start
-    pullRequestPreviewsEnabled: true
