@@ -7,16 +7,18 @@
   <title>QwertyLock Ring | SlendyStuff</title>
   <style>
     :root {
-      --bg: #f6f4ee;
-      --panel: #fffefa;
-      --ink: #14191f;
-      --muted: #5f6873;
-      --line: #d1c8bb;
-      --accent: #16745d;
-      --warn: #9b3d48;
-      --soft: #e7f2ee;
-      --focus: #0b63ce;
-      --shadow: 0 18px 48px rgba(28, 24, 18, 0.12);
+      --bg: #020604;
+      --panel: rgba(0, 18, 9, 0.92);
+      --panel-2: rgba(0, 30, 14, 0.88);
+      --ink: #d7ffe3;
+      --muted: #6bc98a;
+      --line: rgba(60, 255, 129, 0.34);
+      --accent: #3cff81;
+      --accent-2: #b8ffd0;
+      --warn: #ff4d7a;
+      --soft: rgba(60, 255, 129, 0.12);
+      --focus: #9fffb8;
+      --shadow: 0 0 32px rgba(20, 255, 105, 0.15), inset 0 0 32px rgba(20, 255, 105, 0.06);
     }
 
     * { box-sizing: border-box; }
@@ -24,16 +26,62 @@
     body {
       margin: 0;
       min-height: 100vh;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at 16% 12%, rgba(60, 255, 129, 0.12), transparent 28%),
+        radial-gradient(circle at 84% 30%, rgba(0, 128, 64, 0.13), transparent 30%),
+        linear-gradient(135deg, #020604 0%, #06150b 52%, #020604 100%);
       color: var(--ink);
-      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
       line-height: 1.4;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        linear-gradient(rgba(60, 255, 129, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(60, 255, 129, 0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.35));
+    }
+
+    .matrix-rain {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      opacity: 0.32;
+    }
+
+    .matrix-column {
+      position: absolute;
+      top: -42rem;
+      width: 1.2rem;
+      color: var(--accent);
+      font-size: 1rem;
+      line-height: 1.08;
+      text-align: center;
+      white-space: pre;
+      text-shadow: 0 0 10px rgba(60, 255, 129, 0.85);
+      animation: matrixFall linear infinite;
+    }
+
+    @keyframes matrixFall {
+      from { transform: translateY(-15vh); }
+      to { transform: translateY(125vh); }
     }
 
     main {
       width: min(1180px, calc(100vw - 24px));
       margin: 0 auto;
       padding: 18px 0 24px;
+      position: relative;
+      z-index: 1;
     }
 
     header {
@@ -41,8 +89,11 @@
       align-items: end;
       justify-content: space-between;
       gap: 12px;
-      border-bottom: 3px solid var(--accent);
-      padding: 0 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: rgba(0, 12, 6, 0.82);
+      box-shadow: var(--shadow);
     }
 
     h1 {
@@ -50,6 +101,8 @@
       font-size: clamp(2rem, 7vw, 4rem);
       line-height: 0.95;
       letter-spacing: 0;
+      color: var(--accent-2);
+      text-shadow: 0 0 18px rgba(60, 255, 129, 0.45);
     }
 
     .local-note {
@@ -61,7 +114,7 @@
 
     .workspace {
       display: grid;
-      grid-template-columns: minmax(360px, 1fr) minmax(340px, 0.92fr);
+      grid-template-columns: minmax(360px, 0.95fr) minmax(340px, 1.05fr);
       gap: 18px;
       align-items: stretch;
       padding-top: 18px;
@@ -74,12 +127,31 @@
       border-radius: 8px;
       box-shadow: var(--shadow);
       min-width: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .ring-stage::before,
+    .stream-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.03) 0,
+        rgba(255, 255, 255, 0.03) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+      mix-blend-mode: screen;
+      opacity: 0.42;
     }
 
     .ring-stage {
       display: grid;
       grid-template-rows: auto 1fr auto;
-      padding: 16px;
+      padding: 0 14px 14px;
     }
 
     .stage-head {
@@ -87,7 +159,11 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      min-height: 38px;
+      min-height: 42px;
+      margin: 0 -14px 12px;
+      padding: 9px 12px;
+      background: linear-gradient(90deg, rgba(60, 255, 129, 0.18), rgba(60, 255, 129, 0.04));
+      border-bottom: 1px solid var(--line);
     }
 
     .stage-title {
@@ -103,6 +179,7 @@
       color: var(--muted);
       font-size: 0.95rem;
       min-height: 22px;
+      text-shadow: 0 0 8px rgba(60, 255, 129, 0.25);
     }
 
     .status.error {
@@ -123,8 +200,10 @@
       border: 2px solid var(--line);
       border-radius: 50%;
       background:
-        radial-gradient(circle at center, white 0 33%, transparent 34%),
-        repeating-conic-gradient(from -4.5deg, rgba(22, 116, 93, 0.09) 0 9deg, transparent 9deg 18deg);
+        radial-gradient(circle at center, rgba(184, 255, 208, 0.12) 0 33%, transparent 34%),
+        repeating-conic-gradient(from -4.5deg, rgba(60, 255, 129, 0.17) 0 9deg, rgba(0, 0, 0, 0.1) 9deg 18deg),
+        radial-gradient(circle at center, rgba(0, 0, 0, 0.84), rgba(0, 20, 9, 0.92));
+      box-shadow: 0 0 38px rgba(60, 255, 129, 0.2), inset 0 0 40px rgba(60, 255, 129, 0.1);
       touch-action: none;
       user-select: none;
     }
@@ -142,7 +221,7 @@
     .ring::after {
       inset: 36%;
       border-color: var(--accent);
-      background: var(--soft);
+      background: rgba(0, 14, 7, 0.82);
     }
 
     .ring-pointer {
@@ -154,7 +233,8 @@
       height: 0;
       border-left: 13px solid transparent;
       border-right: 13px solid transparent;
-      border-top: 24px solid var(--warn);
+      border-top: 24px solid var(--accent-2);
+      filter: drop-shadow(0 0 12px rgba(60, 255, 129, 0.95));
       transform: translateX(-50%);
     }
 
@@ -169,6 +249,7 @@
       font-weight: 900;
       text-align: center;
       font-size: 0.95rem;
+      text-shadow: 0 0 14px rgba(60, 255, 129, 0.75);
     }
 
     .mark {
@@ -192,8 +273,8 @@
     .mark.active-outer,
     .mark.active-inner,
     .mark.active-password {
-      color: var(--warn);
-      text-shadow: 0 0 14px rgba(155, 61, 72, 0.35);
+      color: var(--accent-2);
+      text-shadow: 0 0 16px rgba(60, 255, 129, 0.85);
     }
 
     .mark.active-inner,
@@ -214,7 +295,7 @@
     .readout-box {
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fbfaf7;
+      background: rgba(0, 10, 5, 0.72);
       padding: 9px;
       text-align: center;
     }
@@ -238,7 +319,8 @@
     .stream-panel {
       display: grid;
       gap: 12px;
-      padding: 16px;
+      padding: 14px;
+      background: var(--panel-2);
     }
 
     label {
@@ -248,18 +330,55 @@
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      color: var(--accent-2);
     }
+
+    .cmd-field {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(0, 6, 3, 0.86);
+      box-shadow: inset 0 0 22px rgba(60, 255, 129, 0.05);
+      overflow: hidden;
+    }
+
+    .cmd-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 30px;
+      padding: 6px 9px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(60, 255, 129, 0.12);
+      color: var(--accent-2);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .cmd-title::before {
+      content: "C:\\QLOCK>";
+      color: var(--accent);
+    }
+
+    .cmd-title label {
+      margin: 0;
+    }
+
+    .cmd-body { padding: 10px; }
 
     textarea,
     input {
       width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: white;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
       color: var(--ink);
       font: 1rem/1.45 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
       outline: none;
-      padding: 11px;
+      padding: 0;
+      caret-color: var(--accent-2);
+      text-shadow: 0 0 8px rgba(60, 255, 129, 0.25);
     }
 
     textarea:focus,
@@ -267,7 +386,7 @@
     button:focus-visible,
     a:focus-visible {
       border-color: var(--focus);
-      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.16);
+      box-shadow: 0 0 0 3px rgba(159, 255, 184, 0.18);
       outline: none;
     }
 
@@ -283,18 +402,47 @@
 
     .stream-output {
       min-height: 156px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfaf7;
-      padding: 12px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
       font: 1.05rem/1.5 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
       overflow-wrap: anywhere;
       white-space: pre-wrap;
+      color: var(--accent-2);
+      text-shadow: 0 0 10px rgba(60, 255, 129, 0.45);
+      position: relative;
     }
 
     .stream-output:empty::before {
-      content: "Decoded text streams here.";
+      content: "awaiting decrypted stream...";
       color: var(--muted);
+    }
+
+    .decoded-symbol {
+      display: inline-block;
+      min-width: 0.58em;
+    }
+
+    .decoded-symbol.catch {
+      color: white;
+      animation: catchIntoPrompt 520ms cubic-bezier(0.18, 0.82, 0.26, 1) both;
+      text-shadow: 0 0 16px white, 0 0 28px rgba(60, 255, 129, 0.95);
+    }
+
+    @keyframes catchIntoPrompt {
+      0% {
+        opacity: 0;
+        transform: translateY(-86px) scale(1.35);
+      }
+      72% {
+        opacity: 1;
+        transform: translateY(3px) scale(1.05);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .actions {
@@ -307,7 +455,7 @@
     .button {
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: white;
+      background: rgba(0, 12, 6, 0.86);
       color: var(--ink);
       cursor: pointer;
       display: inline-flex;
@@ -318,12 +466,16 @@
       min-height: 44px;
       padding: 10px 12px;
       text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      box-shadow: inset 0 0 18px rgba(60, 255, 129, 0.04);
     }
 
     .primary {
       background: var(--accent);
       border-color: var(--accent);
-      color: white;
+      color: #001507;
+      text-shadow: none;
     }
 
     .button[aria-disabled="true"] {
@@ -350,6 +502,7 @@
   </style>
 </head>
 <body>
+  <div class="matrix-rain" id="matrixRain" aria-hidden="true"></div>
   <main>
     <header>
       <h1>QwertyLock Ring</h1>
@@ -378,22 +531,26 @@
       </div>
 
       <div class="stream-panel">
-        <div>
-          <label for="message">Text Stream</label>
-          <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste a private link, or type a reply to encrypt"></textarea>
-        </div>
-
-        <div>
-          <label for="password">Password</label>
-          <div class="password-row">
-            <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Shared password">
-            <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
+        <div class="cmd-field">
+          <div class="cmd-title"><label for="message">input.stream</label></div>
+          <div class="cmd-body">
+            <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste a private link, or type a reply to encrypt"></textarea>
           </div>
         </div>
 
-        <div>
-          <label for="streamOutput">Stream</label>
-          <div class="stream-output" id="streamOutput" aria-live="polite"></div>
+        <div class="cmd-field">
+          <div class="cmd-title"><label for="password">password.key</label></div>
+          <div class="cmd-body password-row">
+              <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Shared password">
+              <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
+          </div>
+        </div>
+
+        <div class="cmd-field">
+          <div class="cmd-title"><label for="streamOutput">output.catch</label></div>
+          <div class="cmd-body">
+            <div class="stream-output" id="streamOutput" aria-live="polite"></div>
+          </div>
         </div>
 
         <div class="actions">
@@ -423,6 +580,7 @@
     let pendingSendUrl = "";
 
     const els = {
+      matrixRain: document.getElementById("matrixRain"),
       ring: document.getElementById("ring"),
       ringCenter: document.getElementById("ringCenter"),
       passwordReadout: document.getElementById("passwordReadout"),
@@ -454,8 +612,40 @@
       els.status.classList.toggle("error", isError);
     }
 
+    function buildMatrixRain() {
+      if (!els.matrixRain) return;
+      const glyphs = "QWERTYUIOPASDFGHJKLZXCVBNM0123456789_.,?";
+      const columns = Math.max(24, Math.min(72, Math.floor(window.innerWidth / 18)));
+      els.matrixRain.textContent = "";
+      for (let i = 0; i < columns; i++) {
+        const column = document.createElement("span");
+        column.className = "matrix-column";
+        column.style.left = `${(i / columns) * 100}%`;
+        column.style.animationDuration = `${8 + (i % 9)}s`;
+        column.style.animationDelay = `${-(i % 13)}s`;
+        let text = "";
+        const length = 28 + (i % 18);
+        for (let j = 0; j < length; j++) {
+          text += `${glyphs[(i * 17 + j * 11) % glyphs.length]}\n`;
+        }
+        column.textContent = text;
+        els.matrixRain.appendChild(column);
+      }
+    }
+
     function displaySymbol(symbol) {
       return symbol === "_" ? "SP" : symbol;
+    }
+
+    function renderDecodedStream(plain, catchIndex = -1) {
+      const display = plain.replace(/_/g, " ");
+      els.streamOutput.textContent = "";
+      [...display].forEach((char, index) => {
+        const span = document.createElement("span");
+        span.className = `decoded-symbol${index === catchIndex ? " catch" : ""}`;
+        span.textContent = char;
+        els.streamOutput.appendChild(span);
+      });
     }
 
     function normalizeText(text) {
@@ -844,7 +1034,7 @@
       }
       const { plain, stream, offset } = await decryptPayload(parsed);
       await consumeRemoteMessage();
-      els.streamOutput.textContent = plain.replace(/_/g, " ");
+      renderDecodedStream(plain);
       updateSmsLink(false);
       setActivePair(parsed.cipherText[offset], plain[0]);
       setPasswordOffset(stream[offset]);
@@ -883,7 +1073,7 @@
         plain += plainSymbol;
         setPasswordOffset(stream[sourceIndex]);
         setActivePair(cipherSymbol, plainSymbol);
-        els.streamOutput.textContent = plain.replace(/_/g, " ");
+        renderDecodedStream(plain, plain.length - 1);
         setStatus(`${index + 1}/${decodedPlain.length}`);
         index += 1;
         ringState.timer = window.setTimeout(step, 620);
@@ -992,7 +1182,9 @@
       if (event.buttons !== 1) return;
       setPasswordOffset(ringIndexFromPointer(event));
     });
+    window.addEventListener("resize", buildMatrixRain);
 
+    buildMatrixRain();
     drawRing();
     updateRingDisplay();
     loadLinkedMessage().catch((error) => setStatus(error.message || "Could not load linked message.", true));
