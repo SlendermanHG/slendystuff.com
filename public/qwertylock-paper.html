@@ -380,7 +380,7 @@
       <div class="stream-panel">
         <div>
           <label for="message">Text Stream</label>
-          <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste linked QLR text, or type a reply to encrypt"></textarea>
+          <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste a private link, or type a reply to encrypt"></textarea>
         </div>
 
         <div>
@@ -405,7 +405,7 @@
           <button id="clearBtn" type="button">Clear</button>
         </div>
 
-        <p class="micro">Nothing is server-saved. Do not send the password in the same text. Decoded blocks are locally marked by hash on this browser.</p>
+        <p class="micro">Server stores encrypted text only until first successful decode or expiry. Password and plaintext stay in this browser.</p>
       </div>
     </section>
   </main>
@@ -414,9 +414,15 @@
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.,?";
     const base32Alphabet = "abcdefghijklmnopqrstuvwxyz234567";
     const toolUrl = "https://slendystuff.com/r/";
+    const apiBase = (location.hostname === "slendystuff.com" || location.hostname === "www.slendystuff.com")
+      ? "https://slendystuff-site.onrender.com"
+      : "";
     const usedStoreKey = "qwertylock.used.qlr.v2";
+    const leaseStoreKey = "qwertylock.openLease.v1";
     const pbkdf2Rounds = 450000;
     const payloadMarker = "QLOCK_";
+    let remoteMessage = null;
+    let pendingSendUrl = "";
 
     const els = {
       ring: document.getElementById("ring"),
@@ -603,15 +609,130 @@
       if (location.hash) history.replaceState(null, "", location.pathname);
     }
 
-    function updateSmsLink(sendable = true) {
-      const text = els.streamOutput.textContent.trim();
-      if (!sendable || !text.startsWith("QLR1")) {
+    function privateMessageUrl(id) {
+      return `${toolUrl}#m=${encodeURIComponent(id)}`;
+    }
+
+    async function apiJson(path, options = {}) {
+      const response = await fetch(`${apiBase}${path}`, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        }
+      });
+      let payload = {};
+      try {
+        payload = await response.json();
+      } catch (_error) {
+        payload = {};
+      }
+      if (!response.ok || payload.ok === false) {
+        throw new Error(payload.error || "One-time message server is unavailable.");
+      }
+      return payload;
+    }
+
+    async function createRemoteMessage(block) {
+      return apiJson("/api/qwertylock/messages", {
+        method: "POST",
+        body: JSON.stringify({ block, ttlMinutes: 1440 })
+      });
+    }
+
+    async function loadRemoteMessage(id) {
+      const loaded = await apiJson(`/api/qwertylock/messages/${encodeURIComponent(id)}`);
+      setRemoteLease(loaded.id, loaded.leaseToken);
+      return loaded.block;
+    }
+
+    function messageIdFromText(text) {
+      const value = String(text || "").trim();
+      const linked = value.match(/[#?&]m=([a-z2-7]{16,32})/i);
+      if (linked) return linked[1].toLowerCase();
+      const bare = value.match(/^[a-z2-7]{16,32}$/i);
+      return bare ? bare[0].toLowerCase() : "";
+    }
+
+    async function openRemoteMessage(id) {
+      setStatus("Opening private message...");
+      const block = await loadRemoteMessage(id);
+      const parsed = parseBlock(block);
+      if (await isUsedBlock(parsed.block)) {
+        clearIncoming();
+        setStatus("This private message was already decoded on this browser.", true);
+        return false;
+      }
+      els.message.value = parsed.block;
+      els.streamOutput.textContent = "Private message loaded. Enter password, then Animate Decode.";
+      updateSmsLink(false);
+      setStatus("Private message loaded.");
+      return true;
+    }
+
+    async function ensureIncomingBlock() {
+      if (els.message.value.trim().toUpperCase().startsWith("QLR1")) return;
+      const messageId = messageIdFromText(els.message.value);
+      if (!messageId) return;
+      await openRemoteMessage(messageId);
+    }
+
+    async function consumeRemoteMessage() {
+      const current = currentRemoteLease();
+      if (!current.id || !current.leaseToken) return;
+      await apiJson(`/api/qwertylock/messages/${encodeURIComponent(current.id)}/consume`, {
+        method: "POST",
+        body: JSON.stringify({ leaseToken: current.leaseToken })
+      });
+      clearRemoteLease();
+    }
+
+    function setRemoteLease(id, leaseToken) {
+      remoteMessage = { id, leaseToken };
+      els.message._qwertylockLease = remoteMessage;
+      els.message.dataset.remoteId = id;
+      els.message.dataset.leaseToken = leaseToken;
+      sessionStorage.setItem(leaseStoreKey, JSON.stringify(remoteMessage));
+    }
+
+    function currentRemoteLease() {
+      if (remoteMessage && remoteMessage.id && remoteMessage.leaseToken) return remoteMessage;
+      const elementLease = els.message._qwertylockLease;
+      if (elementLease && elementLease.id && elementLease.leaseToken) return elementLease;
+      const dataLease = {
+        id: els.message.dataset.remoteId || "",
+        leaseToken: els.message.dataset.leaseToken || ""
+      };
+      if (dataLease.id && dataLease.leaseToken) return dataLease;
+      try {
+        const stored = JSON.parse(sessionStorage.getItem(leaseStoreKey) || "{}");
+        if (stored.id && stored.leaseToken) return stored;
+      } catch (_error) {
+        return { id: "", leaseToken: "" };
+      }
+      return { id: "", leaseToken: "" };
+    }
+
+    function clearRemoteLease() {
+      remoteMessage = null;
+      delete els.message._qwertylockLease;
+      delete els.message.dataset.remoteId;
+      delete els.message.dataset.leaseToken;
+      sessionStorage.removeItem(leaseStoreKey);
+    }
+
+    function resetRemoteMessage() {
+      clearRemoteLease();
+      pendingSendUrl = "";
+    }
+
+    function updateSmsLink(sendable = true, url = pendingSendUrl) {
+      if (!sendable || !url) {
         els.smsLink.setAttribute("aria-disabled", "true");
         els.smsLink.href = `sms:?&body=${encodeURIComponent(toolUrl)}`;
         return;
       }
-      const linkedToolUrl = `${toolUrl}#qlr=${encodeURIComponent(text)}`;
-      const body = `${text}\n\nTap to decode: ${linkedToolUrl}\n\nDo not send the password in this text.`;
+      const body = `Private message: ${url}\n\nUse the password shared separately.`;
       els.smsLink.removeAttribute("aria-disabled");
       els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
     }
@@ -688,11 +809,15 @@
         cipher += alphabet[(alphabet.indexOf(payload[i]) + stream[i]) % alphabet.length];
       }
       const block = canonicalBlock(saltText, cipher);
-      els.streamOutput.textContent = block;
-      updateSmsLink(true);
+      setStatus("Saving encrypted one-time message...");
+      const created = await createRemoteMessage(block);
+      pendingSendUrl = privateMessageUrl(created.id);
+      clearRemoteLease();
+      els.streamOutput.textContent = pendingSendUrl;
+      updateSmsLink(true, pendingSendUrl);
       setActivePair(cipher[payloadMarker.length], plain[0]);
       setPasswordOffset(stream[payloadMarker.length]);
-      setStatus(`Reply encrypted with password stream.`);
+      setStatus("One-time private link ready.");
     }
 
     async function decryptPayload(parsed) {
@@ -713,12 +838,14 @@
 
     async function decodeNow() {
       stopAnimation();
+      await ensureIncomingBlock();
       const parsed = parseBlock(els.message.value);
       if (await isUsedBlock(parsed.block)) {
         clearIncoming();
         throw new Error("This QLR1 block was already decoded on this browser.");
       }
       const { plain, stream, offset } = await decryptPayload(parsed);
+      await consumeRemoteMessage();
       els.streamOutput.textContent = plain.replace(/_/g, " ");
       updateSmsLink(false);
       setActivePair(parsed.cipherText[offset], plain[0]);
@@ -730,12 +857,14 @@
 
     async function animateDecode() {
       stopAnimation();
+      await ensureIncomingBlock();
       const parsed = parseBlock(els.message.value);
       if (await isUsedBlock(parsed.block)) {
         clearIncoming();
         throw new Error("This QLR1 block was already decoded on this browser.");
       }
       const { plain: decodedPlain, stream, offset } = await decryptPayload(parsed);
+      await consumeRemoteMessage();
       els.streamOutput.textContent = "";
       updateSmsLink(false);
       ringState.animating = true;
@@ -773,6 +902,7 @@
 
     function clearIncoming(clearOutput = true) {
       els.message.value = "";
+      clearRemoteLease();
       if (location.hash) history.replaceState(null, "", location.pathname);
       if (clearOutput) {
         els.streamOutput.textContent = "";
@@ -785,6 +915,7 @@
       els.message.value = "";
       els.password.value = "";
       els.streamOutput.textContent = "";
+      resetRemoteMessage();
       setActivePair();
       updateSmsLink(false);
       if (location.hash) history.replaceState(null, "", location.pathname);
@@ -794,8 +925,14 @@
     async function loadLinkedMessage() {
       if (!location.hash) return;
       const params = new URLSearchParams(location.hash.slice(1));
+      const messageId = params.get("m");
+      if (messageId) {
+        await openRemoteMessage(messageId);
+        return;
+      }
       const block = params.get("qlr");
       if (!block || !block.trim().toUpperCase().startsWith("QLR1")) return;
+      clearRemoteLease();
       const parsed = parseBlock(block);
       if (await isUsedBlock(parsed.block)) {
         clearIncoming();
@@ -833,7 +970,15 @@
     });
     els.message.addEventListener("paste", () => {
       window.setTimeout(() => {
-        if (els.message.value.trim().toUpperCase().startsWith("QLR1")) {
+        const pasted = els.message.value.trim();
+        const messageId = messageIdFromText(pasted);
+        if (messageId) {
+          openRemoteMessage(messageId).catch((error) => setStatus(error.message || "Open failed.", true));
+          return;
+        }
+        if (pasted.toUpperCase().startsWith("QLR1")) {
+          if (currentRemoteLease().id) return;
+          clearRemoteLease();
           els.streamOutput.textContent = "QLR1 loaded. Enter password, then Animate Decode.";
           setStatus("Pasted message loaded.");
         }
