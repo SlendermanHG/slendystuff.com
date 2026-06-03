@@ -90,7 +90,6 @@ function applyCors(req, res) {
   const allowed = new Set([
     "https://slendystuff.com",
     "https://www.slendystuff.com",
-    "https://slendystuff-site.onrender.com",
     "http://localhost:4173",
     "http://localhost:9010"
   ]);
