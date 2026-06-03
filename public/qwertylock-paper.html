@@ -191,13 +191,13 @@
 
     .mark.active-outer,
     .mark.active-inner,
-    .mark.active-key {
+    .mark.active-password {
       color: var(--warn);
       text-shadow: 0 0 14px rgba(155, 61, 72, 0.35);
     }
 
     .mark.active-inner,
-    .mark.active-key {
+    .mark.active-password {
       transform:
         rotate(var(--angle))
         translateY(var(--radius))
@@ -371,7 +371,7 @@
         </div>
 
         <div class="readout" aria-label="Ring readout">
-          <div class="readout-box"><span>Password</span><strong id="keyReadout">A</strong></div>
+          <div class="readout-box"><span>Password</span><strong id="passwordReadout">A</strong></div>
           <div class="readout-box"><span>Cipher</span><strong id="cipherReadout">-</strong></div>
           <div class="readout-box"><span>Plain</span><strong id="plainReadout">-</strong></div>
         </div>
@@ -421,7 +421,7 @@
     const els = {
       ring: document.getElementById("ring"),
       ringCenter: document.getElementById("ringCenter"),
-      keyReadout: document.getElementById("keyReadout"),
+      passwordReadout: document.getElementById("passwordReadout"),
       cipherReadout: document.getElementById("cipherReadout"),
       plainReadout: document.getElementById("plainReadout"),
       message: document.getElementById("message"),
@@ -438,7 +438,7 @@
     };
 
     const ringState = {
-      keyIndex: 0,
+      passwordIndex: 0,
       cipherIndex: -1,
       plainIndex: -1,
       animating: false,
@@ -461,6 +461,14 @@
     function onlyRingSymbols(text) {
       const symbols = [];
       for (const raw of normalizeText(text)) {
+        if (alphabet.includes(raw)) symbols.push(raw);
+      }
+      return symbols.join("");
+    }
+
+    function onlyCipherSymbols(text) {
+      const symbols = [];
+      for (const raw of String(text || "").toUpperCase()) {
         if (alphabet.includes(raw)) symbols.push(raw);
       }
       return symbols.join("");
@@ -513,7 +521,7 @@
       const match = source.match(/QLR1\s+([a-z2-7]+)\.([A-Z0-9_.,?\s]+)/i);
       if (!match) throw new Error("Paste a QLR1 block first.");
       const saltText = match[1].toLowerCase();
-      const cipherText = onlyRingSymbols(match[2]);
+      const cipherText = onlyCipherSymbols(match[2]);
       if (!cipherText) throw new Error("QLR1 block has no cipher text.");
       const salt = fromBase32(saltText).slice(0, 16);
       if (salt.length !== 16) throw new Error("QLR1 salt is damaged.");
@@ -537,7 +545,7 @@
       );
     }
 
-    async function makeKeyStream(password, salt, count) {
+    async function makePasswordStream(password, salt, count) {
       if (!password || password.length < 8) throw new Error("Use the shared password. 8+ characters minimum.");
       const key = await deriveAesKey(password, salt);
       const stream = [];
@@ -608,8 +616,8 @@
       els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
     }
 
-    function setRingKey(index) {
-      ringState.keyIndex = (index + alphabet.length) % alphabet.length;
+    function setPasswordOffset(index) {
+      ringState.passwordIndex = (index + alphabet.length) % alphabet.length;
       updateRingDisplay();
     }
 
@@ -620,15 +628,15 @@
     }
 
     function updateRingDisplay() {
-      const keySymbol = alphabet[ringState.keyIndex];
-      els.ringCenter.innerHTML = `A over<br>${displaySymbol(keySymbol)}`;
-      els.keyReadout.textContent = displaySymbol(keySymbol);
+      const passwordSymbol = alphabet[ringState.passwordIndex];
+      els.ringCenter.innerHTML = `A over<br>${displaySymbol(passwordSymbol)}`;
+      els.passwordReadout.textContent = displaySymbol(passwordSymbol);
       els.cipherReadout.textContent = ringState.cipherIndex >= 0 ? displaySymbol(alphabet[ringState.cipherIndex]) : "-";
       els.plainReadout.textContent = ringState.plainIndex >= 0 ? displaySymbol(alphabet[ringState.plainIndex]) : "-";
       document.querySelectorAll(".inner").forEach((mark) => {
         const index = Number(mark.dataset.index || 0);
-        mark.style.setProperty("--angle", `${(index - ringState.keyIndex) * 9}deg`);
-        mark.classList.toggle("active-key", index === ringState.keyIndex);
+        mark.style.setProperty("--angle", `${(index - ringState.passwordIndex) * 9}deg`);
+        mark.classList.toggle("active-password", index === ringState.passwordIndex);
         mark.classList.toggle("active-inner", index === ringState.cipherIndex);
       });
       document.querySelectorAll(".outer").forEach((mark) => {
@@ -674,7 +682,7 @@
       const salt = crypto.getRandomValues(new Uint8Array(16));
       const saltText = toBase32(salt);
       const payload = payloadMarker + plain;
-      const stream = await makeKeyStream(els.password.value, salt, payload.length);
+      const stream = await makePasswordStream(els.password.value, salt, payload.length);
       let cipher = "";
       for (let i = 0; i < payload.length; i++) {
         cipher += alphabet[(alphabet.indexOf(payload[i]) + stream[i]) % alphabet.length];
@@ -683,12 +691,12 @@
       els.streamOutput.textContent = block;
       updateSmsLink(true);
       setActivePair(cipher[payloadMarker.length], plain[0]);
-      setRingKey(stream[payloadMarker.length]);
+      setPasswordOffset(stream[payloadMarker.length]);
       setStatus(`Reply encrypted with password stream.`);
     }
 
     async function decryptPayload(parsed) {
-      const stream = await makeKeyStream(els.password.value, parsed.salt, parsed.cipherText.length);
+      const stream = await makePasswordStream(els.password.value, parsed.salt, parsed.cipherText.length);
       let payload = "";
       for (let i = 0; i < parsed.cipherText.length; i++) {
         payload += alphabet[(alphabet.indexOf(parsed.cipherText[i]) - stream[i] + alphabet.length) % alphabet.length];
@@ -714,7 +722,7 @@
       els.streamOutput.textContent = plain.replace(/_/g, " ");
       updateSmsLink(false);
       setActivePair(parsed.cipherText[offset], plain[0]);
-      setRingKey(stream[offset]);
+      setPasswordOffset(stream[offset]);
       await markUsedBlock(parsed.block);
       clearIncoming(false);
       setStatus("Decoded once.");
@@ -746,7 +754,7 @@
         const cipherSymbol = parsed.cipherText[sourceIndex];
         const plainSymbol = decodedPlain[index];
         plain += plainSymbol;
-        setRingKey(stream[sourceIndex]);
+        setPasswordOffset(stream[sourceIndex]);
         setActivePair(cipherSymbol, plainSymbol);
         els.streamOutput.textContent = plain.replace(/_/g, " ");
         setStatus(`${index + 1}/${decodedPlain.length}`);
@@ -834,11 +842,11 @@
     els.ring.addEventListener("pointerdown", (event) => {
       els.ring.setPointerCapture(event.pointerId);
       stopAnimation();
-      setRingKey(ringIndexFromPointer(event));
+      setPasswordOffset(ringIndexFromPointer(event));
     });
     els.ring.addEventListener("pointermove", (event) => {
       if (event.buttons !== 1) return;
-      setRingKey(ringIndexFromPointer(event));
+      setPasswordOffset(ringIndexFromPointer(event));
     });
 
     drawRing();
