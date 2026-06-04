@@ -2,10 +2,9 @@ name = "qwertylock-api"
 main = "src/worker.js"
 compatibility_date = "2026-06-04"
 
-# After DNS is ready, replace this with your chosen API hostname.
-# routes = [
-#   { pattern = "lock.slendystuff.com", custom_domain = true }
-# ]
+routes = [
+  { pattern = "lock.slendystuff.com", custom_domain = true }
+]
 
 [vars]
 PUBLIC_TOOL_URL = "https://slendystuff.com/r/"
