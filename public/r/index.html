@@ -113,6 +113,30 @@
       text-align: right;
     }
 
+    .flow-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .flow-step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 10px;
+      background: rgba(0, 18, 9, 0.78);
+      color: var(--muted);
+      font-size: 0.86rem;
+      min-height: 58px;
+    }
+
+    .flow-step strong {
+      display: block;
+      color: var(--accent-2);
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+
     .workspace {
       display: grid;
       grid-template-columns: minmax(360px, 0.95fr) minmax(340px, 1.05fr);
@@ -396,9 +420,15 @@
 
     .password-row {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto auto;
       gap: 8px;
       align-items: stretch;
+    }
+
+    .password-help {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
     }
 
     .stream-output {
@@ -492,6 +522,7 @@
 
     @media (max-width: 860px) {
       main { width: min(100vw - 18px, 560px); padding-top: 12px; }
+      .flow-strip { grid-template-columns: 1fr; }
       header { align-items: start; flex-direction: column; }
       .local-note { text-align: left; }
       .workspace { grid-template-columns: 1fr; }
@@ -509,6 +540,12 @@
       <h1>QwertyLock Ring</h1>
       <p class="local-note">Open later at slendystuff.com/r</p>
     </header>
+
+    <section class="flow-strip" aria-label="Private conversation steps">
+      <div class="flow-step"><strong>1. Share phrase once</strong>Use voice or in person. Do not text it with the link.</div>
+      <div class="flow-step"><strong>2. Send only links</strong>Type a message, Create Link, then Text Link.</div>
+      <div class="flow-step"><strong>3. Decode once</strong>Open the link, enter the phrase, then Open / Decode.</div>
+    </section>
 
     <section class="workspace" aria-label="QwertyLock Ring workspace">
       <div class="ring-stage">
@@ -542,9 +579,11 @@
         <div class="cmd-field">
           <div class="cmd-title"><label for="password">password.key</label></div>
           <div class="cmd-body password-row">
-              <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Shared password">
+              <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Shared phrase">
+              <button id="copyPasswordBtn" type="button">Copy</button>
               <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
           </div>
+          <p class="password-help">Best flow: agree on one shared phrase once, then only text encrypted links.</p>
         </div>
 
         <div class="cmd-field">
@@ -555,11 +594,11 @@
         </div>
 
         <div class="actions">
-          <button class="primary" id="animateBtn" type="button">Animate Decode</button>
-          <button id="decodeBtn" type="button">Decode Now</button>
-          <button id="encryptBtn" type="button">Encrypt Reply</button>
-          <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fr" aria-disabled="true">Text Output</a>
-          <button id="makePasswordBtn" type="button">Make Password</button>
+          <button class="primary" id="animateBtn" type="button">Open / Decode</button>
+          <button id="decodeBtn" type="button">Decode Fast</button>
+          <button id="encryptBtn" type="button">Create Link</button>
+          <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fr" aria-disabled="true">Text Link</a>
+          <button id="makePasswordBtn" type="button">Make Phrase</button>
           <button id="clearBtn" type="button">Clear</button>
         </div>
 
@@ -589,6 +628,7 @@
       plainReadout: document.getElementById("plainReadout"),
       message: document.getElementById("message"),
       password: document.getElementById("password"),
+      copyPasswordBtn: document.getElementById("copyPasswordBtn"),
       showPasswordBtn: document.getElementById("showPasswordBtn"),
       streamOutput: document.getElementById("streamOutput"),
       status: document.getElementById("status"),
@@ -831,7 +871,7 @@
 
     async function loadRemoteMessage(id) {
       const loaded = await apiJson(`/api/qwertylock/messages/${encodeURIComponent(id)}`);
-      setRemoteLease(loaded.id, loaded.leaseToken);
+      setRemoteLease(id, loaded.leaseToken);
       return loaded.block;
     }
 
@@ -853,7 +893,7 @@
         return false;
       }
       els.message.value = parsed.block;
-      els.streamOutput.textContent = "Private message loaded. Enter password, then Animate Decode.";
+      els.streamOutput.textContent = "Private message loaded. Enter the shared phrase, then Open / Decode.";
       updateSmsLink(false);
       setStatus("Private message loaded.");
       return true;
@@ -921,7 +961,7 @@
         els.smsLink.href = `sms:?&body=${encodeURIComponent(toolUrl)}`;
         return;
       }
-      const body = `Private message: ${url}\n\nUse the password shared separately.`;
+      const body = `Private message: ${url}\n\nUnlock with our shared phrase. Do not text the phrase here.`;
       els.smsLink.removeAttribute("aria-disabled");
       els.smsLink.href = `sms:?&body=${encodeURIComponent(body)}`;
     }
@@ -1083,11 +1123,40 @@
     }
 
     function makePassword() {
-      const passwordAlphabet = "abcdefghijkmnpqrstuvwxyz23456789";
-      const bytes = crypto.getRandomValues(new Uint8Array(20));
-      const chars = [...bytes].map((byte) => passwordAlphabet[byte & 31]);
-      els.password.value = chars.join("").replace(/(.{4})/g, "$1-").slice(0, -1);
-      setStatus("100-bit password made locally. Share separately.");
+      const words = [
+        "amber", "anchor", "apron", "atlas", "baker", "beacon", "birch", "bison",
+        "black", "blaze", "brick", "brush", "cabin", "cactus", "candle", "canyon",
+        "cedar", "charm", "cinder", "clover", "cobalt", "comet", "copper", "coral",
+        "cotton", "crater", "crimson", "delta", "denim", "dinner", "dragon", "drift",
+        "ember", "falcon", "fancy", "field", "flint", "forest", "frost", "garden",
+        "glider", "golden", "granite", "harbor", "hazel", "hidden", "honest", "indigo",
+        "island", "jacket", "jungle", "kitten", "ladder", "lantern", "laser", "lemon",
+        "lilac", "magnet", "marble", "matrix", "meadow", "meteor", "midnight", "mint",
+        "mirror", "nebula", "nickel", "noble", "oasis", "onyx", "orbit", "paper",
+        "pepper", "pillow", "planet", "plasma", "pocket", "prairie", "quartz", "raven",
+        "river", "rocket", "saddle", "saffron", "shadow", "signal", "silver", "simple",
+        "smoke", "solar", "sparrow", "spider", "spring", "stone", "storm", "summer",
+        "sunset", "temple", "thunder", "tiger", "timber", "token", "topaz", "tundra",
+        "velvet", "violet", "voyage", "walnut", "wander", "winter", "wizard", "yellow",
+        "zephyr", "zero", "zinc", "zipper", "acorn", "button", "castle", "daisy",
+        "engine", "feather", "goblet", "hammer", "ivory", "jigsaw", "kernel", "lagoon"
+      ];
+      const codeAlphabet = "abcdefghijkmnpqrstuvwxyz23456789";
+      const wordBytes = crypto.getRandomValues(new Uint8Array(4));
+      const codeBytes = crypto.getRandomValues(new Uint8Array(8));
+      const picked = [...wordBytes].map((byte) => words[byte & 127]);
+      const code = [...codeBytes].map((byte) => codeAlphabet[byte & 31]).join("").replace(/(.{4})/g, "$1-").slice(0, -1);
+      els.password.value = `${picked.join("-")}-${code}`;
+      setStatus("Shared phrase made locally. Share it once by voice or in person.");
+    }
+
+    async function copyPassword() {
+      if (!els.password.value.trim()) {
+        setStatus("Make or enter a shared phrase first.", true);
+        return;
+      }
+      await navigator.clipboard.writeText(els.password.value);
+      setStatus("Shared phrase copied. Do not send it in the same text as the link.");
     }
 
     function clearIncoming(clearOutput = true) {
@@ -1130,7 +1199,7 @@
         return;
       }
       els.message.value = parsed.block;
-      els.streamOutput.textContent = "QLR1 loaded. Enter password, then Animate Decode.";
+      els.streamOutput.textContent = "QLR1 loaded. Enter the shared phrase, then Open / Decode.";
       updateSmsLink(false);
       setStatus("Linked message loaded.");
     }
@@ -1151,6 +1220,9 @@
       }
     });
     els.makePasswordBtn.addEventListener("click", makePassword);
+    els.copyPasswordBtn.addEventListener("click", () => {
+      copyPassword().catch(() => setStatus("Could not copy phrase from this browser.", true));
+    });
     els.clearBtn.addEventListener("click", clearAll);
     els.showPasswordBtn.addEventListener("click", () => {
       const showing = els.password.type === "text";
