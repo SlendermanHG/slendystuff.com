@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="qwertylock-api-base" content="">
   <title>QwertyLock Ring | SlendyStuff</title>
   <style>
     :root {
@@ -571,7 +572,7 @@
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.,?";
     const base32Alphabet = "abcdefghijklmnopqrstuvwxyz234567";
     const toolUrl = "https://slendystuff.com/r/";
-    const apiBase = "";
+    const apiBase = (document.querySelector('meta[name="qwertylock-api-base"]')?.content || "").trim().replace(/\/$/, "");
     const usedStoreKey = "qwertylock.used.qlr.v2";
     const leaseStoreKey = "qwertylock.openLease.v1";
     const pbkdf2Rounds = 450000;
