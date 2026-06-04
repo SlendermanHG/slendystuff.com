@@ -1,0 +1,19 @@
+name = "qwertylock-api"
+main = "src/worker.js"
+compatibility_date = "2026-06-04"
+
+[vars]
+PUBLIC_TOOL_URL = "https://slendystuff.com/r/"
+
+# After DNS is ready, replace this with your chosen API hostname.
+# routes = [
+#   { pattern = "lock.slendystuff.com/*", custom_domain = true }
+# ]
+
+[[durable_objects.bindings]]
+name = "QLOCK_MESSAGE"
+class_name = "QwertyLockMessage"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["QwertyLockMessage"]

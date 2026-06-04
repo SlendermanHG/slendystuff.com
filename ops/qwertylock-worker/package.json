@@ -1,0 +1,9 @@
+{
+  "name": "qwertylock-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check src/worker.js",
+    "deploy": "wrangler deploy"
+  }
+}
