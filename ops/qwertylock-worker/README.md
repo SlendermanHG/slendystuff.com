@@ -2,7 +2,7 @@
 
 This is the public backend for server-backed one-time QwertyLock messages.
 
-It is designed for Cloudflare Workers with Durable Objects. The browser still encrypts and decrypts locally; this API stores only encrypted `QLR1` blocks until successful consume or expiration.
+It is designed for Cloudflare Workers with Durable Objects. The browser still encrypts and decrypts locally; this API stores only encrypted QLR blocks until successful consume or expiration. New messages use authenticated `QLR2` blocks, while `QLR1` remains accepted for older links.
 
 ## Endpoints
 
@@ -38,7 +38,7 @@ Invoke-WebRequest https://lock.slendystuff.com/api/health -UseBasicParsing
 
 ## Privacy Boundary
 
-The Worker should receive only encrypted QLR1 blocks and random message IDs. It should never receive plaintext or the shared password.
+The Worker should receive only encrypted QLR blocks and random message IDs. It should never receive plaintext or the shared phrase.
 
 The public claim should stay conservative:
 

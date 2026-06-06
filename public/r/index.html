@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://lock.slendystuff.com; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="qwertylock-api-base" content="https://lock.slendystuff.com">
   <title>QwertyLock Ring | SlendyStuff</title>
   <style>
@@ -137,6 +140,12 @@
       margin-bottom: 2px;
     }
 
+    .flow-step.active {
+      border-color: var(--accent);
+      background: rgba(60, 255, 129, 0.14);
+      box-shadow: 0 0 24px rgba(60, 255, 129, 0.14);
+    }
+
     .workspace {
       display: grid;
       grid-template-columns: minmax(360px, 0.95fr) minmax(340px, 1.05fr);
@@ -231,6 +240,12 @@
       box-shadow: 0 0 38px rgba(60, 255, 129, 0.2), inset 0 0 40px rgba(60, 255, 129, 0.1);
       touch-action: none;
       user-select: none;
+      animation: ringGlow 5.5s ease-in-out infinite;
+    }
+
+    @keyframes ringGlow {
+      0%, 100% { box-shadow: 0 0 34px rgba(60, 255, 129, 0.18), inset 0 0 38px rgba(60, 255, 129, 0.1); }
+      50% { box-shadow: 0 0 54px rgba(60, 255, 129, 0.28), inset 0 0 48px rgba(60, 255, 129, 0.16); }
     }
 
     .ring::before,
@@ -450,6 +465,17 @@
       color: var(--muted);
     }
 
+    .stream-output.link-ready {
+      color: #ffffff;
+      text-shadow: 0 0 14px rgba(255, 255, 255, 0.7), 0 0 28px rgba(60, 255, 129, 0.8);
+      animation: linkReadyPulse 1.2s ease-in-out 2;
+    }
+
+    @keyframes linkReadyPulse {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+
     .decoded-symbol {
       display: inline-block;
       min-width: 0.58em;
@@ -524,12 +550,28 @@
       main { width: min(100vw - 18px, 560px); padding-top: 12px; }
       .flow-strip { grid-template-columns: 1fr; }
       header { align-items: start; flex-direction: column; }
+      h1 { font-size: clamp(2rem, 13vw, 3.3rem); }
       .local-note { text-align: left; }
       .workspace { grid-template-columns: 1fr; }
-      .ring-wrap { min-height: 390px; }
+      .stream-panel { order: -1; }
+      .ring-wrap { min-height: 330px; }
       .outer { --radius: -164px; }
       .inner { --radius: -109px; }
-      .ring { width: min(92vw, 380px); }
+      .ring { width: min(90vw, 340px); }
+      .password-row { grid-template-columns: 1fr 1fr; }
+      #password { grid-column: 1 / -1; }
+      .actions { grid-template-columns: 1fr; }
+      .stream-output { min-height: 118px; }
+      #message { min-height: 104px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+      .matrix-rain { display: none; }
     }
   </style>
 </head>
@@ -653,10 +695,17 @@
       els.status.classList.toggle("error", isError);
     }
 
+    function setFlowStep(activeIndex = 0) {
+      document.querySelectorAll(".flow-step").forEach((step, index) => {
+        step.classList.toggle("active", index === activeIndex);
+      });
+    }
+
     function buildMatrixRain() {
       if (!els.matrixRain) return;
       const glyphs = "QWERTYUIOPASDFGHJKLZXCVBNM0123456789_.,?";
-      const columns = Math.max(24, Math.min(72, Math.floor(window.innerWidth / 18)));
+      const maxColumns = window.innerWidth < 640 ? 28 : 72;
+      const columns = Math.max(16, Math.min(maxColumns, Math.floor(window.innerWidth / 18)));
       els.matrixRain.textContent = "";
       for (let i = 0; i < columns; i++) {
         const column = document.createElement("span");
@@ -678,8 +727,8 @@
       return symbol === "_" ? "SP" : symbol;
     }
 
-    function renderDecodedStream(plain, catchIndex = -1) {
-      const display = plain.replace(/_/g, " ");
+    function renderDecodedStream(plain, catchIndex = -1, legacySpaces = false) {
+      const display = legacySpaces ? plain.replace(/_/g, " ") : plain;
       els.streamOutput.textContent = "";
       [...display].forEach((char, index) => {
         const span = document.createElement("span");
@@ -747,20 +796,48 @@
       return new Uint8Array(out);
     }
 
-    function canonicalBlock(saltText, cipherText) {
+    function canonicalQlr1Block(saltText, cipherText) {
       return `QLR1 ${saltText}.${groupSymbols(cipherText)}`;
+    }
+
+    function canonicalQlr2Block(saltText, nonceText, cipherText) {
+      return `QLR2 ${saltText}.${nonceText}.${groupSymbols(cipherText.toUpperCase())}`;
     }
 
     function parseBlock(text) {
       const source = String(text || "").trim();
-      const match = source.match(/QLR1\s+([a-z2-7]+)\.([A-Z0-9_.,?\s]+)/i);
-      if (!match) throw new Error("Paste a QLR1 block first.");
-      const saltText = match[1].toLowerCase();
-      const cipherText = onlyCipherSymbols(match[2]);
+      const qlr2 = source.match(/QLR2\s+([a-z2-7]+)\.([a-z2-7]+)\.([a-z2-7\s]+)/i);
+      if (qlr2) {
+        const saltText = qlr2[1].toLowerCase();
+        const nonceText = qlr2[2].toLowerCase();
+        const cipherText = qlr2[3].toLowerCase().replace(/[^a-z2-7]/g, "");
+        if (!cipherText) throw new Error("QLR2 block has no cipher text.");
+        const salt = fromBase32(saltText).slice(0, 16);
+        const nonce = fromBase32(nonceText).slice(0, 12);
+        const cipherBytes = fromBase32(cipherText);
+        if (salt.length !== 16) throw new Error("QLR2 salt is damaged.");
+        if (nonce.length !== 12) throw new Error("QLR2 nonce is damaged.");
+        if (cipherBytes.length < 17) throw new Error("QLR2 cipher text is damaged.");
+        return {
+          version: "QLR2",
+          saltText,
+          nonceText,
+          salt,
+          nonce,
+          cipherText,
+          cipherBytes,
+          block: canonicalQlr2Block(saltText, nonceText, cipherText)
+        };
+      }
+
+      const qlr1 = source.match(/QLR1\s+([a-z2-7]+)\.([A-Z0-9_.,?\s]+)/i);
+      if (!qlr1) throw new Error("Paste a private link or QLR block first.");
+      const saltText = qlr1[1].toLowerCase();
+      const cipherText = onlyCipherSymbols(qlr1[2]);
       if (!cipherText) throw new Error("QLR1 block has no cipher text.");
       const salt = fromBase32(saltText).slice(0, 16);
       if (salt.length !== 16) throw new Error("QLR1 salt is damaged.");
-      return { saltText, salt, cipherText, block: canonicalBlock(saltText, cipherText) };
+      return { version: "QLR1", saltText, salt, cipherText, block: canonicalQlr1Block(saltText, cipherText) };
     }
 
     async function deriveAesKey(password, salt) {
@@ -781,7 +858,7 @@
     }
 
     async function makePasswordStream(password, salt, count) {
-      if (!password || password.length < 8) throw new Error("Use the shared password. 8+ characters minimum.");
+      if (!password || password.length < 8) throw new Error("Use the shared phrase. 8+ characters minimum.");
       const key = await deriveAesKey(password, salt);
       const stream = [];
       let counterValue = 0;
@@ -801,6 +878,41 @@
           if (byte < 240) stream.push(byte % alphabet.length);
           if (stream.length >= count) break;
         }
+      }
+      return stream;
+    }
+
+    async function deriveGcmKey(password, salt) {
+      if (!password || password.length < 8) throw new Error("Use the shared phrase. 8+ characters minimum.");
+      const baseKey = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(password),
+        "PBKDF2",
+        false,
+        ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt, iterations: pbkdf2Rounds, hash: "SHA-256" },
+        baseKey,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    }
+
+    async function visualStream(seed, count) {
+      const stream = [];
+      let counter = 0;
+      while (stream.length < count) {
+        const bytes = new Uint8Array(await crypto.subtle.digest(
+          "SHA-256",
+          new TextEncoder().encode(`${seed}:${counter}`)
+        ));
+        for (const byte of bytes) {
+          stream.push(byte % alphabet.length);
+          if (stream.length >= count) break;
+        }
+        counter += 1;
       }
       return stream;
     }
@@ -893,6 +1005,7 @@
         return false;
       }
       els.message.value = parsed.block;
+      els.streamOutput.classList.remove("link-ready");
       els.streamOutput.textContent = "Private message loaded. Enter the shared phrase, then Open / Decode.";
       updateSmsLink(false);
       setStatus("Private message loaded.");
@@ -900,7 +1013,7 @@
     }
 
     async function ensureIncomingBlock() {
-      if (els.message.value.trim().toUpperCase().startsWith("QLR1")) return;
+      if (els.message.value.trim().toUpperCase().startsWith("QLR")) return;
       const messageId = messageIdFromText(els.message.value);
       if (!messageId) return;
       await openRemoteMessage(messageId);
@@ -977,6 +1090,11 @@
       updateRingDisplay();
     }
 
+    function ringSymbolFromText(text) {
+      const symbol = onlyRingSymbols(String(text || "").slice(0, 1));
+      return symbol ? symbol[0] : "";
+    }
+
     function updateRingDisplay() {
       const passwordSymbol = alphabet[ringState.passwordIndex];
       els.ringCenter.innerHTML = `A over<br>${displaySymbol(passwordSymbol)}`;
@@ -1027,29 +1145,57 @@
 
     async function encryptReply() {
       stopAnimation();
-      const plain = onlyRingSymbols(els.message.value);
+      setFlowStep(1);
+      const plain = els.message.value.trim();
       if (!plain) throw new Error("Type a reply first.");
       const salt = crypto.getRandomValues(new Uint8Array(16));
+      const nonce = crypto.getRandomValues(new Uint8Array(12));
       const saltText = toBase32(salt);
-      const payload = payloadMarker + plain;
-      const stream = await makePasswordStream(els.password.value, salt, payload.length);
-      let cipher = "";
-      for (let i = 0; i < payload.length; i++) {
-        cipher += alphabet[(alphabet.indexOf(payload[i]) + stream[i]) % alphabet.length];
-      }
-      const block = canonicalBlock(saltText, cipher);
+      const nonceText = toBase32(nonce);
+      const key = await deriveGcmKey(els.password.value, salt);
+      const cipherBytes = new Uint8Array(await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: nonce },
+        key,
+        new TextEncoder().encode(plain)
+      ));
+      const cipher = toBase32(cipherBytes);
+      const stream = await visualStream(`${saltText}.${nonceText}.${cipher}`, Math.max(1, plain.length));
+      const block = canonicalQlr2Block(saltText, nonceText, cipher);
       setStatus("Saving encrypted one-time message...");
       const created = await createRemoteMessage(block);
       pendingSendUrl = privateMessageUrl(created.id);
       clearRemoteLease();
       els.streamOutput.textContent = pendingSendUrl;
+      els.streamOutput.classList.add("link-ready");
       updateSmsLink(true, pendingSendUrl);
-      setActivePair(cipher[payloadMarker.length], plain[0]);
-      setPasswordOffset(stream[payloadMarker.length]);
+      setActivePair(cipher[0]?.toUpperCase() || "", ringSymbolFromText(plain));
+      setPasswordOffset(stream[0]);
+      setFlowStep(1);
       setStatus("One-time private link ready.");
     }
 
     async function decryptPayload(parsed) {
+      if (parsed.version === "QLR2") {
+        try {
+          const key = await deriveGcmKey(els.password.value, parsed.salt);
+          const plainBytes = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: parsed.nonce },
+            key,
+            parsed.cipherBytes
+          );
+          const plain = new TextDecoder().decode(plainBytes);
+          return {
+            plain,
+            stream: await visualStream(`${parsed.saltText}.${parsed.nonceText}.${parsed.cipherText}`, Math.max(1, [...plain].length)),
+            offset: 0,
+            legacySpaces: false,
+            cipherText: parsed.cipherText.toUpperCase()
+          };
+        } catch (_error) {
+          throw new Error("Wrong shared phrase or damaged QLR2 block.");
+        }
+      }
+
       const stream = await makePasswordStream(els.password.value, parsed.salt, parsed.cipherText.length);
       let payload = "";
       for (let i = 0; i < parsed.cipherText.length; i++) {
@@ -1061,7 +1207,9 @@
       return {
         plain: payload.slice(payloadMarker.length),
         stream,
-        offset: payloadMarker.length
+        offset: payloadMarker.length,
+        legacySpaces: true,
+        cipherText: parsed.cipherText
       };
     }
 
@@ -1071,16 +1219,18 @@
       const parsed = parseBlock(els.message.value);
       if (await isUsedBlock(parsed.block)) {
         clearIncoming();
-        throw new Error("This QLR1 block was already decoded on this browser.");
+        throw new Error("This QLR block was already decoded on this browser.");
       }
-      const { plain, stream, offset } = await decryptPayload(parsed);
+      const { plain, stream, offset, legacySpaces, cipherText } = await decryptPayload(parsed);
       await consumeRemoteMessage();
-      renderDecodedStream(plain);
+      renderDecodedStream(plain, -1, legacySpaces);
       updateSmsLink(false);
-      setActivePair(parsed.cipherText[offset], plain[0]);
+      els.streamOutput.classList.remove("link-ready");
+      setActivePair(cipherText[offset] || "", ringSymbolFromText(plain));
       setPasswordOffset(stream[offset]);
       await markUsedBlock(parsed.block);
       clearIncoming(false);
+      setFlowStep(2);
       setStatus("Decoded once.");
     }
 
@@ -1090,34 +1240,37 @@
       const parsed = parseBlock(els.message.value);
       if (await isUsedBlock(parsed.block)) {
         clearIncoming();
-        throw new Error("This QLR1 block was already decoded on this browser.");
+        throw new Error("This QLR block was already decoded on this browser.");
       }
-      const { plain: decodedPlain, stream, offset } = await decryptPayload(parsed);
+      const { plain: decodedPlain, stream, offset, legacySpaces, cipherText } = await decryptPayload(parsed);
       await consumeRemoteMessage();
       els.streamOutput.textContent = "";
+      els.streamOutput.classList.remove("link-ready");
       updateSmsLink(false);
       ringState.animating = true;
       let plain = "";
       let index = 0;
+      const decodedChars = [...decodedPlain];
       const step = async () => {
         if (!ringState.animating) return;
-        if (index >= decodedPlain.length) {
+        if (index >= decodedChars.length) {
           await markUsedBlock(parsed.block);
           clearIncoming(false);
           ringState.animating = false;
+          setFlowStep(2);
           setStatus("Decoded once.");
           return;
         }
         const sourceIndex = index + offset;
-        const cipherSymbol = parsed.cipherText[sourceIndex];
-        const plainSymbol = decodedPlain[index];
+        const cipherSymbol = cipherText[sourceIndex] || "";
+        const plainSymbol = decodedChars[index] || "";
         plain += plainSymbol;
-        setPasswordOffset(stream[sourceIndex]);
-        setActivePair(cipherSymbol, plainSymbol);
-        renderDecodedStream(plain, plain.length - 1);
-        setStatus(`${index + 1}/${decodedPlain.length}`);
+        setPasswordOffset(stream[sourceIndex] || stream[0] || 0);
+        setActivePair(cipherSymbol, ringSymbolFromText(plainSymbol));
+        renderDecodedStream(plain, [...plain].length - 1, legacySpaces);
+        setStatus(`${index + 1}/${decodedChars.length}`);
         index += 1;
-        ringState.timer = window.setTimeout(step, 620);
+        ringState.timer = window.setTimeout(step, window.innerWidth < 640 ? 180 : 420);
       };
       step();
     }
@@ -1165,6 +1318,7 @@
       if (location.hash) history.replaceState(null, "", location.pathname);
       if (clearOutput) {
         els.streamOutput.textContent = "";
+        els.streamOutput.classList.remove("link-ready");
         updateSmsLink(false);
       }
     }
@@ -1174,6 +1328,7 @@
       els.message.value = "";
       els.password.value = "";
       els.streamOutput.textContent = "";
+      els.streamOutput.classList.remove("link-ready");
       resetRemoteMessage();
       setActivePair();
       updateSmsLink(false);
@@ -1190,16 +1345,17 @@
         return;
       }
       const block = params.get("qlr");
-      if (!block || !block.trim().toUpperCase().startsWith("QLR1")) return;
+      if (!block || !block.trim().toUpperCase().startsWith("QLR")) return;
       clearRemoteLease();
       const parsed = parseBlock(block);
       if (await isUsedBlock(parsed.block)) {
         clearIncoming();
-        setStatus("This linked QLR1 block was already decoded on this browser.", true);
+        setStatus("This linked QLR block was already decoded on this browser.", true);
         return;
       }
       els.message.value = parsed.block;
-      els.streamOutput.textContent = "QLR1 loaded. Enter the shared phrase, then Open / Decode.";
+      els.streamOutput.classList.remove("link-ready");
+      els.streamOutput.textContent = "QLR block loaded. Enter the shared phrase, then Open / Decode.";
       updateSmsLink(false);
       setStatus("Linked message loaded.");
     }
@@ -1238,10 +1394,11 @@
           openRemoteMessage(messageId).catch((error) => setStatus(error.message || "Open failed.", true));
           return;
         }
-        if (pasted.toUpperCase().startsWith("QLR1")) {
+        if (pasted.toUpperCase().startsWith("QLR")) {
           if (currentRemoteLease().id) return;
           clearRemoteLease();
-          els.streamOutput.textContent = "QLR1 loaded. Enter password, then Animate Decode.";
+          els.streamOutput.classList.remove("link-ready");
+          els.streamOutput.textContent = "QLR block loaded. Enter the shared phrase, then Open / Decode.";
           setStatus("Pasted message loaded.");
         }
       }, 80);
