@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <title>QwertyLock Privacy and Security</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #000704;
+      --panel: rgba(0, 18, 9, 0.82);
+      --line: rgba(76, 255, 142, 0.32);
+      --text: #d7ffe3;
+      --muted: #91b99d;
+      --accent: #54ff8d;
+      --accent-2: #f0f7a0;
+      --danger: #ff7f8a;
+      --shadow: 0 0 28px rgba(84, 255, 141, 0.12);
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        linear-gradient(rgba(84, 255, 141, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(84, 255, 141, 0.05) 1px, transparent 1px),
+        radial-gradient(circle at 70% 10%, rgba(240, 247, 160, 0.08), transparent 28rem),
+        var(--bg);
+      background-size: 28px 28px, 28px 28px, auto, auto;
+      color: var(--text);
+    }
+
+    main {
+      width: min(920px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 28px 0 52px;
+    }
+
+    header,
+    section {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-top: 14px;
+    }
+
+    h1,
+    h2 {
+      margin: 0 0 12px;
+      color: var(--accent);
+      text-shadow: 0 0 12px rgba(84, 255, 141, 0.35);
+    }
+
+    h1 { font-size: clamp(2rem, 8vw, 4rem); }
+    h2 { font-size: 1.15rem; }
+
+    p,
+    li {
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    ul { padding-left: 20px; }
+    strong { color: var(--text); }
+    .warning { color: var(--danger); }
+
+    a {
+      color: #001507;
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      display: inline-block;
+      padding: 10px 12px;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    @media (max-width: 640px) {
+      main { width: min(100vw - 18px, 560px); padding-top: 14px; }
+      header,
+      section { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>QwertyLock Privacy and Security</h1>
+      <p>QwertyLock is designed for short private text conversations where a shared phrase is exchanged separately from the message link.</p>
+      <a href="/r/">Back to QwertyLock</a>
+    </header>
+
+    <section>
+      <h2>What the tool stores</h2>
+      <ul>
+        <li>The server stores encrypted QLR message blocks and random message IDs until first successful decode or selected expiry.</li>
+        <li>The server does not need the shared phrase, plaintext message, account, phone number, or contact list to deliver a message.</li>
+        <li>No cookies are used by the QwertyLock page. The browser may keep ordinary visit history unless the user clears it or uses private browsing.</li>
+        <li>The browser uses local storage only to remember hashes of messages already decoded on that same browser, so it can warn against reopening them.</li>
+        <li>The browser uses session storage for a temporary decode lease while opening a linked message.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>What stays in the browser</h2>
+      <ul>
+        <li>Plaintext and the shared phrase are handled in the page by the browser's Web Crypto API.</li>
+        <li>The shared phrase is never intentionally sent to the QwertyLock server.</li>
+        <li>The optional phrase QR is generated on the page and contains the shared phrase as plain text for in-person exchange only.</li>
+        <li>Text-to-speech and speech-to-text features depend on the browser and device. They may use device or cloud speech services controlled by the operating system or browser vendor.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Security model</h2>
+      <ul>
+        <li>Messages use AES-GCM encryption with a fresh random salt and nonce per encrypted block.</li>
+        <li>The encryption key is derived from the shared phrase with PBKDF2-SHA-256.</li>
+        <li>Messages are intended to be one-time opens: after a successful decode, the server deletes the encrypted block.</li>
+        <li>Expiration choices are 10 minutes, 1 hour, or 24 hours. Expiration removes unopened encrypted blocks after the selected time.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Limits</h2>
+      <ul>
+        <li class="warning">Do not use QwertyLock as a guarantee against compromised phones, malware, screenshots, screen recording, shoulder surfing, hostile keyboards, or someone with access to your unlocked device.</li>
+        <li>Anyone with both the message link and shared phrase can decode the message if it has not already been opened or expired.</li>
+        <li>Do not text the shared phrase in the same SMS/MMS thread as encrypted links.</li>
+        <li>Strong public security claims should wait for an independent cryptography/security review. No formal outside audit is claimed here.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Safe use</h2>
+      <ul>
+        <li>Start by exchanging the shared phrase face-to-face, by voice, or over a separate trusted channel.</li>
+        <li>For in-person setup, use Phrase QR only while both people are physically present.</li>
+        <li>Send only QwertyLock links by SMS/MMS.</li>
+        <li>Use 10 minutes for sensitive messages, 1 hour for normal back-and-forth, and 24 hours only when the receiver may not respond quickly.</li>
+        <li>Clear the page after reading or sending.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

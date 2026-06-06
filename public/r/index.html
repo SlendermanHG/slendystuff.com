@@ -154,6 +154,14 @@
       padding-top: 18px;
     }
 
+    .utility-bar {
+      width: min(820px, 100%);
+      margin: 12px auto 0;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
     .stream-panel {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -250,7 +258,8 @@
     .cmd-body { padding: 10px; }
 
     textarea,
-    input {
+    input,
+    select {
       width: 100%;
       border: 0;
       border-radius: 0;
@@ -265,6 +274,7 @@
 
     textarea:focus,
     input:focus,
+    select:focus,
     button:focus-visible,
     a:focus-visible {
       border-color: var(--focus);
@@ -274,6 +284,12 @@
 
     #message { min-height: 118px; resize: vertical; }
     #password { min-height: 46px; }
+
+    .field-hint {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
 
     .password-row {
       display: grid;
@@ -346,7 +362,7 @@
 
     .actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
     }
 
@@ -388,9 +404,80 @@
       margin: 0;
     }
 
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(0, 0, 0, 0.72);
+    }
+
+    .modal.open { display: grid; }
+
+    .modal-panel {
+      width: min(680px, 100%);
+      max-height: min(760px, 92vh);
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(0, 14, 7, 0.97);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .modal-panel h2 {
+      margin: 0 0 10px;
+      color: var(--accent-2);
+      font-size: 1.35rem;
+    }
+
+    .modal-panel p,
+    .modal-panel li {
+      color: var(--muted);
+    }
+
+    .modal-panel ul {
+      padding-left: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: end;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .qr-wrap {
+      display: grid;
+      place-items: center;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: #001507;
+    }
+
+    #phraseQr {
+      width: min(260px, 72vw);
+      height: min(260px, 72vw);
+      image-rendering: pixelated;
+    }
+
+    .qr-phrase {
+      color: #001507;
+      overflow-wrap: anywhere;
+      text-align: center;
+      font-weight: 800;
+    }
+
     @media (max-width: 860px) {
       main { width: min(100vw - 18px, 560px); padding-top: 12px; }
       .flow-strip { grid-template-columns: 1fr; }
+      .utility-bar { grid-template-columns: 1fr 1fr; }
       header { align-items: start; flex-direction: column; }
       h1 { font-size: clamp(2rem, 13vw, 3.3rem); }
       .local-note { text-align: left; }
@@ -426,6 +513,13 @@
       <div class="flow-step"><strong>3. Decode once</strong>Open the link, enter the phrase, then Open / Decode.</div>
     </section>
 
+    <div class="utility-bar" aria-label="QwertyLock setup tools">
+      <button id="startConversationBtn" type="button">Start Conversation</button>
+      <button id="safetyBtn" type="button">Safety</button>
+      <button id="qrBtn" type="button">Phrase QR</button>
+      <a class="button" href="/qwertylock-privacy.html">Privacy</a>
+    </div>
+
     <p class="status" id="status" role="status" aria-live="polite"></p>
 
     <section class="workspace" aria-label="QwertyLock workspace">
@@ -434,6 +528,7 @@
           <div class="cmd-title"><label for="message">input.stream</label></div>
           <div class="cmd-body">
             <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste a private link, or type a reply to encrypt"></textarea>
+            <p class="field-hint">Voice input uses browser/device speech support when available. For strongest privacy, type manually or use your phone keyboard's built-in dictation only if you trust it.</p>
           </div>
         </div>
 
@@ -445,6 +540,18 @@
               <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
           </div>
           <p class="password-help">Best flow: agree on one shared phrase once, then only text encrypted links.</p>
+        </div>
+
+        <div class="cmd-field">
+          <div class="cmd-title"><label for="ttlMinutes">expire.after</label></div>
+          <div class="cmd-body">
+            <select id="ttlMinutes">
+              <option value="10">10 minutes</option>
+              <option value="60">1 hour</option>
+              <option value="1440" selected>24 hours</option>
+            </select>
+            <p class="field-hint">Messages also disappear immediately after successful decode.</p>
+          </div>
         </div>
 
         <div class="cmd-field">
@@ -460,6 +567,8 @@
           <button id="encryptBtn" type="button">Create Link</button>
           <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fr" aria-disabled="true">Text Link</a>
           <button id="makePasswordBtn" type="button">Make Phrase</button>
+          <button id="dictateBtn" type="button">Dictate</button>
+          <button id="readOutputBtn" type="button">Read Output</button>
           <button id="clearBtn" type="button">Clear</button>
         </div>
 
@@ -468,6 +577,40 @@
     </section>
   </main>
 
+  <div class="modal" id="safetyModal" role="dialog" aria-modal="true" aria-labelledby="safetyTitle">
+    <div class="modal-panel">
+      <h2 id="safetyTitle">How to Use Safely</h2>
+      <ul>
+        <li>Share the phrase once by voice, in person, or a different channel from the message link.</li>
+        <li>Never text the shared phrase in the same SMS/MMS thread as the private link.</li>
+        <li>Use Phrase QR only face-to-face. Do not screenshot or forward it.</li>
+        <li>Anyone with both the link and phrase can decode the message.</li>
+        <li>Speech features may use browser or device speech services. Skip them for maximum privacy.</li>
+        <li>This is a privacy tool, not a promise against compromised phones, screenshots, malware, or someone watching the screen.</li>
+      </ul>
+      <div class="modal-actions">
+        <button id="closeSafetyBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="qrModal" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+    <div class="modal-panel">
+      <h2 id="qrTitle">In-Person Phrase QR</h2>
+      <p>Let the other person scan this only while you are together. This QR contains the shared phrase as plain text.</p>
+      <div class="qr-wrap">
+        <canvas id="phraseQr" width="260" height="260" aria-label="Shared phrase QR"></canvas>
+        <div class="qr-phrase" id="qrPhraseText"></div>
+      </div>
+      <p>Do not send this QR in the same text thread as private links.</p>
+      <div class="modal-actions">
+        <button id="refreshQrBtn" type="button">Refresh</button>
+        <button id="closeQrBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/qrcode-generator.js"></script>
   <script>
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.,?";
     const base32Alphabet = "abcdefghijklmnopqrstuvwxyz234567";
@@ -488,17 +631,31 @@
       showPasswordBtn: document.getElementById("showPasswordBtn"),
       streamOutput: document.getElementById("streamOutput"),
       status: document.getElementById("status"),
+      startConversationBtn: document.getElementById("startConversationBtn"),
+      safetyBtn: document.getElementById("safetyBtn"),
+      qrBtn: document.getElementById("qrBtn"),
+      safetyModal: document.getElementById("safetyModal"),
+      closeSafetyBtn: document.getElementById("closeSafetyBtn"),
+      qrModal: document.getElementById("qrModal"),
+      phraseQr: document.getElementById("phraseQr"),
+      qrPhraseText: document.getElementById("qrPhraseText"),
+      refreshQrBtn: document.getElementById("refreshQrBtn"),
+      closeQrBtn: document.getElementById("closeQrBtn"),
+      ttlMinutes: document.getElementById("ttlMinutes"),
       animateBtn: document.getElementById("animateBtn"),
       decodeBtn: document.getElementById("decodeBtn"),
       encryptBtn: document.getElementById("encryptBtn"),
       smsLink: document.getElementById("smsLink"),
       makePasswordBtn: document.getElementById("makePasswordBtn"),
+      dictateBtn: document.getElementById("dictateBtn"),
+      readOutputBtn: document.getElementById("readOutputBtn"),
       clearBtn: document.getElementById("clearBtn")
     };
 
     const animationState = {
       animating: false,
-      timer: 0
+      timer: 0,
+      recognition: null
     };
 
     function setStatus(text, isError = false) {
@@ -765,9 +922,10 @@
     }
 
     async function createRemoteMessage(block) {
+      const ttlMinutes = Math.max(10, Math.min(1440, Number(els.ttlMinutes.value || 1440)));
       return apiJson("/api/qwertylock/messages", {
         method: "POST",
-        body: JSON.stringify({ block, ttlMinutes: 1440 })
+        body: JSON.stringify({ block, ttlMinutes })
       });
     }
 
@@ -1028,6 +1186,95 @@
       setStatus("Shared phrase copied. Do not send it in the same text as the link.");
     }
 
+    function openModal(modal) {
+      modal.classList.add("open");
+    }
+
+    function closeModal(modal) {
+      modal.classList.remove("open");
+    }
+
+    function startConversation() {
+      makePassword();
+      setFlowStep(0);
+      renderPhraseQr();
+      openModal(els.safetyModal);
+      setStatus("Shared phrase made. Exchange it safely before texting private links.");
+    }
+
+    function renderPhraseQr() {
+      if (!els.password.value.trim()) makePassword();
+      const phrase = els.password.value.trim();
+      els.qrPhraseText.textContent = phrase;
+      drawQrCode(els.phraseQr, phrase);
+    }
+
+    function drawQrCode(canvas, text) {
+      if (typeof qrcode !== "function") throw new Error("QR generator is unavailable.");
+      const qr = qrcode(0, "M");
+      qr.addData(text);
+      qr.make();
+      const ctx = canvas.getContext("2d");
+      const size = qr.getModuleCount();
+      const quiet = 4;
+      const scale = Math.floor(canvas.width / (size + quiet * 2));
+      const offset = Math.floor((canvas.width - size * scale) / 2);
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#001507";
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          if (qr.isDark(y, x)) ctx.fillRect(offset + x * scale, offset + y * scale, scale, scale);
+        }
+      }
+    }
+
+    function dictateMessage() {
+      const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!Recognition) {
+        els.message.focus();
+        setStatus("Speech recognition is not available here. Use your phone keyboard microphone if you trust it.", true);
+        return;
+      }
+      if (animationState.recognition) {
+        animationState.recognition.stop();
+        return;
+      }
+      const recognition = new Recognition();
+      animationState.recognition = recognition;
+      recognition.lang = navigator.language || "en-US";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.onresult = (event) => {
+        const transcript = event.results?.[0]?.[0]?.transcript || "";
+        els.message.value = `${els.message.value}${els.message.value ? " " : ""}${transcript}`.trim();
+        setStatus("Dictation added. Review before creating a link.");
+      };
+      recognition.onerror = () => setStatus("Dictation failed or was blocked by the browser.", true);
+      recognition.onend = () => {
+        animationState.recognition = null;
+        els.dictateBtn.textContent = "Dictate";
+      };
+      els.dictateBtn.textContent = "Stop Dictation";
+      setStatus("Listening. Browser speech recognition may use device or cloud speech services.");
+      recognition.start();
+    }
+
+    function readOutput() {
+      if (!("speechSynthesis" in window)) {
+        setStatus("Text-to-speech is not available in this browser.", true);
+        return;
+      }
+      const text = els.streamOutput.textContent.trim();
+      if (!text) {
+        setStatus("There is no output to read.", true);
+        return;
+      }
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+      setStatus("Reading output aloud on this device.");
+    }
+
     function clearIncoming(clearOutput = true) {
       els.message.value = "";
       clearRemoteLease();
@@ -1094,12 +1341,47 @@
     els.copyPasswordBtn.addEventListener("click", () => {
       copyPassword().catch(() => setStatus("Could not copy phrase from this browser.", true));
     });
+    els.startConversationBtn.addEventListener("click", startConversation);
+    els.safetyBtn.addEventListener("click", () => openModal(els.safetyModal));
+    els.closeSafetyBtn.addEventListener("click", () => closeModal(els.safetyModal));
+    els.qrBtn.addEventListener("click", () => {
+      try {
+        renderPhraseQr();
+        openModal(els.qrModal);
+        setStatus("Phrase QR is for in-person exchange only.");
+      } catch (error) {
+        setStatus(error.message || "Could not make phrase QR.", true);
+      }
+    });
+    els.refreshQrBtn.addEventListener("click", () => {
+      try {
+        makePassword();
+        renderPhraseQr();
+        setStatus("New shared phrase made locally.");
+      } catch (error) {
+        setStatus(error.message || "Could not refresh phrase QR.", true);
+      }
+    });
+    els.closeQrBtn.addEventListener("click", () => closeModal(els.qrModal));
+    [els.safetyModal, els.qrModal].forEach((modal) => {
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeModal(modal);
+      });
+    });
+    els.dictateBtn.addEventListener("click", dictateMessage);
+    els.readOutputBtn.addEventListener("click", readOutput);
     els.clearBtn.addEventListener("click", clearAll);
     els.showPasswordBtn.addEventListener("click", () => {
       const showing = els.password.type === "text";
       els.password.type = showing ? "password" : "text";
       els.showPasswordBtn.textContent = showing ? "Show" : "Hide";
       els.showPasswordBtn.setAttribute("aria-pressed", String(!showing));
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeModal(els.safetyModal);
+        closeModal(els.qrModal);
+      }
     });
     els.message.addEventListener("paste", () => {
       window.setTimeout(() => {
