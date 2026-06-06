@@ -14,7 +14,9 @@ function corsHeaders(request) {
   const origin = request.headers.get("Origin") || "";
   const headers = {
     "Cache-Control": "no-store",
-    "Content-Type": "application/json; charset=utf-8"
+    "Content-Type": "application/json; charset=utf-8",
+    "Referrer-Policy": "no-referrer",
+    "X-Content-Type-Options": "nosniff"
   };
   if (ALLOWED_ORIGINS.has(origin)) {
     headers["Access-Control-Allow-Origin"] = origin;
@@ -61,9 +63,10 @@ function randomToken(byteCount = 24) {
 
 function validateBlock(block) {
   const value = String(block || "").trim();
-  if (!value.startsWith("QLR1 ")) return "";
   if (value.length > MAX_BLOCK_CHARS) return "";
-  if (!/^QLR1\s+[a-z2-7]+\.[A-Z0-9_.,?\s]+$/i.test(value)) return "";
+  const isQlr1 = /^QLR1\s+[a-z2-7]+\.[A-Z0-9_.,?\s]+$/i.test(value);
+  const isQlr2 = /^QLR2\s+[a-z2-7]+\.[a-z2-7]+\.[a-z2-7\s]+$/i.test(value);
+  if (!isQlr1 && !isQlr2) return "";
   return value;
 }
 
@@ -107,7 +110,7 @@ export default {
       if (!payload) return json(request, 400, { ok: false, error: "Invalid JSON payload." });
 
       const block = validateBlock(payload.block);
-      if (!block) return json(request, 400, { ok: false, error: "Invalid QLR1 block." });
+      if (!block) return json(request, 400, { ok: false, error: "Invalid QLR block." });
 
       const requestedTtl = Number(payload.ttlMinutes || 0) * 60;
       const ttlSeconds = Math.min(

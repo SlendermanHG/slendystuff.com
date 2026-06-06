@@ -11,6 +11,6 @@ QwertyLock creates encrypted message links with limited uses and expiration. Enc
 
 The shared phrase and plaintext stay in the browser. Encrypted blocks are deleted after their allowed uses or expiration. Anyone with a link and its phrase can read the message while it remains available; share the phrase separately.
 
-This version accepts encrypted `QLR1` blocks.
+New messages use authenticated `QLR2` blocks; older `QLR1` links remain supported.
 
 [Open QwertyLock](https://slendystuff.com/r/) · [Privacy information](https://slendystuff.com/qwertylock-privacy.html)

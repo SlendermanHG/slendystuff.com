@@ -168,9 +168,10 @@ function parseJsonBody(body) {
 
 function validateQwertylockBlock(block) {
   const value = String(block || "").trim();
-  if (!value.startsWith("QLR1 ")) return "";
   if (value.length > QWERTYLOCK_MAX_BLOCK) return "";
-  if (!/^QLR1\s+[a-z2-7]+\.[A-Z0-9_.,?\s]+$/i.test(value)) return "";
+  const isQlr1 = /^QLR1\s+[a-z2-7]+\.[A-Z0-9_.,?\s]+$/i.test(value);
+  const isQlr2 = /^QLR2\s+[a-z2-7]+\.[a-z2-7]+\.[a-z2-7\s]+$/i.test(value);
+  if (!isQlr1 && !isQlr2) return "";
   return value;
 }
 
@@ -190,7 +191,7 @@ async function handleQwertylockApi(req, res, url) {
     if (!parsed) return sendJson(res, 400, { ok: false, error: "Invalid JSON payload." });
 
     const block = validateQwertylockBlock(parsed.block);
-    if (!block) return sendJson(res, 400, { ok: false, error: "Invalid QLR1 block." });
+    if (!block) return sendJson(res, 400, { ok: false, error: "Invalid QLR block." });
 
     const ttlMs = Math.min(
       Math.max(Number(parsed.ttlMinutes || 0) * 60 * 1000 || QWERTYLOCK_DEFAULT_TTL_MS, 5 * 60 * 1000),
