@@ -547,8 +547,8 @@
 
     <section class="flow-strip" aria-label="Private conversation steps">
       <div class="flow-step"><strong>1. Share phrase once</strong>Use voice or in person. Do not text it with the link.</div>
-      <div class="flow-step"><strong>2. Send only links</strong>Type a message, Create Link, then Text Link.</div>
-      <div class="flow-step"><strong>3. Decode once</strong>Open the link, enter the phrase, then Open / Decode.</div>
+      <div class="flow-step"><strong>2. Send only links</strong>Choose expiry/uses, Create Link, then Text Link.</div>
+      <div class="flow-step"><strong>3. Decode by limit</strong>Open the link, enter the phrase, then Open / Decode.</div>
     </section>
 
     <div class="utility-bar" aria-label="QwertyLock setup tools">
@@ -598,8 +598,20 @@
               <option value="10">10 minutes</option>
               <option value="60">1 hour</option>
               <option value="1440" selected>24 hours</option>
+              <option value="forever">Forever</option>
             </select>
-            <p class="field-hint">Messages also disappear immediately after successful decode.</p>
+            <p class="field-hint">Forever means no timer expiry. The open limit still removes the message.</p>
+          </div>
+        </div>
+
+        <div class="cmd-field">
+          <div class="cmd-title"><label for="useLimit">open.limit</label></div>
+          <div class="cmd-body">
+            <select id="useLimit">
+              <option value="1" selected>One use</option>
+              <option value="2">Two uses</option>
+            </select>
+            <p class="field-hint">Each successful decode counts as one use.</p>
           </div>
         </div>
 
@@ -621,7 +633,7 @@
           <button id="clearBtn" type="button">Clear</button>
         </div>
 
-        <p class="micro">Server stores encrypted text only until first successful decode or expiry. Password and plaintext stay in this browser.</p>
+        <p class="micro">Server stores encrypted text only until the selected open limit or expiry. Password and plaintext stay in this browser.</p>
       </div>
     </section>
   </main>
@@ -633,7 +645,7 @@
         <li>Share the phrase once by voice, in person, or a different channel from the message link.</li>
         <li>Never text the shared phrase in the same SMS/MMS thread as the private link.</li>
         <li>Use Phrase QR only face-to-face. Do not screenshot or forward it.</li>
-        <li>Anyone with both the link and phrase can decode the message.</li>
+        <li>Anyone with both the link and phrase can decode the message until the selected open limit or expiry is reached.</li>
         <li>Speech features may use browser or device speech services. Skip them for maximum privacy.</li>
         <li>This is a privacy tool, not a promise against compromised phones, screenshots, malware, or someone watching the screen.</li>
       </ul>
@@ -694,6 +706,7 @@
       refreshQrBtn: document.getElementById("refreshQrBtn"),
       closeQrBtn: document.getElementById("closeQrBtn"),
       ttlMinutes: document.getElementById("ttlMinutes"),
+      useLimit: document.getElementById("useLimit"),
       animateBtn: document.getElementById("animateBtn"),
       decodeBtn: document.getElementById("decodeBtn"),
       encryptBtn: document.getElementById("encryptBtn"),
@@ -1087,22 +1100,30 @@
         payload = {};
       }
       if (!response.ok || payload.ok === false) {
-        throw new Error(payload.error || "One-time message server is unavailable.");
+        throw new Error(payload.error || "Private message server is unavailable.");
       }
       return payload;
     }
 
+    function decodeStatus(consumed) {
+      const remaining = Number(consumed && consumed.remainingUses || 0);
+      return remaining > 0 ? `Decoded. ${remaining} use${remaining === 1 ? "" : "s"} remains.` : "Decoded. No uses remain.";
+    }
+
     async function createRemoteMessage(block) {
-      const ttlMinutes = Math.max(10, Math.min(1440, Number(els.ttlMinutes.value || 1440)));
+      const ttlMinutes = els.ttlMinutes.value === "forever"
+        ? "forever"
+        : Math.max(10, Math.min(1440, Number(els.ttlMinutes.value || 1440)));
+      const useLimit = Math.max(1, Math.min(2, Number(els.useLimit.value || 1)));
       return apiJson("/api/qwertylock/messages", {
         method: "POST",
-        body: JSON.stringify({ block, ttlMinutes })
+        body: JSON.stringify({ block, ttlMinutes, useLimit })
       });
     }
 
     async function loadRemoteMessage(id) {
       const loaded = await apiJson(`/api/qwertylock/messages/${encodeURIComponent(id)}`);
-      setRemoteLease(id, loaded.leaseToken);
+      setRemoteLease(id, loaded.leaseToken, loaded.remainingUses, loaded.useLimit);
       return loaded.block;
     }
 
@@ -1140,19 +1161,22 @@
 
     async function consumeRemoteMessage() {
       const current = currentRemoteLease();
-      if (!current.id || !current.leaseToken) return;
-      await apiJson(`/api/qwertylock/messages/${encodeURIComponent(current.id)}/consume`, {
+      if (!current.id || !current.leaseToken) return { remainingUses: 0, useLimit: 1 };
+      const consumed = await apiJson(`/api/qwertylock/messages/${encodeURIComponent(current.id)}/consume`, {
         method: "POST",
         body: JSON.stringify({ leaseToken: current.leaseToken })
       });
       clearRemoteLease();
+      return consumed;
     }
 
-    function setRemoteLease(id, leaseToken) {
-      remoteMessage = { id, leaseToken };
+    function setRemoteLease(id, leaseToken, remainingUses = 1, useLimit = 1) {
+      remoteMessage = { id, leaseToken, remainingUses: Number(remainingUses || 1), useLimit: Number(useLimit || 1) };
       els.message._qwertylockLease = remoteMessage;
       els.message.dataset.remoteId = id;
       els.message.dataset.leaseToken = leaseToken;
+      els.message.dataset.remainingUses = String(remoteMessage.remainingUses);
+      els.message.dataset.useLimit = String(remoteMessage.useLimit);
       sessionStorage.setItem(leaseStoreKey, JSON.stringify(remoteMessage));
     }
 
@@ -1162,7 +1186,9 @@
       if (elementLease && elementLease.id && elementLease.leaseToken) return elementLease;
       const dataLease = {
         id: els.message.dataset.remoteId || "",
-        leaseToken: els.message.dataset.leaseToken || ""
+        leaseToken: els.message.dataset.leaseToken || "",
+        remainingUses: Number(els.message.dataset.remainingUses || 1),
+        useLimit: Number(els.message.dataset.useLimit || 1)
       };
       if (dataLease.id && dataLease.leaseToken) return dataLease;
       try {
@@ -1179,6 +1205,8 @@
       delete els.message._qwertylockLease;
       delete els.message.dataset.remoteId;
       delete els.message.dataset.leaseToken;
+      delete els.message.dataset.remainingUses;
+      delete els.message.dataset.useLimit;
       sessionStorage.removeItem(leaseStoreKey);
     }
 
@@ -1221,7 +1249,7 @@
       ));
       const cipher = toBase32(cipherBytes);
       const block = canonicalQlr2Block(saltText, nonceText, cipher);
-      setStatus("Saving encrypted one-time message...");
+      setStatus("Saving encrypted private message...");
       const created = await createRemoteMessage(block);
       pendingSendUrl = privateMessageUrl(created.id);
       clearRemoteLease();
@@ -1230,7 +1258,7 @@
       updateSmsLink(true, pendingSendUrl);
       setFlowStep(1);
       spinCipherRing("link ready", 0.16);
-      setStatus("One-time private link ready.");
+      setStatus("Private link ready.");
     }
 
     async function decryptPayload(parsed) {
@@ -1276,15 +1304,15 @@
         throw new Error("This QLR block was already decoded on this browser.");
       }
       const { plain, legacySpaces } = await decryptPayload(parsed);
-      await consumeRemoteMessage();
+      const consumed = await consumeRemoteMessage();
       renderDecodedStream(plain, -1, legacySpaces);
       updateSmsLink(false);
       els.streamOutput.classList.remove("link-ready");
-      await markUsedBlock(parsed.block);
+      if (Number(consumed.remainingUses || 0) <= 0) await markUsedBlock(parsed.block);
       clearIncoming(false);
       setFlowStep(2);
       spinCipherRing("decoded", 0.12);
-      setStatus("Decoded once.");
+      setStatus(decodeStatus(consumed));
     }
 
     async function animateDecode() {
@@ -1297,7 +1325,7 @@
         throw new Error("This QLR block was already decoded on this browser.");
       }
       const { plain: decodedPlain, legacySpaces } = await decryptPayload(parsed);
-      await consumeRemoteMessage();
+      const consumed = await consumeRemoteMessage();
       els.streamOutput.textContent = "";
       els.streamOutput.classList.remove("link-ready");
       updateSmsLink(false);
@@ -1308,12 +1336,12 @@
       const step = async () => {
         if (!animationState.animating) return;
         if (index >= decodedChars.length) {
-          await markUsedBlock(parsed.block);
+          if (Number(consumed.remainingUses || 0) <= 0) await markUsedBlock(parsed.block);
           clearIncoming(false);
           animationState.animating = false;
           setFlowStep(2);
           spinCipherRing("decoded", 0.12);
-          setStatus("Decoded once.");
+          setStatus(decodeStatus(consumed));
           return;
         }
         const plainSymbol = decodedChars[index] || "";

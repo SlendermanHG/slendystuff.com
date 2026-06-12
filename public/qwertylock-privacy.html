@@ -100,7 +100,7 @@
     <section>
       <h2>What the tool stores</h2>
       <ul>
-        <li>The server stores encrypted QLR message blocks and random message IDs until first successful decode or selected expiry.</li>
+        <li>The server stores encrypted QLR message blocks and random message IDs until the selected open limit or selected expiry is reached.</li>
         <li>The server does not need the shared phrase, plaintext message, account, phone number, or contact list to deliver a message.</li>
         <li>No cookies are used by the QwertyLock page. The browser may keep ordinary visit history unless the user clears it or uses private browsing.</li>
         <li>The browser uses local storage only to remember hashes of messages already decoded on that same browser, so it can warn against reopening them.</li>
@@ -123,8 +123,8 @@
       <ul>
         <li>Messages use AES-GCM encryption with a fresh random salt and nonce per encrypted block.</li>
         <li>The encryption key is derived from the shared phrase with PBKDF2-SHA-256.</li>
-        <li>Messages are intended to be one-time opens: after a successful decode, the server deletes the encrypted block.</li>
-        <li>Expiration choices are 10 minutes, 1 hour, or 24 hours. Expiration removes unopened encrypted blocks after the selected time.</li>
+        <li>Open limit choices are one successful decode or two successful decodes. After the final allowed decode, the server deletes the encrypted block.</li>
+        <li>Expiration choices are 10 minutes, 1 hour, 24 hours, or Forever. Forever means no timer expiry; the open limit still removes the encrypted block.</li>
       </ul>
     </section>
 
@@ -132,7 +132,7 @@
       <h2>Limits</h2>
       <ul>
         <li class="warning">Do not use QwertyLock as a guarantee against compromised phones, malware, screenshots, screen recording, shoulder surfing, hostile keyboards, or someone with access to your unlocked device.</li>
-        <li>Anyone with both the message link and shared phrase can decode the message if it has not already been opened or expired.</li>
+        <li>Anyone with both the message link and shared phrase can decode the message if the selected open limit and expiry have not been reached.</li>
         <li>Do not text the shared phrase in the same SMS/MMS thread as encrypted links.</li>
         <li>Strong public security claims should wait for an independent cryptography/security review. No formal outside audit is claimed here.</li>
       </ul>
@@ -144,7 +144,7 @@
         <li>Start by exchanging the shared phrase face-to-face, by voice, or over a separate trusted channel.</li>
         <li>For in-person setup, use Phrase QR only while both people are physically present.</li>
         <li>Send only QwertyLock links by SMS/MMS.</li>
-        <li>Use 10 minutes for sensitive messages, 1 hour for normal back-and-forth, and 24 hours only when the receiver may not respond quickly.</li>
+        <li>Use 10 minutes for sensitive messages, 1 hour for normal back-and-forth, 24 hours only when the receiver may not respond quickly, and Forever only when you accept that encrypted text may remain on the server until the open limit is reached.</li>
         <li>Clear the page after reading or sending.</li>
       </ul>
     </section>
