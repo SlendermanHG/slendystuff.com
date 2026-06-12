@@ -5,7 +5,8 @@ const fsp = require("fs/promises");
 const path = require("path");
 
 const PORT = Number(process.env.PORT || 4173);
-const ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || "change-me-now");
+const ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || "");
+const ADMIN_API_ENABLED = Boolean(ADMIN_PASSWORD && ADMIN_PASSWORD !== "change-me-now");
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, "public");
 const DATA_DIR = process.env.DATA_DIR || path.join(ROOT, "data");
@@ -55,6 +56,7 @@ async function saveConfig(config) {
 }
 
 function sendJson(res, statusCode, payload) {
+  setSecurityHeaders(res);
   res.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store"
@@ -63,11 +65,20 @@ function sendJson(res, statusCode, payload) {
 }
 
 function sendText(res, statusCode, payload) {
+  setSecurityHeaders(res);
   res.writeHead(statusCode, {
     "Content-Type": "text/plain; charset=utf-8",
     "Cache-Control": "no-store"
   });
   res.end(payload);
+}
+
+function setSecurityHeaders(res) {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
 }
 
 async function readBody(req, maxBytes = 64 * 1024) {
@@ -293,7 +304,7 @@ function sanitizeConfig(payload) {
 
 function isAuthorized(req) {
   const supplied = String(req.headers["x-admin-password"] || "");
-  return supplied && supplied === ADMIN_PASSWORD;
+  return ADMIN_API_ENABLED && supplied && supplied === ADMIN_PASSWORD;
 }
 
 async function handleApi(req, res) {
@@ -307,6 +318,9 @@ async function handleApi(req, res) {
   }
 
   if (req.url === "/api/admin/config" && req.method === "POST") {
+    if (!ADMIN_API_ENABLED) {
+      return sendJson(res, 403, { ok: false, error: "Admin API is disabled until ADMIN_PASSWORD is set." });
+    }
     if (!isAuthorized(req)) {
       return sendJson(res, 401, { ok: false, error: "Invalid admin password." });
     }
@@ -323,6 +337,9 @@ async function handleApi(req, res) {
   }
 
   if (req.url === "/api/admin/config" && req.method === "GET") {
+    if (!ADMIN_API_ENABLED) {
+      return sendJson(res, 403, { ok: false, error: "Admin API is disabled until ADMIN_PASSWORD is set." });
+    }
     if (!isAuthorized(req)) {
       return sendJson(res, 401, { ok: false, error: "Invalid admin password." });
     }
@@ -341,6 +358,7 @@ async function serveFile(filePath, res) {
   const ext = path.extname(filePath).toLowerCase();
   const contentType = mimeTypes[ext] || "application/octet-stream";
   const body = await fsp.readFile(filePath);
+  setSecurityHeaders(res);
   res.writeHead(200, {
     "Content-Type": contentType,
     "Cache-Control": ext === ".html" ? "no-store" : "public, max-age=300"
@@ -349,7 +367,12 @@ async function serveFile(filePath, res) {
 }
 
 function safePublicPath(urlPath) {
-  const normalized = decodeURIComponent(urlPath.split("?")[0]);
+  let normalized = "";
+  try {
+    normalized = decodeURIComponent(urlPath.split("?")[0]);
+  } catch (_error) {
+    return null;
+  }
   const requested = normalized === "/" ? "/index.html" : normalized;
   const resolved = path.normalize(path.join(PUBLIC_DIR, requested));
   if (!resolved.startsWith(PUBLIC_DIR)) return null;
@@ -400,6 +423,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (!req.url) return sendText(res, 400, "Bad request.");
     applyCors(req, res);
+    setSecurityHeaders(res);
     if (req.method === "OPTIONS") {
       res.writeHead(204);
       return res.end();
@@ -417,6 +441,9 @@ const server = http.createServer(async (req, res) => {
 
 ensureConfigFile()
   .then(() => {
+    if (!ADMIN_API_ENABLED) {
+      console.warn("Admin API disabled: set ADMIN_PASSWORD to enable protected admin endpoints.");
+    }
     server.listen(PORT, () => {
       console.log(`SlendyStuff listening on http://localhost:${PORT}`);
     });
