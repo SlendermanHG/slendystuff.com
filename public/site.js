@@ -61,10 +61,10 @@ function initRotator() {
   const node = document.querySelector("[data-rotate]");
   if (!node) return;
   const phrases = [
-    "Remote support for people who need help now.",
-    "Website fixes, rebuilds, and maintenance that stay manageable.",
-    "Custom bots and automations for communities with specific needs.",
-    "Technical help that explains the issue instead of talking around it."
+    "Remote support for people who need the problem handled without a runaround.",
+    "Website rebuilds and maintenance that stay practical after launch.",
+    "Custom bots and workflows for teams that have outgrown generic tools.",
+    "Technical help that leaves you clearer than you were before."
   ];
   let index = 0;
   setInterval(() => {

@@ -232,6 +232,14 @@ Implications:
 - Replaced the old admin/server config logic in `public/site.js` with a static `public/site-config.json` fetch.
 - Removed remaining public copy that referenced `/admin.html`.
 
+## 2026-06-12 Continuation
+
+- User requested a security check and a refresh of the website while leaving `/r` untouched.
+- Identified and removed a tracked Wrangler cache account file from `ops/qwertylock-worker/.wrangler/cache/`.
+- Hardened `server.js` by disabling admin API access unless `ADMIN_PASSWORD` is explicitly configured, adding baseline security headers, and making path decoding fail closed.
+- Refreshed shared marketing copy and visual styling across the main public pages without changing `public/r/index.html`.
+- Added basic CSP and referrer-policy meta tags to the main public-facing pages.
+
 ## 2026-06-01 Continuation
 
 - User requested using the existing `slendystuff.com` site connection for the QwertyLock Secure browser tool.
