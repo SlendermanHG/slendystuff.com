@@ -266,3 +266,8 @@ Implications:
 - Replaced ring-key based `QLR` with password-based `QLR1`: the message block now carries a random salt plus ring ciphertext, while the shared password derives the ring stream locally in the browser.
 - Added wrong-password detection with an internal marker so mistyped passwords fail instead of marking a message used.
 - Added the short route `public/r/index.html`, making the easiest link `https://slendystuff.com/r/`.
+
+## 2026-06-12 Workflow Follow-up
+
+- User requested updating the GitHub Pages workflow after the Node 20 deprecation warning.
+- Added `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` at the workflow level in `.github/workflows/pages.yml` to opt the Pages actions into Node 24 ahead of the default runner switch.
