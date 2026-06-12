@@ -341,6 +341,31 @@
       background: rgba(60, 255, 129, 0.08);
     }
 
+    .ring-map {
+      min-height: 1.6em;
+      color: var(--accent-2);
+      font-size: 0.86rem;
+      font-weight: 800;
+      text-align: center;
+      text-shadow: 0 0 10px rgba(60, 255, 129, 0.45);
+      text-transform: uppercase;
+    }
+
+    .decode-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 330px);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .decode-stage .cmd-field {
+      min-width: 0;
+    }
+
+    .ring-field {
+      display: grid;
+    }
+
     .stream-output {
       min-height: 156px;
       border: 0;
@@ -522,6 +547,7 @@
       .password-row { grid-template-columns: 1fr 1fr; }
       #password { grid-column: 1 / -1; }
       .actions { grid-template-columns: 1fr; }
+      .decode-stage { grid-template-columns: 1fr; }
       #cipherRing { width: min(260px, 74vw); }
       .stream-output { min-height: 118px; }
       #message { min-height: 104px; }
@@ -562,17 +588,6 @@
 
     <section class="workspace" aria-label="QwertyLock workspace">
       <div class="stream-panel">
-        <div class="cmd-field ring-field">
-          <div class="cmd-title"><span>visual.ring</span></div>
-          <div class="cmd-body ring-body">
-            <canvas id="cipherRing" width="320" height="320" aria-label="Password cipher ring visual"></canvas>
-            <div class="ring-meta" aria-hidden="true">
-              <span id="ringMode">standby</span>
-              <span id="ringShift">shift 00</span>
-            </div>
-          </div>
-        </div>
-
         <div class="cmd-field">
           <div class="cmd-title"><label for="message">input.stream</label></div>
           <div class="cmd-body">
@@ -615,10 +630,24 @@
           </div>
         </div>
 
-        <div class="cmd-field">
-          <div class="cmd-title"><label for="streamOutput">output.catch</label></div>
-          <div class="cmd-body">
-            <div class="stream-output" id="streamOutput" aria-live="polite"></div>
+        <div class="decode-stage">
+          <div class="cmd-field">
+            <div class="cmd-title"><label for="streamOutput">output.catch</label></div>
+            <div class="cmd-body">
+              <div class="stream-output" id="streamOutput" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div class="cmd-field ring-field">
+            <div class="cmd-title"><span>cipher.ring</span></div>
+            <div class="cmd-body ring-body">
+              <canvas id="cipherRing" width="320" height="320" aria-label="Password cipher ring visual"></canvas>
+              <div class="ring-map" id="ringMap" aria-hidden="true">awaiting cipher pair</div>
+              <div class="ring-meta" aria-hidden="true">
+                <span id="ringMode">standby</span>
+                <span id="ringShift">shift 00</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -691,6 +720,7 @@
       copyPasswordBtn: document.getElementById("copyPasswordBtn"),
       showPasswordBtn: document.getElementById("showPasswordBtn"),
       cipherRing: document.getElementById("cipherRing"),
+      ringMap: document.getElementById("ringMap"),
       ringMode: document.getElementById("ringMode"),
       ringShift: document.getElementById("ringShift"),
       streamOutput: document.getElementById("streamOutput"),
@@ -725,7 +755,11 @@
       ringAngle: 0,
       ringDragging: false,
       ringDragAngle: 0,
-      ringMode: "standby"
+      ringMode: "standby",
+      ringActiveOuter: "",
+      ringActiveInner: "",
+      ringActiveIndex: 0,
+      ringActiveTotal: 0
     };
 
     function setStatus(text, isError = false) {
@@ -772,7 +806,38 @@
 
     function setRingMode(mode) {
       animationState.ringMode = mode;
+      if (mode === "standby" || mode === "phrase set" || mode === "plain text" || mode === "locked text") {
+        animationState.ringActiveOuter = "";
+        animationState.ringActiveInner = "";
+        animationState.ringActiveIndex = 0;
+        animationState.ringActiveTotal = 0;
+        if (els.ringMap) els.ringMap.textContent = mode === "standby" ? "awaiting cipher pair" : "wheel keyed by phrase";
+      }
       if (els.ringMode) els.ringMode.textContent = mode;
+      renderCipherRing();
+    }
+
+    function ringSymbol(char, fallbackIndex = 0) {
+      const normalized = String(char || "").toUpperCase().replace(/\s/g, "_");
+      for (const candidate of normalized) {
+        if (alphabet.includes(candidate)) return candidate;
+      }
+      return alphabet[fallbackIndex % alphabet.length];
+    }
+
+    function setCipherRingPair(cipherChar = "", plainChar = "", index = 0, total = 0) {
+      animationState.ringActiveOuter = ringSymbol(cipherChar, index);
+      animationState.ringActiveInner = ringSymbol(plainChar, index + ringShift());
+      animationState.ringActiveIndex = index + 1;
+      animationState.ringActiveTotal = total;
+      const outerIndex = alphabet.indexOf(animationState.ringActiveOuter);
+      const innerIndex = alphabet.indexOf(animationState.ringActiveInner);
+      const step = Math.PI * 2 / alphabet.length;
+      animationState.ringAngle = (outerIndex - innerIndex - ringShift()) * step;
+      if (els.ringMap) {
+        const count = total ? ` ${index + 1}/${total}` : "";
+        els.ringMap.textContent = `${animationState.ringActiveOuter} -> ${animationState.ringActiveInner}${count}`;
+      }
       renderCipherRing();
     }
 
@@ -783,10 +848,14 @@
       const size = canvas.width;
       const center = size / 2;
       const shift = ringShift();
+      const step = Math.PI * 2 / alphabet.length;
       const outerRadius = size * 0.43;
-      const innerRadius = size * 0.31;
+      const middleRadius = size * 0.35;
+      const innerRadius = size * 0.27;
       const tickRadius = size * 0.49;
       const phraseReady = els.password.value.trim().length > 0;
+      const activeOuterIndex = alphabet.indexOf(animationState.ringActiveOuter);
+      const activeInnerIndex = alphabet.indexOf(animationState.ringActiveInner);
       ctx.clearRect(0, 0, size, size);
       ctx.save();
       ctx.translate(center, center);
@@ -794,10 +863,19 @@
       ctx.beginPath();
       ctx.arc(0, 0, size * 0.48, 0, Math.PI * 2);
       ctx.fill();
+      const glow = ctx.createRadialGradient(0, 0, size * 0.12, 0, 0, size * 0.48);
+      glow.addColorStop(0, phraseReady ? "rgba(60, 255, 129, 0.16)" : "rgba(60, 255, 129, 0.08)");
+      glow.addColorStop(0.72, "rgba(60, 255, 129, 0.035)");
+      glow.addColorStop(1, "rgba(60, 255, 129, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(0, 0, size * 0.48, 0, Math.PI * 2);
+      ctx.fill();
       const rings = [
-        [size * 0.47, "rgba(60, 255, 129, 0.48)", 2],
-        [size * 0.37, "rgba(184, 255, 208, 0.34)", 1.5],
-        [size * 0.23, "rgba(60, 255, 129, 0.25)", 1]
+        [size * 0.47, "rgba(60, 255, 129, 0.5)", 2],
+        [size * 0.39, "rgba(184, 255, 208, 0.32)", 1.5],
+        [size * 0.31, "rgba(60, 255, 129, 0.28)", 1.5],
+        [size * 0.19, "rgba(60, 255, 129, 0.22)", 1]
       ];
       rings.forEach(([radius, color, width]) => {
         ctx.strokeStyle = color;
@@ -806,48 +884,70 @@
         ctx.arc(0, 0, radius, 0, Math.PI * 2);
         ctx.stroke();
       });
-      ctx.font = "700 13px ui-monospace, Consolas, monospace";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.5);
+      ctx.lineTo(0, -size * 0.44);
+      ctx.stroke();
+      ctx.font = "800 13px ui-monospace, Consolas, monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       for (let i = 0; i < alphabet.length; i++) {
-        const angle = animationState.ringAngle - Math.PI / 2 + (i / alphabet.length) * Math.PI * 2;
+        const outerAngle = -Math.PI / 2 + i * step;
+        const innerAngle = -Math.PI / 2 + animationState.ringAngle + (i + shift) * step;
         const outerChar = alphabet[i];
-        const innerChar = alphabet[(i + shift) % alphabet.length];
+        const innerChar = alphabet[i];
         const tick = i % 5 === 0 ? 8 : 4;
-        ctx.strokeStyle = i === shift ? "rgba(255, 255, 255, 0.92)" : "rgba(60, 255, 129, 0.35)";
-        ctx.lineWidth = i === shift ? 2 : 1;
+        ctx.strokeStyle = i === activeOuterIndex ? "rgba(255, 255, 255, 0.95)" : "rgba(60, 255, 129, 0.35)";
+        ctx.lineWidth = i === activeOuterIndex ? 2.5 : 1;
         ctx.beginPath();
-        ctx.moveTo(Math.cos(angle) * (tickRadius - tick), Math.sin(angle) * (tickRadius - tick));
-        ctx.lineTo(Math.cos(angle) * tickRadius, Math.sin(angle) * tickRadius);
+        ctx.moveTo(Math.cos(outerAngle) * (tickRadius - tick), Math.sin(outerAngle) * (tickRadius - tick));
+        ctx.lineTo(Math.cos(outerAngle) * tickRadius, Math.sin(outerAngle) * tickRadius);
         ctx.stroke();
         ctx.save();
-        ctx.translate(Math.cos(angle) * outerRadius, Math.sin(angle) * outerRadius);
-        ctx.rotate(angle + Math.PI / 2);
-        ctx.fillStyle = i === shift ? "#ffffff" : "#b8ffd0";
+        ctx.translate(Math.cos(outerAngle) * outerRadius, Math.sin(outerAngle) * outerRadius);
+        ctx.rotate(outerAngle + Math.PI / 2);
+        ctx.fillStyle = i === activeOuterIndex ? "#ffffff" : "#b8ffd0";
         ctx.fillText(outerChar, 0, 0);
         ctx.restore();
         ctx.save();
-        ctx.translate(Math.cos(angle) * innerRadius, Math.sin(angle) * innerRadius);
-        ctx.rotate(angle + Math.PI / 2);
-        ctx.fillStyle = phraseReady ? "#3cff81" : "rgba(107, 201, 138, 0.72)";
+        ctx.translate(Math.cos(innerAngle) * middleRadius, Math.sin(innerAngle) * middleRadius);
+        ctx.rotate(innerAngle + Math.PI / 2);
+        ctx.fillStyle = i === activeInnerIndex ? "#ffffff" : (phraseReady ? "#3cff81" : "rgba(107, 201, 138, 0.72)");
         ctx.fillText(innerChar, 0, 0);
         ctx.restore();
+      }
+      if (activeOuterIndex >= 0 && activeInnerIndex >= 0) {
+        const outerAngle = -Math.PI / 2 + activeOuterIndex * step;
+        const innerAngle = -Math.PI / 2 + animationState.ringAngle + (activeInnerIndex + shift) * step;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(outerAngle) * (outerRadius - 12), Math.sin(outerAngle) * (outerRadius - 12));
+        ctx.lineTo(Math.cos(innerAngle) * (middleRadius + 12), Math.sin(innerAngle) * (middleRadius + 12));
+        ctx.stroke();
       }
       const pulse = animationState.ringMode === "decoding" || animationState.ringMode === "encrypting";
       ctx.fillStyle = pulse ? "rgba(60, 255, 129, 0.18)" : "rgba(60, 255, 129, 0.08)";
       ctx.beginPath();
-      ctx.arc(0, 0, size * 0.17, 0, Math.PI * 2);
+      ctx.arc(0, 0, size * 0.18, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = phraseReady ? "rgba(255, 255, 255, 0.7)" : "rgba(60, 255, 129, 0.26)";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(0, 0, size * 0.17, 0, Math.PI * 2);
+      ctx.arc(0, 0, size * 0.18, 0, Math.PI * 2);
       ctx.stroke();
       ctx.fillStyle = phraseReady ? "#b8ffd0" : "#6bc98a";
-      ctx.font = "900 20px ui-monospace, Consolas, monospace";
-      ctx.fillText("Q", 0, -8);
+      ctx.font = "900 18px ui-monospace, Consolas, monospace";
+      ctx.fillText(animationState.ringActiveOuter && animationState.ringActiveInner ? `${animationState.ringActiveOuter}>${animationState.ringActiveInner}` : "Q", 0, -10);
       ctx.font = "800 10px ui-monospace, Consolas, monospace";
       ctx.fillText(animationState.ringMode.toUpperCase(), 0, 14);
+      if (animationState.ringActiveTotal) {
+        ctx.fillStyle = "#6bc98a";
+        ctx.font = "700 9px ui-monospace, Consolas, monospace";
+        ctx.fillText(`${animationState.ringActiveIndex}/${animationState.ringActiveTotal}`, 0, 31);
+      }
       ctx.restore();
       if (els.ringShift) els.ringShift.textContent = `shift ${String(shift).padStart(2, "0")}`;
     }
@@ -1306,12 +1406,16 @@
       const { plain, legacySpaces } = await decryptPayload(parsed);
       const consumed = await consumeRemoteMessage();
       renderDecodedStream(plain, -1, legacySpaces);
+      const plainChars = [...plain];
+      const lastPlainIndex = Math.max(0, plainChars.length - 1);
+      const cipherChar = parsed.cipherText[lastPlainIndex % parsed.cipherText.length] || parsed.cipherText[0] || "";
+      setCipherRingPair(cipherChar, plainChars[plainChars.length - 1] || "", Math.max(0, plainChars.length - 1), plainChars.length);
       updateSmsLink(false);
       els.streamOutput.classList.remove("link-ready");
       if (Number(consumed.remainingUses || 0) <= 0) await markUsedBlock(parsed.block);
       clearIncoming(false);
       setFlowStep(2);
-      spinCipherRing("decoded", 0.12);
+      setRingMode("decoded");
       setStatus(decodeStatus(consumed));
     }
 
@@ -1340,15 +1444,14 @@
           clearIncoming(false);
           animationState.animating = false;
           setFlowStep(2);
-          spinCipherRing("decoded", 0.12);
+          setRingMode("decoded");
           setStatus(decodeStatus(consumed));
           return;
         }
         const plainSymbol = decodedChars[index] || "";
         plain += plainSymbol;
         renderDecodedStream(plain, [...plain].length - 1, legacySpaces);
-        animationState.ringAngle += Math.PI / alphabet.length;
-        renderCipherRing();
+        setCipherRingPair(parsed.cipherText[index % parsed.cipherText.length] || "", plainSymbol, index, decodedChars.length);
         setStatus(`${index + 1}/${decodedChars.length}`);
         index += 1;
         animationState.timer = window.setTimeout(step, window.innerWidth < 640 ? 180 : 420);
