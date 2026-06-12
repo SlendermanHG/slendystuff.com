@@ -271,3 +271,4 @@ Implications:
 
 - User requested updating the GitHub Pages workflow after the Node 20 deprecation warning.
 - Added `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` at the workflow level in `.github/workflows/pages.yml` to opt the Pages actions into Node 24 ahead of the default runner switch.
+- Followed that by upgrading `actions/checkout` from `v4` to `v5` and `actions/deploy-pages` from `v4` to `v5`, which are the Node 24 major lines.
