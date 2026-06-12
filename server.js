@@ -16,6 +16,7 @@ const QWERTYLOCK_MAX_BLOCK = 8000;
 const QWERTYLOCK_DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
 const QWERTYLOCK_MAX_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const QWERTYLOCK_LEASE_MS = 10 * 60 * 1000;
+const QWERTYLOCK_MAX_USES = 2;
 
 const defaultConfig = {
   supportEmail: "support@slendystuff.com",
@@ -153,7 +154,8 @@ async function saveQwertylockMessages(messages) {
 function cleanupQwertylockMessages(messages, now = Date.now()) {
   let changed = false;
   for (const [id, message] of Object.entries(messages)) {
-    if (!message || Number(message.expiresAt || 0) <= now || message.consumedAt) {
+    const useLimit = normalizeQwertylockUseLimit(message && message.useLimit);
+    if (!message || (Number(message.expiresAt || 0) > 0 && Number(message.expiresAt || 0) <= now) || Number(message.useCount || 0) >= useLimit || message.consumedAt) {
       delete messages[id];
       changed = true;
       continue;
@@ -186,6 +188,15 @@ function validateQwertylockBlock(block) {
   return value;
 }
 
+function isForeverQwertylockTtl(value) {
+  return String(value || "").toLowerCase() === "forever";
+}
+
+function normalizeQwertylockUseLimit(value) {
+  const requested = Number(value || 1);
+  return Math.max(1, Math.min(QWERTYLOCK_MAX_USES, Number.isFinite(requested) ? Math.floor(requested) : 1));
+}
+
 function qwertylockMessageUrl(req, id) {
   const proto = req.headers["x-forwarded-proto"] || "https";
   const host = req.headers["x-forwarded-host"] || req.headers.host || "slendystuff.com";
@@ -204,10 +215,13 @@ async function handleQwertylockApi(req, res, url) {
     const block = validateQwertylockBlock(parsed.block);
     if (!block) return sendJson(res, 400, { ok: false, error: "Invalid QLR block." });
 
-    const ttlMs = Math.min(
-      Math.max(Number(parsed.ttlMinutes || 0) * 60 * 1000 || QWERTYLOCK_DEFAULT_TTL_MS, 5 * 60 * 1000),
-      QWERTYLOCK_MAX_TTL_MS
-    );
+    const ttlMs = isForeverQwertylockTtl(parsed.ttlMinutes)
+      ? 0
+      : Math.min(
+        Math.max(Number(parsed.ttlMinutes || 0) * 60 * 1000 || QWERTYLOCK_DEFAULT_TTL_MS, 5 * 60 * 1000),
+        QWERTYLOCK_MAX_TTL_MS
+      );
+    const useLimit = normalizeQwertylockUseLimit(parsed.useLimit);
     const now = Date.now();
     const messages = await loadQwertylockMessages();
     cleanupQwertylockMessages(messages, now);
@@ -219,7 +233,9 @@ async function handleQwertylockApi(req, res, url) {
       id,
       block,
       createdAt: now,
-      expiresAt: now + ttlMs,
+      expiresAt: ttlMs > 0 ? now + ttlMs : 0,
+      useLimit,
+      useCount: 0,
       leaseToken: "",
       leaseUntil: 0
     };
@@ -263,7 +279,10 @@ async function handleQwertylockApi(req, res, url) {
       block: message.block,
       leaseToken: message.leaseToken,
       leaseUntil: message.leaseUntil,
-      expiresAt: message.expiresAt
+      expiresAt: message.expiresAt,
+      useLimit: normalizeQwertylockUseLimit(message.useLimit),
+      useCount: Number(message.useCount || 0),
+      remainingUses: normalizeQwertylockUseLimit(message.useLimit) - Number(message.useCount || 0)
     });
   }
 
@@ -284,9 +303,19 @@ async function handleQwertylockApi(req, res, url) {
       return sendJson(res, 409, { ok: false, error: "This private message session expired. Reopen the link." });
     }
 
-    delete messages[id];
+    const useLimit = normalizeQwertylockUseLimit(message.useLimit);
+    const useCount = Number(message.useCount || 0) + 1;
+    const remainingUses = Math.max(0, useLimit - useCount);
+    if (remainingUses <= 0) {
+      delete messages[id];
+    } else {
+      message.useLimit = useLimit;
+      message.useCount = useCount;
+      message.leaseToken = "";
+      message.leaseUntil = 0;
+    }
     await saveQwertylockMessages(messages);
-    return sendJson(res, 200, { ok: true });
+    return sendJson(res, 200, { ok: true, remainingUses, useLimit, useCount });
   }
 
   return false;

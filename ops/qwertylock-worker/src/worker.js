@@ -9,6 +9,7 @@ const MAX_BLOCK_CHARS = 8000;
 const DEFAULT_TTL_SECONDS = 24 * 60 * 60;
 const MAX_TTL_SECONDS = 7 * 24 * 60 * 60;
 const LEASE_SECONDS = 10 * 60;
+const MAX_USE_LIMIT = 2;
 
 function corsHeaders(request) {
   const origin = request.headers.get("Origin") || "";
@@ -70,6 +71,15 @@ function validateBlock(block) {
   return value;
 }
 
+function isForeverTtl(value) {
+  return String(value || "").toLowerCase() === "forever";
+}
+
+function normalizeUseLimit(value) {
+  const requested = Number(value || 1);
+  return Math.max(1, Math.min(MAX_USE_LIMIT, Number.isFinite(requested) ? Math.floor(requested) : 1));
+}
+
 async function readJson(request, maxChars = 20000) {
   const text = await request.text();
   if (text.length > maxChars) throw new Error("Request body is too large.");
@@ -112,18 +122,20 @@ export default {
       const block = validateBlock(payload.block);
       if (!block) return json(request, 400, { ok: false, error: "Invalid QLR block." });
 
-      const requestedTtl = Number(payload.ttlMinutes || 0) * 60;
-      const ttlSeconds = Math.min(
-        Math.max(requestedTtl || DEFAULT_TTL_SECONDS, 5 * 60),
-        MAX_TTL_SECONDS
-      );
+      const ttlSeconds = isForeverTtl(payload.ttlMinutes)
+        ? 0
+        : Math.min(
+          Math.max(Number(payload.ttlMinutes || 0) * 60 || DEFAULT_TTL_SECONDS, 5 * 60),
+          MAX_TTL_SECONDS
+        );
+      const useLimit = normalizeUseLimit(payload.useLimit);
 
       for (let attempt = 0; attempt < 5; attempt++) {
         const id = randomBase32(10);
         const stub = await messageStub(env, id);
         const response = await stub.fetch("https://qwertylock-message/create", {
           method: "POST",
-          body: JSON.stringify({ block, ttlSeconds })
+          body: JSON.stringify({ block, ttlSeconds, useLimit })
         });
         if (response.status === 201) {
           return json(request, 201, {
@@ -173,15 +185,18 @@ export class QwertyLockMessage {
 
       const payload = await request.json();
       const now = Date.now();
-      const expiresAt = now + Number(payload.ttlSeconds) * 1000;
+      const ttlSeconds = Number(payload.ttlSeconds || 0);
+      const expiresAt = ttlSeconds > 0 ? now + ttlSeconds * 1000 : 0;
       await this.ctx.storage.put("message", {
         block: String(payload.block),
         createdAt: now,
         expiresAt,
+        useLimit: normalizeUseLimit(payload.useLimit),
+        useCount: 0,
         leaseToken: "",
         leaseUntil: 0
       });
-      await this.ctx.storage.setAlarm(expiresAt);
+      if (expiresAt) await this.ctx.storage.setAlarm(expiresAt);
       return Response.json({ ok: true, expiresAt }, { status: 201 });
     }
 
@@ -190,7 +205,12 @@ export class QwertyLockMessage {
       if (!message) return Response.json({ ok: false, error: "This private message is gone." }, { status: 410 });
 
       const now = Date.now();
-      if (Number(message.expiresAt || 0) <= now) {
+      if (Number(message.expiresAt || 0) > 0 && Number(message.expiresAt || 0) <= now) {
+        await this.ctx.storage.deleteAll();
+        return Response.json({ ok: false, error: "This private message is gone." }, { status: 410 });
+      }
+
+      if (Number(message.useCount || 0) >= normalizeUseLimit(message.useLimit)) {
         await this.ctx.storage.deleteAll();
         return Response.json({ ok: false, error: "This private message is gone." }, { status: 410 });
       }
@@ -211,7 +231,10 @@ export class QwertyLockMessage {
         block: message.block,
         leaseToken: message.leaseToken,
         leaseUntil: message.leaseUntil,
-        expiresAt: message.expiresAt
+        expiresAt: message.expiresAt,
+        useLimit: normalizeUseLimit(message.useLimit),
+        useCount: Number(message.useCount || 0),
+        remainingUses: normalizeUseLimit(message.useLimit) - Number(message.useCount || 0)
       });
     }
 
@@ -225,8 +248,19 @@ export class QwertyLockMessage {
         return Response.json({ ok: false, error: "This private message session expired. Reopen the link." }, { status: 409 });
       }
 
-      await this.ctx.storage.deleteAll();
-      return Response.json({ ok: true });
+      const useLimit = normalizeUseLimit(message.useLimit);
+      const useCount = Number(message.useCount || 0) + 1;
+      const remainingUses = Math.max(0, useLimit - useCount);
+      if (remainingUses <= 0) {
+        await this.ctx.storage.deleteAll();
+      } else {
+        message.useLimit = useLimit;
+        message.useCount = useCount;
+        message.leaseToken = "";
+        message.leaseUntil = 0;
+        await this.ctx.storage.put("message", message);
+      }
+      return Response.json({ ok: true, remainingUses, useLimit, useCount });
     }
 
     return Response.json({ ok: false, error: "Not found." }, { status: 404 });
