@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /stats/
+Disallow: /qwertylock-7m4r.html
+Disallow: /qwertylock-paper.html
+Disallow: /qwertylock-privacy.html
+Allow: /
+
+Sitemap: https://slendystuff.com/sitemap.xml
