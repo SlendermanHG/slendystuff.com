@@ -9,7 +9,38 @@ It is designed for Cloudflare Workers with Durable Objects. The browser still en
 - `POST /api/qwertylock/messages`
 - `GET /api/qwertylock/messages/:id`
 - `POST /api/qwertylock/messages/:id/consume`
+- `GET /api/qwertylock/stats` owner-only anonymous stats. Requires `Authorization: Bearer <STATS_ADMIN_TOKEN>`.
 - `GET /api/health`
+
+## Owner Stats
+
+The stats endpoint is intentionally private and aggregate-first. It tracks:
+
+- all-time created message count
+- all-time successful use count
+- last-24-hour created/use/expired/final-delete counts, bucketed hourly
+- option totals by duration, use limit, and QLR version
+- active server block count
+- active block timing metadata: creation date, duration, expiration date, use limit, use count, and remaining uses
+
+The stats report does not return message IDs, encrypted blocks, plaintext, passphrases, IP addresses, user agents, phone numbers, or recipients.
+
+Before deploying stats, set the secret:
+
+```powershell
+cd ops\qwertylock-worker
+$token = "replace-with-long-random-token"
+$token | npx wrangler secret put STATS_ADMIN_TOKEN
+```
+
+Then query it:
+
+```powershell
+$headers = @{ Authorization = "Bearer replace-with-long-random-token" }
+Invoke-RestMethod https://lock.slendystuff.com/api/qwertylock/stats -Headers $headers
+```
+
+Limitation: Durable Objects cannot be listed globally after the fact. Active block inventory starts with messages created after this stats index is deployed. Older messages are not discoverable unless they pass through updated open/consume/expiry code.
 
 ## Deploy
 
