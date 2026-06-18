@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Cache-Control" content="no-store">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://lock.slendystuff.com; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-ancestors 'none'">
+  <title>QwertyLock Stats | SlendyStuff</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b0d;
+      --panel: rgba(12, 18, 22, 0.9);
+      --panel-2: rgba(17, 26, 31, 0.94);
+      --text: #edf6f2;
+      --muted: #9db1aa;
+      --line: rgba(138, 232, 191, 0.18);
+      --line-strong: rgba(138, 232, 191, 0.38);
+      --accent: #8ae8bf;
+      --accent-2: #82a8ff;
+      --warn: #ffcf73;
+      --bad: #ff7f9f;
+      --shadow: 0 24px 90px rgba(0, 0, 0, 0.42);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(138, 232, 191, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(130, 168, 255, 0.03) 1px, transparent 1px),
+        radial-gradient(circle at 14% 10%, rgba(138, 232, 191, 0.13), transparent 26rem),
+        radial-gradient(circle at 86% 18%, rgba(130, 168, 255, 0.11), transparent 24rem),
+        linear-gradient(180deg, #0b1114 0%, #050708 100%);
+      background-size: 44px 44px, 44px 44px, auto, auto, auto;
+      color: var(--text);
+      font: 15px/1.55 "Segoe UI", Arial, sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: rgba(138, 232, 191, 0.12);
+      color: var(--text);
+      min-height: 44px;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button:hover,
+    button:focus {
+      border-color: rgba(138, 232, 191, 0.75);
+      outline: none;
+    }
+
+    input {
+      width: 100%;
+      min-height: 46px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line-strong);
+      background: rgba(0, 0, 0, 0.32);
+      color: var(--text);
+      padding: 0.75rem 0.85rem;
+    }
+
+    .shell {
+      width: min(100% - 28px, 1180px);
+      margin: 0 auto;
+      padding: 24px 0 42px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 18px 0 22px;
+    }
+
+    h1,
+    h2,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 0.35rem;
+      font-size: clamp(2rem, 5vw, 4.1rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin-bottom: 0.8rem;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.3rem 0.75rem;
+      color: var(--accent);
+      background: rgba(0, 0, 0, 0.22);
+      font-size: 0.88rem;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, var(--panel) 0%, rgba(6, 10, 12, 0.92) 100%);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: clamp(1.8rem, 5vw, 3.4rem);
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 0.45rem;
+      color: var(--muted);
+    }
+
+    .wide {
+      grid-column: span 2;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    canvas {
+      width: 100%;
+      height: 260px;
+      display: block;
+      border-radius: var(--radius);
+      background: rgba(0, 0, 0, 0.22);
+    }
+
+    .bars {
+      display: grid;
+      gap: 10px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(92px, 150px) 1fr auto;
+      align-items: center;
+      gap: 10px;
+      min-height: 32px;
+    }
+
+    .bar-track {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: var(--w);
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.65rem 0.55rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--accent);
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .gate {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(3, 6, 7, 0.88);
+      backdrop-filter: blur(18px);
+    }
+
+    .gate-card {
+      width: min(100%, 520px);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .status {
+      min-height: 24px;
+      margin-top: 12px;
+      color: var(--warn);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 880px) {
+      .topbar,
+      .grid {
+        display: block;
+      }
+
+      .panel,
+      .metric {
+        margin-bottom: 12px;
+      }
+
+      .bar-row {
+        grid-template-columns: 86px 1fr auto;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="gate" id="gate">
+    <section class="gate-card">
+      <span class="pill">owner stats / private</span>
+      <h1>QwertyLock Stats</h1>
+      <p class="muted">This page does not include the admin token in code. Paste the token once, then optionally require Face ID/passkey before this browser can show stats again.</p>
+      <label for="tokenInput">Stats token</label>
+      <input id="tokenInput" type="password" autocomplete="off" spellcheck="false" placeholder="Paste token from Desktop file">
+      <label style="display:flex; gap:10px; align-items:center; margin-top:12px;">
+        <input id="rememberToken" type="checkbox" style="width:auto; min-height:auto;">
+        Remember on this device after Face ID/passkey
+      </label>
+      <div class="actions">
+        <button id="unlockBtn" type="button">Unlock Stats</button>
+        <button id="faceBtn" type="button">Use Face ID / Passkey</button>
+        <button id="enrollBtn" type="button">Set Up This Device</button>
+      </div>
+      <div class="status" id="gateStatus"></div>
+      <p class="muted">Best protection: put Cloudflare Access in front of <code>/stats*</code> and require your owner email plus WebAuthn/security key MFA.</p>
+    </section>
+  </div>
+
+  <main class="shell" id="app" aria-live="polite">
+    <header class="topbar">
+      <div>
+        <span class="pill">slendystuff.com/stats</span>
+        <h1>QwertyLock Usage</h1>
+        <p class="muted">Anonymous option and activity stats. No messages, passphrases, IPs, phone numbers, user agents, or recipients.</p>
+      </div>
+      <div class="actions">
+        <button id="refreshBtn" type="button">Refresh</button>
+        <button id="lockBtn" type="button">Lock</button>
+      </div>
+    </header>
+
+    <section class="grid">
+      <article class="panel metric">
+        <strong id="mCreated24">0</strong>
+        <span>created / 24h</span>
+      </article>
+      <article class="panel metric">
+        <strong id="mUses24">0</strong>
+        <span>successful uses / 24h</span>
+      </article>
+      <article class="panel metric">
+        <strong id="mActive">0</strong>
+        <span>active server blocks</span>
+      </article>
+      <article class="panel metric">
+        <strong id="mTotalUses">0</strong>
+        <span>all-time uses tracked</span>
+      </article>
+
+      <section class="panel wide">
+        <h2>24h Activity</h2>
+        <canvas id="activityChart" width="760" height="300"></canvas>
+      </section>
+      <section class="panel wide">
+        <h2>Popularity</h2>
+        <div class="bars" id="durationBars"></div>
+      </section>
+
+      <section class="panel wide">
+        <h2>Open Limit Choices</h2>
+        <div class="bars" id="limitBars"></div>
+      </section>
+      <section class="panel wide">
+        <h2>Active Block Mix</h2>
+        <div class="bars" id="activeBars"></div>
+      </section>
+
+      <section class="panel full">
+        <h2>Active Blocks</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Created</th>
+              <th>Age</th>
+              <th>Duration</th>
+              <th>Expires</th>
+              <th>Limit</th>
+              <th>Used</th>
+              <th>Left</th>
+              <th>Version</th>
+            </tr>
+          </thead>
+          <tbody id="activeRows">
+            <tr><td colspan="9">Locked.</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const apiUrl = "https://lock.slendystuff.com/api/qwertylock/stats";
+    const tokenStoreKey = "qwertylock.stats.token";
+    const credentialStoreKey = "qwertylock.stats.credentialId";
+    const els = {
+      gate: document.getElementById("gate"),
+      tokenInput: document.getElementById("tokenInput"),
+      rememberToken: document.getElementById("rememberToken"),
+      unlockBtn: document.getElementById("unlockBtn"),
+      faceBtn: document.getElementById("faceBtn"),
+      enrollBtn: document.getElementById("enrollBtn"),
+      gateStatus: document.getElementById("gateStatus"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      lockBtn: document.getElementById("lockBtn"),
+      mCreated24: document.getElementById("mCreated24"),
+      mUses24: document.getElementById("mUses24"),
+      mActive: document.getElementById("mActive"),
+      mTotalUses: document.getElementById("mTotalUses"),
+      activityChart: document.getElementById("activityChart"),
+      durationBars: document.getElementById("durationBars"),
+      limitBars: document.getElementById("limitBars"),
+      activeBars: document.getElementById("activeBars"),
+      activeRows: document.getElementById("activeRows")
+    };
+
+    let sessionToken = "";
+
+    function bytes(length = 32) {
+      const value = new Uint8Array(length);
+      crypto.getRandomValues(value);
+      return value;
+    }
+
+    function b64(bytesValue) {
+      return btoa(String.fromCharCode(...new Uint8Array(bytesValue))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+    }
+
+    function fromB64(value) {
+      const padded = value.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((value.length + 3) % 4);
+      return Uint8Array.from(atob(padded), (char) => char.charCodeAt(0));
+    }
+
+    function setStatus(message, bad = true) {
+      els.gateStatus.textContent = message;
+      els.gateStatus.style.color = bad ? "var(--warn)" : "var(--accent)";
+    }
+
+    function savedCredentialId() {
+      return localStorage.getItem(credentialStoreKey) || "";
+    }
+
+    async function enrollPasskey() {
+      if (!window.PublicKeyCredential || !navigator.credentials) {
+        setStatus("This browser does not expose passkey/Face ID support here.");
+        return;
+      }
+      const userId = bytes(16);
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge: bytes(32),
+          rp: { name: "SlendyStuff Stats", id: location.hostname },
+          user: { id: userId, name: "owner@slendystuff", displayName: "SlendyStuff Owner" },
+          pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+          authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+          timeout: 60000,
+          attestation: "none"
+        }
+      });
+      localStorage.setItem(credentialStoreKey, b64(credential.rawId));
+      setStatus("This device is enrolled. Use Face ID / Passkey next time.", false);
+    }
+
+    async function verifyPasskey() {
+      const id = savedCredentialId();
+      if (!id) {
+        setStatus("Set up this device first.");
+        return false;
+      }
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge: bytes(32),
+          allowCredentials: [{ id: fromB64(id), type: "public-key" }],
+          userVerification: "required",
+          timeout: 60000
+        }
+      });
+      return b64(assertion.rawId) === id;
+    }
+
+    async function unlockWithToken(token) {
+      sessionToken = token.trim();
+      if (!sessionToken) {
+        setStatus("Paste the stats token.");
+        return;
+      }
+      const stats = await loadStats();
+      if (els.rememberToken.checked) {
+        localStorage.setItem(tokenStoreKey, sessionToken);
+      } else {
+        sessionStorage.setItem(tokenStoreKey, sessionToken);
+      }
+      render(stats);
+      els.gate.classList.add("hidden");
+    }
+
+    async function loadStats() {
+      const response = await fetch(apiUrl, {
+        headers: {
+          "Authorization": `Bearer ${sessionToken}`,
+          "X-QwertyLock-Stats-Token": sessionToken
+        },
+        cache: "no-store"
+      });
+      if (!response.ok) {
+        if (response.status === 403) throw new Error("Stats token was rejected.");
+        throw new Error(`Stats request failed: ${response.status}`);
+      }
+      return response.json();
+    }
+
+    function mapEntries(map) {
+      return Object.entries(map || {}).sort((a, b) => Number(b[1]) - Number(a[1]));
+    }
+
+    function renderBars(node, entries) {
+      const max = Math.max(1, ...entries.map((entry) => Number(entry[1] || 0)));
+      node.innerHTML = entries.length ? entries.map(([label, count]) => `
+        <div class="bar-row">
+          <span>${label}</span>
+          <span class="bar-track"><span class="bar-fill" style="--w:${Math.max(4, Number(count) / max * 100)}%"></span></span>
+          <strong>${count}</strong>
+        </div>
+      `).join("") : `<p class="muted">No data yet.</p>`;
+    }
+
+    function renderChart(stats) {
+      const canvas = els.activityChart;
+      const ctx = canvas.getContext("2d");
+      const created = stats.last24h.hourly.created || [];
+      const used = stats.last24h.hourly.successfulUses || [];
+      const values = created.map((row, index) => ({
+        label: new Date(row.hourStart).getHours().toString().padStart(2, "0"),
+        created: Number(row.count || 0),
+        used: Number(used[index]?.count || 0)
+      }));
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      ctx.fillRect(0, 0, w, h);
+      const pad = 34;
+      const max = Math.max(1, ...values.flatMap((row) => [row.created, row.used]));
+      const barW = Math.max(6, (w - pad * 2) / Math.max(1, values.length) - 4);
+      values.forEach((row, index) => {
+        const x = pad + index * ((w - pad * 2) / Math.max(1, values.length));
+        const createdH = (h - pad * 2) * row.created / max;
+        const usedH = (h - pad * 2) * row.used / max;
+        ctx.fillStyle = "#8ae8bf";
+        ctx.fillRect(x, h - pad - createdH, barW * 0.46, createdH);
+        ctx.fillStyle = "#82a8ff";
+        ctx.fillRect(x + barW * 0.5, h - pad - usedH, barW * 0.46, usedH);
+        if (index % 4 === 0) {
+          ctx.fillStyle = "rgba(237,246,242,0.58)";
+          ctx.font = "11px Segoe UI";
+          ctx.fillText(row.label, x, h - 10);
+        }
+      });
+      ctx.fillStyle = "#8ae8bf";
+      ctx.fillText("created", pad, 18);
+      ctx.fillStyle = "#82a8ff";
+      ctx.fillText("used", pad + 72, 18);
+    }
+
+    function render(stats) {
+      els.mCreated24.textContent = stats.last24h.created || 0;
+      els.mUses24.textContent = stats.last24h.successfulUses || 0;
+      els.mActive.textContent = stats.active.count || 0;
+      els.mTotalUses.textContent = stats.totals.successfulUses || 0;
+      renderChart(stats);
+      renderBars(els.durationBars, mapEntries(stats.options.createdByDuration));
+      renderBars(els.limitBars, mapEntries(stats.options.createdByUseLimit).map(([label, count]) => [`${label} open${label === "1" ? "" : "s"}`, count]));
+      renderBars(els.activeBars, mapEntries(stats.options.activeByDuration));
+      const blocks = stats.active.blocks || [];
+      els.activeRows.innerHTML = blocks.length ? blocks.map((block) => `
+        <tr>
+          <td>${block.record}</td>
+          <td>${block.createdAt}</td>
+          <td>${block.ageMinutes}m</td>
+          <td>${block.duration}</td>
+          <td>${block.expiresAt || "never"}</td>
+          <td>${block.useLimit}</td>
+          <td>${block.useCount}</td>
+          <td>${block.remainingUses}</td>
+          <td>${block.blockVersion}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="9">No active blocks currently tracked.</td></tr>`;
+    }
+
+    els.unlockBtn.addEventListener("click", async () => {
+      try {
+        await unlockWithToken(els.tokenInput.value);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    els.enrollBtn.addEventListener("click", async () => {
+      try {
+        await enrollPasskey();
+      } catch (error) {
+        setStatus(error.message || "Face ID/passkey setup failed.");
+      }
+    });
+
+    els.faceBtn.addEventListener("click", async () => {
+      try {
+        const ok = await verifyPasskey();
+        if (!ok) {
+          setStatus("Face ID/passkey did not match.");
+          return;
+        }
+        const saved = localStorage.getItem(tokenStoreKey) || sessionStorage.getItem(tokenStoreKey) || els.tokenInput.value;
+        await unlockWithToken(saved);
+      } catch (error) {
+        setStatus(error.message || "Face ID/passkey failed.");
+      }
+    });
+
+    els.refreshBtn.addEventListener("click", async () => {
+      try {
+        render(await loadStats());
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    els.lockBtn.addEventListener("click", () => {
+      sessionToken = "";
+      sessionStorage.removeItem(tokenStoreKey);
+      els.tokenInput.value = "";
+      els.gate.classList.remove("hidden");
+    });
+
+    const savedToken = sessionStorage.getItem(tokenStoreKey);
+    if (savedToken) {
+      sessionToken = savedToken;
+      loadStats().then((stats) => {
+        render(stats);
+        els.gate.classList.add("hidden");
+      }).catch(() => {
+        sessionStorage.removeItem(tokenStoreKey);
+      });
+    }
+  </script>
+</body>
+</html>
