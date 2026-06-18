@@ -924,7 +924,8 @@
     const apiBase = (document.querySelector('meta[name="qwertylock-api-base"]')?.content || "").trim().replace(/\/$/, "");
     const usedStoreKey = "qwertylock.used.qlr.v2";
     const leaseStoreKey = "qwertylock.openLease.v1";
-    const pbkdf2Rounds = 450000;
+    const pbkdf2Rounds = 600000;
+    const legacyPbkdf2Rounds = 450000;
     const payloadMarker = "QLOCK_";
     let remoteMessage = null;
     let pendingSendUrl = "";
@@ -1304,7 +1305,7 @@
       return { version: "QLR1", saltText, salt, cipherText, block: canonicalQlr1Block(saltText, cipherText) };
     }
 
-    async function deriveAesKey(password, salt) {
+    async function deriveAesKey(password, salt, iterations = pbkdf2Rounds) {
       const baseKey = await crypto.subtle.importKey(
         "raw",
         new TextEncoder().encode(password),
@@ -1313,7 +1314,7 @@
         ["deriveKey"]
       );
       return crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt, iterations: pbkdf2Rounds, hash: "SHA-256" },
+        { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
         baseKey,
         { name: "AES-CTR", length: 256 },
         false,
@@ -1321,9 +1322,9 @@
       );
     }
 
-    async function makePasswordStream(password, salt, count) {
+    async function makePasswordStream(password, salt, count, iterations = pbkdf2Rounds) {
       if (!password || password.length < 8) throw new Error("Use the shared phrase. 8+ characters minimum.");
-      const key = await deriveAesKey(password, salt);
+      const key = await deriveAesKey(password, salt, iterations);
       const stream = [];
       let counterValue = 0;
       while (stream.length < count) {
@@ -1346,7 +1347,7 @@
       return stream;
     }
 
-    async function deriveGcmKey(password, salt) {
+    async function deriveGcmKey(password, salt, iterations = pbkdf2Rounds) {
       if (!password || password.length < 8) throw new Error("Use the shared phrase. 8+ characters minimum.");
       const baseKey = await crypto.subtle.importKey(
         "raw",
@@ -1356,7 +1357,7 @@
         ["deriveKey"]
       );
       return crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt, iterations: pbkdf2Rounds, hash: "SHA-256" },
+        { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
         baseKey,
         { name: "AES-GCM", length: 256 },
         false,
@@ -1580,35 +1581,40 @@
 
     async function decryptPayload(parsed) {
       if (parsed.version === "QLR2") {
-        try {
-          const key = await deriveGcmKey(els.password.value, parsed.salt);
-          const plainBytes = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: parsed.nonce },
-            key,
-            parsed.cipherBytes
-          );
-          const plain = new TextDecoder().decode(plainBytes);
-          return {
-            plain,
-            legacySpaces: false
-          };
-        } catch (_error) {
-          throw new Error("Wrong shared phrase or damaged QLR2 block.");
+        for (const iterations of [pbkdf2Rounds, legacyPbkdf2Rounds]) {
+          try {
+            const key = await deriveGcmKey(els.password.value, parsed.salt, iterations);
+            const plainBytes = await crypto.subtle.decrypt(
+              { name: "AES-GCM", iv: parsed.nonce },
+              key,
+              parsed.cipherBytes
+            );
+            const plain = new TextDecoder().decode(plainBytes);
+            return {
+              plain,
+              legacySpaces: false
+            };
+          } catch (_error) {
+            // Try the previous KDF cost before declaring older messages damaged.
+          }
         }
+        throw new Error("Wrong shared phrase or damaged QLR2 block.");
       }
 
-      const stream = await makePasswordStream(els.password.value, parsed.salt, parsed.cipherText.length);
-      let payload = "";
-      for (let i = 0; i < parsed.cipherText.length; i++) {
-        payload += alphabet[(alphabet.indexOf(parsed.cipherText[i]) - stream[i] + alphabet.length) % alphabet.length];
+      for (const iterations of [pbkdf2Rounds, legacyPbkdf2Rounds]) {
+        const stream = await makePasswordStream(els.password.value, parsed.salt, parsed.cipherText.length, iterations);
+        let payload = "";
+        for (let i = 0; i < parsed.cipherText.length; i++) {
+          payload += alphabet[(alphabet.indexOf(parsed.cipherText[i]) - stream[i] + alphabet.length) % alphabet.length];
+        }
+        if (payload.startsWith(payloadMarker)) {
+          return {
+            plain: payload.slice(payloadMarker.length),
+            legacySpaces: true
+          };
+        }
       }
-      if (!payload.startsWith(payloadMarker)) {
-        throw new Error("Wrong password or damaged QLR1 block.");
-      }
-      return {
-        plain: payload.slice(payloadMarker.length),
-        legacySpaces: true
-      };
+      throw new Error("Wrong password or damaged QLR1 block.");
     }
 
     async function decodeNow() {
