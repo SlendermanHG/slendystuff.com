@@ -14,3 +14,5 @@ The shared phrase and plaintext stay in the browser. Encrypted blocks are delete
 New messages use authenticated `QLR2` blocks; older `QLR1` links remain supported.
 
 [Open QwertyLock](https://slendystuff.com/r/) · [Privacy information](https://slendystuff.com/qwertylock-privacy.html)
+
+Authenticated administration reports aggregate usage and timing metadata; it does not return message content, phrases or identifiers.
