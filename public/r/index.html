@@ -206,6 +206,10 @@
       font-weight: 700;
     }
 
+    .status:empty {
+      display: none;
+    }
+
     .stream-panel {
       display: grid;
       gap: 12px;
@@ -555,6 +559,166 @@
       font-weight: 800;
     }
 
+    .easy-app {
+      width: min(760px, calc(100vw - 20px));
+      padding: 14px 0 26px;
+    }
+
+    .easy-header {
+      align-items: center;
+      border-color: rgba(184, 255, 208, 0.22);
+      border-radius: 18px;
+      padding: 14px;
+      background: linear-gradient(145deg, rgba(4, 24, 14, 0.9), rgba(1, 8, 5, 0.86));
+    }
+
+    .easy-header h1 {
+      font-size: clamp(2.35rem, 11vw, 4.6rem);
+    }
+
+    .easy-header .local-note {
+      text-align: left;
+      margin-top: 6px;
+    }
+
+    .easy-header button {
+      min-width: 116px;
+      background: var(--accent);
+      color: #001507;
+      border-color: var(--accent);
+      text-shadow: none;
+    }
+
+    .easy-workspace {
+      grid-template-columns: 1fr;
+      padding-top: 12px;
+    }
+
+    .easy-panel {
+      gap: 14px;
+      border-radius: 20px;
+      padding: 14px;
+      background: rgba(0, 14, 8, 0.9);
+    }
+
+    .easy-panel::before {
+      opacity: 0.22;
+    }
+
+    .easy-panel > .cmd-field {
+      border-radius: 16px;
+      background: rgba(1, 10, 6, 0.86);
+    }
+
+    .easy-panel > .cmd-field .cmd-title::before {
+      content: "";
+    }
+
+    .easy-panel .cmd-title {
+      min-height: 38px;
+      padding: 9px 12px;
+      background: rgba(184, 255, 208, 0.07);
+      font-size: 0.84rem;
+      letter-spacing: 0.04em;
+    }
+
+    .easy-panel .cmd-body {
+      padding: 14px;
+    }
+
+    .message-card textarea {
+      min-height: 172px;
+      font-size: 1.08rem;
+      line-height: 1.5;
+    }
+
+    .phrase-card input {
+      min-height: 50px;
+      font-size: 1.04rem;
+    }
+
+    .easy-actions {
+      grid-template-columns: 1.15fr 1.15fr 1fr;
+    }
+
+    .easy-actions button,
+    .easy-actions .button {
+      min-height: 56px;
+      border-radius: 14px;
+      font-size: 0.94rem;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .output-card .stream-output {
+      min-height: 126px;
+      font-size: 1.08rem;
+    }
+
+    .stream-output:empty::before {
+      content: "Decoded messages and new private links appear here.";
+    }
+
+    .advanced-dashboard {
+      border: 1px solid rgba(60, 255, 129, 0.22);
+      border-radius: 16px;
+      background: rgba(0, 8, 4, 0.78);
+      overflow: hidden;
+    }
+
+    .advanced-dashboard summary {
+      min-height: 54px;
+      padding: 15px;
+      cursor: pointer;
+      color: var(--accent-2);
+      font-weight: 900;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      list-style: none;
+    }
+
+    .advanced-dashboard summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .advanced-dashboard summary::after {
+      content: " +";
+      color: var(--accent);
+    }
+
+    .advanced-dashboard[open] summary::after {
+      content: " -";
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 0 12px 12px;
+    }
+
+    .advanced-dashboard .cmd-title::before {
+      content: "C:\\QLOCK>";
+    }
+
+    .advanced-actions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .advanced-actions button,
+    .advanced-actions .button {
+      min-height: 44px;
+      font-size: 0.82rem;
+    }
+
+    .advanced-dashboard .ring-field {
+      grid-column: 1 / -1;
+    }
+
     @media (max-width: 860px) {
       main { width: min(100vw - 18px, 560px); padding-top: 12px; }
       .flow-strip { grid-template-columns: 1fr; }
@@ -570,6 +734,17 @@
       #cipherRing { width: min(260px, 74vw); }
       .stream-output { min-height: 118px; }
       #message { min-height: 104px; }
+      .easy-app { width: min(100vw - 14px, 560px); }
+      .easy-header { flex-direction: row; align-items: center; }
+      .easy-header h1 { font-size: clamp(2.15rem, 12vw, 3.35rem); }
+      .easy-header button { min-width: 92px; }
+      .easy-panel { border-radius: 18px; padding: 10px; }
+      .message-card textarea { min-height: 150px; }
+      .easy-actions { grid-template-columns: 1fr; }
+      .easy-actions button,
+      .easy-actions .button { min-height: 58px; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .advanced-actions { grid-template-columns: 1fr 1fr; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -584,104 +759,97 @@
 </head>
 <body>
   <div class="matrix-rain" id="matrixRain" aria-hidden="true"></div>
-  <main>
-    <header>
-      <h1>QwertyLock</h1>
-      <p class="local-note">Open later at slendystuff.com/r</p>
+  <main class="easy-app">
+    <header class="easy-header">
+      <div>
+        <h1>Private Chat</h1>
+        <p class="local-note">slendystuff.com/r</p>
+      </div>
+      <button id="startConversationBtn" type="button">Start</button>
     </header>
-
-    <section class="flow-strip" aria-label="Private conversation steps">
-      <div class="flow-step"><strong>1. Share phrase once</strong>Use voice or in person. Do not text it with the link.</div>
-      <div class="flow-step"><strong>2. Send only links</strong>Choose expiry/uses, Create Link, then Text Link.</div>
-      <div class="flow-step"><strong>3. Decode by limit</strong>Open the link, enter the phrase, then Open / Decode.</div>
-    </section>
-
-    <div class="utility-bar" aria-label="QwertyLock setup tools">
-      <button id="startConversationBtn" type="button">Start Conversation</button>
-      <button id="safetyBtn" type="button">Safety</button>
-      <button id="qrBtn" type="button">Phrase QR</button>
-      <a class="button" href="/qwertylock-privacy.html">Privacy</a>
-    </div>
 
     <p class="status" id="status" role="status" aria-live="polite"></p>
 
-    <section class="workspace" aria-label="QwertyLock workspace">
-      <div class="stream-panel">
-        <div class="cmd-field">
-          <div class="cmd-title"><label for="message">input.stream</label></div>
+    <section class="workspace easy-workspace" aria-label="Private chat workspace">
+      <div class="stream-panel easy-panel">
+        <div class="cmd-field message-card">
+          <div class="cmd-title"><label for="message">Message</label></div>
           <div class="cmd-body">
-            <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste a private link, or type a reply to encrypt"></textarea>
-            <p class="field-hint">Voice input uses browser/device speech support when available. For strongest privacy, type manually or use your phone keyboard's built-in dictation only if you trust it.</p>
+            <textarea id="message" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Paste a private link here, or type your reply"></textarea>
           </div>
         </div>
 
-        <div class="cmd-field">
-          <div class="cmd-title"><label for="password">password.key</label></div>
+        <div class="cmd-field phrase-card">
+          <div class="cmd-title"><label for="password">Shared phrase</label></div>
           <div class="cmd-body password-row">
-              <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Shared phrase">
-              <button id="copyPasswordBtn" type="button">Copy</button>
-              <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
+            <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Enter shared phrase">
+            <button id="copyPasswordBtn" type="button">Copy</button>
+            <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
           </div>
-          <p class="password-help">Best flow: agree on one shared phrase once, then only text encrypted links.</p>
         </div>
 
-        <div class="cmd-field">
-          <div class="cmd-title"><label for="ttlMinutes">expire.after</label></div>
+        <div class="actions easy-actions">
+          <button class="primary" id="animateBtn" type="button">Open Message</button>
+          <button id="encryptBtn" type="button">Make Private Link</button>
+          <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fr" aria-disabled="true">Text Link</a>
+        </div>
+
+        <div class="cmd-field output-card">
+          <div class="cmd-title"><label for="streamOutput">Output</label></div>
           <div class="cmd-body">
-            <select id="ttlMinutes">
-              <option value="10">10 minutes</option>
-              <option value="60">1 hour</option>
-              <option value="1440" selected>24 hours</option>
-              <option value="forever">Forever</option>
-            </select>
-            <p class="field-hint">Forever means no timer expiry. The open limit still removes the message.</p>
+            <div class="stream-output" id="streamOutput" aria-live="polite"></div>
           </div>
         </div>
 
-        <div class="cmd-field">
-          <div class="cmd-title"><label for="useLimit">open.limit</label></div>
-          <div class="cmd-body">
-            <select id="useLimit">
-              <option value="1" selected>One use</option>
-              <option value="2">Two uses</option>
-            </select>
-            <p class="field-hint">Each successful decode counts as one use.</p>
-          </div>
-        </div>
-
-        <div class="decode-stage">
-          <div class="cmd-field">
-            <div class="cmd-title"><label for="streamOutput">output.catch</label></div>
-            <div class="cmd-body">
-              <div class="stream-output" id="streamOutput" aria-live="polite"></div>
+        <details class="advanced-dashboard">
+          <summary>Advanced Dashboard</summary>
+          <div class="dashboard-grid">
+            <div class="cmd-field">
+              <div class="cmd-title"><label for="ttlMinutes">Expires</label></div>
+              <div class="cmd-body">
+                <select id="ttlMinutes">
+                  <option value="10">10 minutes</option>
+                  <option value="60">1 hour</option>
+                  <option value="1440" selected>24 hours</option>
+                  <option value="forever">Forever</option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          <div class="cmd-field ring-field">
-            <div class="cmd-title"><span>cipher.ring</span></div>
-            <div class="cmd-body ring-body">
-              <canvas id="cipherRing" width="320" height="320" aria-label="Password cipher ring visual"></canvas>
-              <div class="ring-map" id="ringMap" aria-hidden="true">awaiting cipher pair</div>
-              <div class="ring-meta" aria-hidden="true">
-                <span id="ringMode">standby</span>
-                <span id="ringShift">shift 00</span>
+            <div class="cmd-field">
+              <div class="cmd-title"><label for="useLimit">Opens</label></div>
+              <div class="cmd-body">
+                <select id="useLimit">
+                  <option value="1" selected>One use</option>
+                  <option value="2">Two uses</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="advanced-actions">
+              <button id="decodeBtn" type="button">Decode Fast</button>
+              <button id="makePasswordBtn" type="button">Make Phrase</button>
+              <button id="dictateBtn" type="button">Dictate</button>
+              <button id="readOutputBtn" type="button">Read Output</button>
+              <button id="clearBtn" type="button">Clear</button>
+              <button id="safetyBtn" type="button">Safety</button>
+              <button id="qrBtn" type="button">Phrase QR</button>
+              <a class="button" href="/qwertylock-privacy.html">Privacy</a>
+            </div>
+
+            <div class="cmd-field ring-field">
+              <div class="cmd-title"><span>Cipher ring</span></div>
+              <div class="cmd-body ring-body">
+                <canvas id="cipherRing" width="320" height="320" aria-label="Password cipher ring visual"></canvas>
+                <div class="ring-map" id="ringMap" aria-hidden="true">awaiting cipher pair</div>
+                <div class="ring-meta" aria-hidden="true">
+                  <span id="ringMode">standby</span>
+                  <span id="ringShift">shift 00</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="actions">
-          <button class="primary" id="animateBtn" type="button">Open / Decode</button>
-          <button id="decodeBtn" type="button">Decode Fast</button>
-          <button id="encryptBtn" type="button">Create Link</button>
-          <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fr" aria-disabled="true">Text Link</a>
-          <button id="makePasswordBtn" type="button">Make Phrase</button>
-          <button id="dictateBtn" type="button">Dictate</button>
-          <button id="readOutputBtn" type="button">Read Output</button>
-          <button id="clearBtn" type="button">Clear</button>
-        </div>
-
-        <p class="micro">Server stores encrypted text only until the selected open limit or expiry. Password and plaintext stay in this browser.</p>
+        </details>
       </div>
     </section>
   </main>
