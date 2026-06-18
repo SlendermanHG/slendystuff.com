@@ -8,36 +8,90 @@
   <meta http-equiv="Cache-Control" content="no-store">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src https://lock.slendystuff.com; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <meta name="qwertylock-api-base" content="https://lock.slendystuff.com">
-  <title>Private Chat Link Tool | QwertyLock by SlendyStuff</title>
-  <meta name="description" content="QwertyLock creates browser-encrypted private message links with shared phrases, optional one-time opens, expiration choices, and no plaintext message storage.">
-  <meta name="keywords" content="private message link, encrypted message link, one time message, browser encrypted chat, QwertyLock, SlendyStuff">
+  <title>QwertyLock Private Chat | Encrypted One-Time Message Links</title>
+  <meta name="description" content="Create browser-encrypted private message links for text, SMS, MMS, and chat. QwertyLock uses a shared phrase, optional one-time opens, and expiration choices.">
+  <meta name="keywords" content="private message link, encrypted message link, one time message, self destructing message, browser encrypted chat, private SMS link, QwertyLock, SlendyStuff">
   <link rel="canonical" href="https://slendystuff.com/r/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="QwertyLock Private Chat Link Tool">
-  <meta property="og:description" content="Create browser-encrypted private message links with shared phrases, one-time opens, and expiration choices.">
+  <meta property="og:title" content="QwertyLock Private Chat">
+  <meta property="og:description" content="Create browser-encrypted private message links for text, SMS, MMS, and chat with shared phrases and optional one-time opens.">
   <meta property="og:url" content="https://slendystuff.com/r/">
   <meta property="og:site_name" content="SlendyStuff">
+  <meta property="og:image" content="https://slendystuff.com/qwertylock-secure-card.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="QwertyLock Private Chat Link Tool">
-  <meta name="twitter:description" content="Browser-encrypted private message links with shared phrases and optional one-time opens.">
+  <meta name="twitter:title" content="QwertyLock Private Chat">
+  <meta name="twitter:description" content="Browser-encrypted private message links for text, SMS, MMS, and chat.">
+  <meta name="twitter:image" content="https://slendystuff.com/qwertylock-secure-card.png">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "QwertyLock",
-      "applicationCategory": "SecurityApplication",
-      "operatingSystem": "Any modern browser",
-      "url": "https://slendystuff.com/r/",
-      "description": "Browser-encrypted private message links using shared phrases, expiration choices, and optional one-time opens.",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "creator": {
-        "@type": "Organization",
-        "name": "SlendyStuff"
-      }
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "QwertyLock",
+          "alternateName": "QwertyLock Private Chat",
+          "applicationCategory": "SecurityApplication",
+          "operatingSystem": "Any modern browser",
+          "url": "https://slendystuff.com/r/",
+          "description": "Browser-encrypted private message links using shared phrases, expiration choices, and optional one-time opens.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "creator": {
+            "@type": "Organization",
+            "name": "SlendyStuff",
+            "url": "https://slendystuff.com/"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is QwertyLock?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "QwertyLock is a browser-based private chat link tool for creating encrypted message links that can be sent by text, SMS, MMS, or chat."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Does QwertyLock store plaintext messages?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No. The browser encrypts the message before it is stored. The server stores an encrypted block until the selected open limit or expiration removes it."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What does the other person need to open a private message?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "They need the private link and the shared phrase. For better privacy, share the phrase separately from the link."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "SlendyStuff",
+              "item": "https://slendystuff.com/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "QwertyLock Private Chat",
+              "item": "https://slendystuff.com/r/"
+            }
+          ]
+        }
+      ]
     }
   </script>
   <style>
@@ -776,8 +830,77 @@
       grid-column: 1 / -1;
     }
 
+    .seo-content {
+      width: min(980px, calc(100vw - 20px));
+      margin: 10px auto 46px;
+      display: grid;
+      gap: 14px;
+      color: var(--ink);
+    }
+
+    .seo-panel {
+      border: 1px solid rgba(60, 255, 129, 0.22);
+      border-radius: 16px;
+      background: rgba(0, 14, 8, 0.82);
+      box-shadow: var(--shadow);
+      padding: clamp(16px, 3vw, 24px);
+    }
+
+    .seo-panel h2,
+    .seo-panel h3 {
+      margin: 0 0 10px;
+      color: var(--accent-2);
+      letter-spacing: 0;
+      line-height: 1.15;
+    }
+
+    .seo-panel h2 {
+      font-size: clamp(1.45rem, 4vw, 2.3rem);
+    }
+
+    .seo-panel h3 {
+      font-size: 1.08rem;
+    }
+
+    .seo-panel p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .seo-panel p + p,
+    .seo-panel ul + p {
+      margin-top: 12px;
+    }
+
+    .seo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .seo-card {
+      border: 1px solid rgba(60, 255, 129, 0.16);
+      border-radius: 14px;
+      background: rgba(0, 8, 4, 0.72);
+      padding: 16px;
+    }
+
+    .seo-panel ul {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .seo-content a {
+      color: var(--accent-2);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
     @media (max-width: 860px) {
-      main { width: min(100vw - 18px, 560px); padding-top: 12px; }
+      main { width: min(calc(100% - 18px), 560px); padding-top: 12px; }
       .flow-strip { grid-template-columns: 1fr; }
       .utility-bar { grid-template-columns: 1fr 1fr; }
       header { align-items: start; flex-direction: column; }
@@ -791,17 +914,27 @@
       #cipherRing { width: min(260px, 74vw); }
       .stream-output { min-height: 118px; }
       #message { min-height: 104px; }
-      .easy-app { width: min(100vw - 14px, 560px); }
+      .easy-app { width: min(calc(100% - 14px), 560px); }
       .easy-header { flex-direction: row; align-items: center; }
-      .easy-header h1 { font-size: clamp(2.15rem, 12vw, 3.35rem); }
+      .easy-header h1 { font-size: clamp(1.7rem, 9vw, 2.7rem); }
       .easy-header button { min-width: 92px; }
       .easy-panel { border-radius: 18px; padding: 10px; }
       .message-card textarea { min-height: 150px; }
       .easy-actions { grid-template-columns: 1fr; }
       .easy-actions button,
       .easy-actions .button { min-height: 58px; }
+      .easy-header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+      }
+      .easy-header h1 {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
       .dashboard-grid { grid-template-columns: 1fr; }
       .advanced-actions { grid-template-columns: 1fr 1fr; }
+      .seo-grid { grid-template-columns: 1fr; }
+      .seo-content { margin-top: 2px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -819,7 +952,7 @@
   <main class="easy-app">
     <header class="easy-header">
       <div>
-        <h1>Private Chat</h1>
+        <h1>QwertyLock Private Chat</h1>
         <p class="local-note">slendystuff.com/r</p>
       </div>
       <button id="startConversationBtn" type="button">Start</button>
@@ -913,6 +1046,62 @@
       </div>
     </section>
   </main>
+
+  <section class="seo-content" aria-label="About QwertyLock private chat">
+    <article class="seo-panel">
+      <h2>QwertyLock private chat links for text, SMS, MMS, and browsers</h2>
+      <p>QwertyLock is a free private message link tool from SlendyStuff. Type a message, choose a shared phrase, and create a browser-encrypted link that can be sent by text message, MMS, chat, or any app that can open a normal web link.</p>
+      <p>The goal is simple: make private one-time message sharing usable from a standard phone browser without making the other person install another app.</p>
+    </article>
+
+    <div class="seo-grid">
+      <article class="seo-card">
+        <h3>Private message links</h3>
+        <p>Create an encrypted message link and send it through the conversation app you already use. The recipient opens the link, enters the shared phrase, and reads the message in the browser.</p>
+      </article>
+
+      <article class="seo-card">
+        <h3>One-time opens</h3>
+        <p>The default setting is one open with a 24-hour expiration. Advanced settings can use 10 minutes, 1 hour, 24 hours, forever, one use, or two uses.</p>
+      </article>
+
+      <article class="seo-card">
+        <h3>No plaintext server storage</h3>
+        <p>The message is encrypted in the browser before it is saved. The server stores the encrypted block only, not the readable message or the shared phrase.</p>
+      </article>
+    </div>
+
+    <article class="seo-panel">
+      <h2>How to use QwertyLock safely</h2>
+      <ul>
+        <li>Agree on a strong shared phrase separately from the private link.</li>
+        <li>Do not send the shared phrase in the same text thread as the encrypted message link.</li>
+        <li>Use one-time opens for normal private messages.</li>
+        <li>Use forever messages only when you intentionally want a future one-time message waiting on the server.</li>
+        <li>Remember that screenshots, compromised phones, malware, and someone watching the screen are outside what a browser link can prevent.</li>
+      </ul>
+    </article>
+
+    <article class="seo-panel">
+      <h2>Frequently asked questions</h2>
+      <h3>What is QwertyLock?</h3>
+      <p>QwertyLock is a browser-based private chat link tool for creating encrypted message links that can be sent by text, SMS, MMS, or chat.</p>
+
+      <h3>Does QwertyLock store plaintext messages?</h3>
+      <p>No. The browser encrypts the message before it is stored. The server stores an encrypted block until the selected open limit or expiration removes it.</p>
+
+      <h3>What does the other person need to open a private message?</h3>
+      <p>They need the private link and the shared phrase. For better privacy, share the phrase separately from the link.</p>
+
+      <h3>Is this the same as a full secure messaging app?</h3>
+      <p>No. QwertyLock is a lightweight browser tool for private message links. It is not a replacement for professional secure messaging, device security, or operational security.</p>
+    </article>
+
+    <article class="seo-panel">
+      <h2>Built by SlendyStuff</h2>
+      <p>QwertyLock is part of the SlendyStuff software wing, alongside custom technical support, website work, bots, and practical tools. Visit the <a href="/software.html">SlendyStuff software page</a> for more tools and updates.</p>
+    </article>
+  </section>
 
   <div class="modal" id="safetyModal" role="dialog" aria-modal="true" aria-labelledby="safetyTitle">
     <div class="modal-panel">
