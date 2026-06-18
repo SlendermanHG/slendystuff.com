@@ -637,6 +637,32 @@
       font-size: 1.04rem;
     }
 
+    .phrase-card {
+      border-color: rgba(60, 255, 129, 0.58);
+      box-shadow: 0 0 24px rgba(60, 255, 129, 0.12), inset 0 0 22px rgba(60, 255, 129, 0.06);
+    }
+
+    .phrase-note,
+    .default-note {
+      margin: 10px 0 0;
+      color: var(--accent-2);
+      font-size: 0.9rem;
+      font-weight: 800;
+      text-shadow: 0 0 10px rgba(60, 255, 129, 0.38);
+    }
+
+    .phrase-note {
+      grid-column: 1 / -1;
+    }
+
+    .default-note {
+      margin: -2px 0 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
     .easy-actions {
       grid-template-columns: 1.15fr 1.15fr 1fr;
     }
@@ -780,11 +806,12 @@
         </div>
 
         <div class="cmd-field phrase-card">
-          <div class="cmd-title"><label for="password">Shared phrase</label></div>
+          <div class="cmd-title"><label for="password">Secret phrase / password</label></div>
           <div class="cmd-body password-row">
-            <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Enter shared phrase">
+            <input id="password" type="password" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Put passphrase here">
             <button id="copyPasswordBtn" type="button">Copy</button>
             <button id="showPasswordBtn" type="button" aria-pressed="false">Show</button>
+            <p class="phrase-note">Enter the passphrase here before opening or making a message.</p>
           </div>
         </div>
 
@@ -793,6 +820,8 @@
           <button id="encryptBtn" type="button">Make Private Link</button>
           <a class="button" id="smsLink" href="sms:?&body=https%3A%2F%2Fslendystuff.com%2Fr" aria-disabled="true">Text Link</a>
         </div>
+
+        <p class="default-note">Default: 1 open, expires after 24 hours.</p>
 
         <div class="cmd-field output-card">
           <div class="cmd-title"><label for="streamOutput">Output</label></div>
@@ -1433,8 +1462,9 @@
       }
       els.message.value = parsed.block;
       els.streamOutput.classList.remove("link-ready");
-      els.streamOutput.textContent = "Private message loaded. Enter the shared phrase, then Open / Decode.";
+      els.streamOutput.textContent = "Private message loaded. Put the passphrase in Secret phrase / password, then tap Open Message.";
       updateSmsLink(false);
+      els.password.focus();
       setStatus("Private message loaded.");
       return true;
     }
@@ -1816,8 +1846,9 @@
       }
       els.message.value = parsed.block;
       els.streamOutput.classList.remove("link-ready");
-      els.streamOutput.textContent = "QLR block loaded. Enter the shared phrase, then Open / Decode.";
+      els.streamOutput.textContent = "Message loaded. Put the passphrase in Secret phrase / password, then tap Open Message.";
       updateSmsLink(false);
+      els.password.focus();
       setStatus("Linked message loaded.");
     }
 
@@ -1922,7 +1953,8 @@
           if (currentRemoteLease().id) return;
           clearRemoteLease();
           els.streamOutput.classList.remove("link-ready");
-          els.streamOutput.textContent = "QLR block loaded. Enter the shared phrase, then Open / Decode.";
+          els.streamOutput.textContent = "Message loaded. Put the passphrase in Secret phrase / password, then tap Open Message.";
+          els.password.focus();
           setStatus("Pasted message loaded.");
         }
       }, 80);
