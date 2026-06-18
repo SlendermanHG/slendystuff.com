@@ -13,6 +13,7 @@ const MAX_USE_LIMIT = 2;
 const STATS_OBJECT_ID = "__qwertylock_private_stats__";
 const STATS_BUCKET_MS = 60 * 60 * 1000;
 const STATS_WINDOW_BUCKETS = 24;
+const STATS_PAIRING_TTL_MS = 24 * 60 * 60 * 1000;
 
 function corsHeaders(request) {
   const origin = request.headers.get("Origin") || "";
@@ -127,10 +128,27 @@ function statsToken(request) {
   return (request.headers.get("X-QwertyLock-Stats-Token") || "").trim();
 }
 
-function hasStatsAccess(request, env) {
+function isStatsAdmin(request, env) {
   const expected = String(env.STATS_ADMIN_TOKEN || "").trim();
   if (!expected) return false;
   return statsToken(request) === expected;
+}
+
+async function statsAccess(request, env) {
+  if (isStatsAdmin(request, env)) return { ok: true, role: "admin" };
+  const token = statsToken(request);
+  if (!token) return { ok: false };
+  try {
+    const stats = await statsStub(env);
+    const response = await stats.fetch("https://qwertylock-stats/stats/authorize", {
+      method: "POST",
+      body: JSON.stringify({ token })
+    });
+    const body = await response.json();
+    return body.ok ? { ok: true, role: "device", device: body.device } : { ok: false };
+  } catch (_error) {
+    return { ok: false };
+  }
 }
 
 export default {
@@ -142,6 +160,11 @@ export default {
     const url = new URL(request.url);
     const createPath = "/api/qwertylock/messages";
     const statsPath = "/api/qwertylock/stats";
+    const statsPairingStartPath = "/api/qwertylock/stats/pairing/start";
+    const statsPairingClaimPath = "/api/qwertylock/stats/pairing/claim";
+    const statsPairingClosePath = "/api/qwertylock/stats/pairing/close";
+    const statsDeviceRegisterPath = "/api/qwertylock/stats/devices/register";
+    const statsDevicesPath = "/api/qwertylock/stats/devices";
     const messageMatch = url.pathname.match(/^\/api\/qwertylock\/messages\/([a-z2-7]{16})$/);
     const consumeMatch = url.pathname.match(/^\/api\/qwertylock\/messages\/([a-z2-7]{16})\/consume$/);
 
@@ -153,11 +176,59 @@ export default {
       if (!String(env.STATS_ADMIN_TOKEN || "").trim()) {
         return json(request, 503, { ok: false, error: "Stats are not configured." });
       }
-      if (!hasStatsAccess(request, env)) {
+      const access = await statsAccess(request, env);
+      if (!access.ok) {
         return json(request, 403, { ok: false, error: "Stats access denied." });
       }
       const stats = await statsStub(env);
       const response = await stats.fetch("https://qwertylock-stats/stats/report");
+      return json(request, response.status, await response.json());
+    }
+
+    if (url.pathname === statsDevicesPath && request.method === "GET") {
+      const access = await statsAccess(request, env);
+      if (!access.ok) return json(request, 403, { ok: false, error: "Stats access denied." });
+      const stats = await statsStub(env);
+      const response = await stats.fetch("https://qwertylock-stats/stats/devices");
+      return json(request, response.status, await response.json());
+    }
+
+    if (url.pathname === statsDeviceRegisterPath && request.method === "POST") {
+      if (!isStatsAdmin(request, env)) return json(request, 403, { ok: false, error: "Stats access denied." });
+      const payload = await readJson(request, 4096);
+      const stats = await statsStub(env);
+      const response = await stats.fetch("https://qwertylock-stats/stats/devices/register", {
+        method: "POST",
+        body: JSON.stringify(payload || {})
+      });
+      return json(request, response.status, await response.json());
+    }
+
+    if (url.pathname === statsPairingStartPath && request.method === "POST") {
+      if (!isStatsAdmin(request, env)) return json(request, 403, { ok: false, error: "Stats access denied." });
+      const payload = await readJson(request, 4096);
+      const stats = await statsStub(env);
+      const response = await stats.fetch("https://qwertylock-stats/stats/pairing/start", {
+        method: "POST",
+        body: JSON.stringify(payload || {})
+      });
+      return json(request, response.status, await response.json());
+    }
+
+    if (url.pathname === statsPairingClaimPath && request.method === "POST") {
+      const payload = await readJson(request, 4096);
+      const stats = await statsStub(env);
+      const response = await stats.fetch("https://qwertylock-stats/stats/pairing/claim", {
+        method: "POST",
+        body: JSON.stringify(payload || {})
+      });
+      return json(request, response.status, await response.json());
+    }
+
+    if (url.pathname === statsPairingClosePath && request.method === "POST") {
+      if (!isStatsAdmin(request, env)) return json(request, 403, { ok: false, error: "Stats access denied." });
+      const stats = await statsStub(env);
+      const response = await stats.fetch("https://qwertylock-stats/stats/pairing/close", { method: "POST" });
       return json(request, response.status, await response.json());
     }
 
@@ -382,6 +453,69 @@ export class QwertyLockMessage {
     await this.incrementCounter(key, amount);
   }
 
+  async hashToken(token) {
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(token || "")));
+    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+
+  async deviceToken() {
+    return randomToken(32);
+  }
+
+  cleanDeviceName(name) {
+    return String(name || "Owner device").replace(/[^\w .:-]/g, "").trim().slice(0, 60) || "Owner device";
+  }
+
+  publicDevice(device) {
+    return {
+      id: device.id,
+      name: device.name,
+      createdAt: device.createdAt,
+      lastSeenAt: device.lastSeenAt || null,
+      pairedVia: device.pairedVia || "manual"
+    };
+  }
+
+  async devices() {
+    const devices = await this.ctx.storage.get("devices") || {};
+    return devices && typeof devices === "object" ? devices : {};
+  }
+
+  async saveDevices(devices) {
+    await this.ctx.storage.put("devices", devices);
+  }
+
+  async createDevice(name, pairedVia = "manual") {
+    const token = await this.deviceToken();
+    const now = new Date().toISOString();
+    const device = {
+      id: randomBase32(8),
+      name: this.cleanDeviceName(name),
+      createdAt: now,
+      lastSeenAt: null,
+      pairedVia,
+      tokenHash: await this.hashToken(token)
+    };
+    const devices = await this.devices();
+    devices[device.id] = device;
+    await this.saveDevices(devices);
+    return { token, device: this.publicDevice(device) };
+  }
+
+  async authorizeDevice(token) {
+    const tokenHash = await this.hashToken(token);
+    const devices = await this.devices();
+    for (const device of Object.values(devices)) {
+      if (device.tokenHash === tokenHash) {
+        device.lastSeenAt = new Date().toISOString();
+        devices[device.id] = device;
+        await this.saveDevices(devices);
+        return this.publicDevice(device);
+      }
+    }
+    return null;
+  }
+
   async activeEntries() {
     const active = await this.ctx.storage.list({ prefix: "active:" });
     return [...active.entries()].map(([key, value]) => ({ key, value }));
@@ -408,6 +542,74 @@ export class QwertyLockMessage {
   }
 
   async handleStatsRequest(request, url) {
+    if (url.pathname === "/stats/authorize" && request.method === "POST") {
+      const payload = await this.readStatsJson(request);
+      const device = await this.authorizeDevice(payload.token);
+      return Response.json(device ? { ok: true, device } : { ok: false }, { status: device ? 200 : 403 });
+    }
+
+    if (url.pathname === "/stats/devices" && request.method === "GET") {
+      const devices = Object.values(await this.devices()).map((device) => this.publicDevice(device));
+      devices.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+      const pairing = await this.ctx.storage.get("pairing");
+      return Response.json({
+        ok: true,
+        devices,
+        pairing: pairing ? {
+          createdAt: pairing.createdAt,
+          expiresAt: pairing.expiresAt,
+          pendingName: pairing.pendingName || "Owner phone"
+        } : null
+      });
+    }
+
+    if (url.pathname === "/stats/devices/register" && request.method === "POST") {
+      const payload = await this.readStatsJson(request);
+      const created = await this.createDevice(payload.name || "Owner computer", "admin");
+      return Response.json({ ok: true, ...created }, { status: 201 });
+    }
+
+    if (url.pathname === "/stats/pairing/start" && request.method === "POST") {
+      const payload = await this.readStatsJson(request);
+      const code = randomToken(24);
+      const now = Date.now();
+      const expiresAt = now + STATS_PAIRING_TTL_MS;
+      await this.ctx.storage.put("pairing", {
+        codeHash: await this.hashToken(code),
+        createdAt: new Date(now).toISOString(),
+        expiresAt: new Date(expiresAt).toISOString(),
+        pendingName: this.cleanDeviceName(payload.deviceName || "Owner phone")
+      });
+      return Response.json({
+        ok: true,
+        code,
+        pairUrl: `https://slendystuff.com/stats/?pair=${encodeURIComponent(code)}`,
+        expiresAt: new Date(expiresAt).toISOString()
+      }, { status: 201 });
+    }
+
+    if (url.pathname === "/stats/pairing/claim" && request.method === "POST") {
+      const payload = await this.readStatsJson(request);
+      const pairing = await this.ctx.storage.get("pairing");
+      if (!pairing) return Response.json({ ok: false, error: "No pairing session is open." }, { status: 410 });
+      if (Date.parse(pairing.expiresAt) <= Date.now()) {
+        await this.ctx.storage.delete("pairing");
+        return Response.json({ ok: false, error: "Pairing session expired." }, { status: 410 });
+      }
+      if (await this.hashToken(payload.code) !== pairing.codeHash) {
+        return Response.json({ ok: false, error: "Pairing code rejected." }, { status: 403 });
+      }
+
+      await this.ctx.storage.delete("pairing");
+      const created = await this.createDevice(payload.deviceName || pairing.pendingName || "Owner phone", "pairing");
+      return Response.json({ ok: true, ...created });
+    }
+
+    if (url.pathname === "/stats/pairing/close" && request.method === "POST") {
+      await this.ctx.storage.delete("pairing");
+      return Response.json({ ok: true });
+    }
+
     if (url.pathname === "/stats/register" && request.method === "POST") {
       const payload = await this.readStatsJson(request);
       const id = String(payload.id || "");
