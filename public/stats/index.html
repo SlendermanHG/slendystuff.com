@@ -249,6 +249,21 @@
       color: var(--warn);
     }
 
+    .subpanel {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      background: rgba(0, 0, 0, 0.24);
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .pair-link {
+      overflow-wrap: anywhere;
+      color: var(--accent);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.92rem;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -292,6 +307,15 @@
         <button id="unlockBtn" type="button">Unlock Stats</button>
         <button id="faceBtn" type="button">Use Face ID / Passkey</button>
         <button id="enrollBtn" type="button">Set Up This Device</button>
+      </div>
+      <div class="subpanel hidden" id="pairPanel">
+        <h2>Pair This Device</h2>
+        <p class="muted">A one-time pairing link is open. Name this device, then pair it and set up Face ID/passkey.</p>
+        <label for="pairDeviceName">Device name</label>
+        <input id="pairDeviceName" type="text" autocomplete="off" spellcheck="false" placeholder="Owner iPhone">
+        <div class="actions">
+          <button id="claimPairBtn" type="button">Pair and Set Up Face ID</button>
+        </div>
       </div>
       <div class="status" id="gateStatus"></div>
       <p class="muted">Best protection: put Cloudflare Access in front of <code>/stats*</code> and require your owner email plus WebAuthn/security key MFA.</p>
@@ -368,13 +392,41 @@
           </tbody>
         </table>
       </section>
+
+      <section class="panel full">
+        <h2>Owner Devices</h2>
+        <div class="actions">
+          <button id="newPairBtn" type="button">Open Phone Pairing</button>
+          <button id="closePairBtn" type="button">Close Pairing</button>
+        </div>
+        <p class="muted" id="pairingState">Pairing status loads after unlock.</p>
+        <p class="pair-link" id="pairingLink"></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Added</th>
+              <th>Last Seen</th>
+              <th>Method</th>
+            </tr>
+          </thead>
+          <tbody id="deviceRows">
+            <tr><td colspan="4">Locked.</td></tr>
+          </tbody>
+        </table>
+      </section>
     </section>
   </main>
 
   <script>
     const apiUrl = "https://lock.slendystuff.com/api/qwertylock/stats";
+    const devicesUrl = "https://lock.slendystuff.com/api/qwertylock/stats/devices";
+    const pairStartUrl = "https://lock.slendystuff.com/api/qwertylock/stats/pairing/start";
+    const pairClaimUrl = "https://lock.slendystuff.com/api/qwertylock/stats/pairing/claim";
+    const pairCloseUrl = "https://lock.slendystuff.com/api/qwertylock/stats/pairing/close";
     const tokenStoreKey = "qwertylock.stats.token";
     const credentialStoreKey = "qwertylock.stats.credentialId";
+    const pairCode = new URLSearchParams(location.search).get("pair") || "";
     const els = {
       gate: document.getElementById("gate"),
       tokenInput: document.getElementById("tokenInput"),
@@ -382,6 +434,9 @@
       unlockBtn: document.getElementById("unlockBtn"),
       faceBtn: document.getElementById("faceBtn"),
       enrollBtn: document.getElementById("enrollBtn"),
+      pairPanel: document.getElementById("pairPanel"),
+      pairDeviceName: document.getElementById("pairDeviceName"),
+      claimPairBtn: document.getElementById("claimPairBtn"),
       gateStatus: document.getElementById("gateStatus"),
       refreshBtn: document.getElementById("refreshBtn"),
       lockBtn: document.getElementById("lockBtn"),
@@ -393,7 +448,12 @@
       durationBars: document.getElementById("durationBars"),
       limitBars: document.getElementById("limitBars"),
       activeBars: document.getElementById("activeBars"),
-      activeRows: document.getElementById("activeRows")
+      activeRows: document.getElementById("activeRows"),
+      newPairBtn: document.getElementById("newPairBtn"),
+      closePairBtn: document.getElementById("closePairBtn"),
+      pairingState: document.getElementById("pairingState"),
+      pairingLink: document.getElementById("pairingLink"),
+      deviceRows: document.getElementById("deviceRows")
     };
 
     let sessionToken = "";
@@ -466,28 +526,41 @@
         setStatus("Paste the stats token.");
         return;
       }
-      const stats = await loadStats();
+      const [stats, devices] = await Promise.all([loadStats(), loadDevices()]);
       if (els.rememberToken.checked) {
         localStorage.setItem(tokenStoreKey, sessionToken);
       } else {
         sessionStorage.setItem(tokenStoreKey, sessionToken);
       }
       render(stats);
+      renderDevices(devices);
       els.gate.classList.add("hidden");
     }
 
-    async function loadStats() {
-      const response = await fetch(apiUrl, {
+    async function authedFetch(url, options = {}) {
+      return fetch(url, {
+        ...options,
         headers: {
           "Authorization": `Bearer ${sessionToken}`,
-          "X-QwertyLock-Stats-Token": sessionToken
+          "X-QwertyLock-Stats-Token": sessionToken,
+          ...(options.headers || {})
         },
         cache: "no-store"
       });
+    }
+
+    async function loadStats() {
+      const response = await authedFetch(apiUrl);
       if (!response.ok) {
         if (response.status === 403) throw new Error("Stats token was rejected.");
         throw new Error(`Stats request failed: ${response.status}`);
       }
+      return response.json();
+    }
+
+    async function loadDevices() {
+      const response = await authedFetch(devicesUrl);
+      if (!response.ok) return { devices: [], pairing: null };
       return response.json();
     }
 
@@ -569,6 +642,61 @@
       `).join("") : `<tr><td colspan="9">No active blocks currently tracked.</td></tr>`;
     }
 
+    function renderDevices(payload) {
+      const devices = payload.devices || [];
+      els.deviceRows.innerHTML = devices.length ? devices.map((device) => `
+        <tr>
+          <td>${device.name}</td>
+          <td>${device.createdAt}</td>
+          <td>${device.lastSeenAt || "not used yet"}</td>
+          <td>${device.pairedVia}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="4">No owner devices registered yet.</td></tr>`;
+
+      if (payload.pairing) {
+        els.pairingState.textContent = `Pairing is open for ${payload.pairing.pendingName}. Expires ${payload.pairing.expiresAt}.`;
+      } else {
+        els.pairingState.textContent = "Pairing is closed.";
+        els.pairingLink.textContent = "";
+      }
+    }
+
+    async function refreshAll() {
+      const [stats, devices] = await Promise.all([loadStats(), loadDevices()]);
+      render(stats);
+      renderDevices(devices);
+    }
+
+    async function claimPairing() {
+      if (!pairCode) {
+        setStatus("No pairing code is present in the URL.");
+        return;
+      }
+      const response = await fetch(pairClaimUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: pairCode,
+          deviceName: els.pairDeviceName.value || "Owner iPhone"
+        }),
+        cache: "no-store"
+      });
+      const body = await response.json();
+      if (!response.ok || !body.ok) throw new Error(body.error || "Pairing failed.");
+
+      sessionToken = body.token;
+      localStorage.setItem(tokenStoreKey, sessionToken);
+      setStatus("Device paired. Asking this browser to set up Face ID/passkey...", false);
+      try {
+        await enrollPasskey();
+      } catch (_error) {
+        setStatus("Device paired, but Face ID/passkey setup did not finish. You can tap Set Up This Device again.", false);
+      }
+      history.replaceState(null, "", location.pathname);
+      await refreshAll();
+      els.gate.classList.add("hidden");
+    }
+
     els.unlockBtn.addEventListener("click", async () => {
       try {
         await unlockWithToken(els.tokenInput.value);
@@ -582,6 +710,14 @@
         await enrollPasskey();
       } catch (error) {
         setStatus(error.message || "Face ID/passkey setup failed.");
+      }
+    });
+
+    els.claimPairBtn.addEventListener("click", async () => {
+      try {
+        await claimPairing();
+      } catch (error) {
+        setStatus(error.message || "Pairing failed.");
       }
     });
 
@@ -601,7 +737,36 @@
 
     els.refreshBtn.addEventListener("click", async () => {
       try {
-        render(await loadStats());
+        await refreshAll();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    els.newPairBtn.addEventListener("click", async () => {
+      try {
+        const response = await authedFetch(pairStartUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceName: "Owner iPhone" })
+        });
+        const body = await response.json();
+        if (!response.ok || !body.ok) throw new Error(body.error || "Could not open pairing.");
+        els.pairingState.textContent = `Pairing is open until ${body.expiresAt}.`;
+        els.pairingLink.textContent = body.pairUrl;
+        await navigator.clipboard?.writeText(body.pairUrl).catch(() => {});
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    els.closePairBtn.addEventListener("click", async () => {
+      try {
+        const response = await authedFetch(pairCloseUrl, { method: "POST" });
+        if (!response.ok) throw new Error("Could not close pairing.");
+        els.pairingState.textContent = "Pairing is closed.";
+        els.pairingLink.textContent = "";
+        renderDevices(await loadDevices());
       } catch (error) {
         alert(error.message);
       }
@@ -615,14 +780,21 @@
     });
 
     const savedToken = sessionStorage.getItem(tokenStoreKey);
-    if (savedToken) {
+    if (pairCode) {
+      els.pairPanel.classList.remove("hidden");
+      els.pairDeviceName.value = /iPhone|iPad|Android/i.test(navigator.userAgent) ? "Owner phone" : "Owner device";
+      setStatus("Pairing link detected. Pair this device, then enroll Face ID/passkey.", false);
+    } else if (savedToken) {
       sessionToken = savedToken;
-      loadStats().then((stats) => {
+      Promise.all([loadStats(), loadDevices()]).then(([stats, devices]) => {
         render(stats);
+        renderDevices(devices);
         els.gate.classList.add("hidden");
       }).catch(() => {
         sessionStorage.removeItem(tokenStoreKey);
       });
+    } else if (localStorage.getItem(tokenStoreKey) && savedCredentialId()) {
+      setStatus("This device has saved access. Use Face ID / Passkey to unlock.", false);
     }
   </script>
 </body>
