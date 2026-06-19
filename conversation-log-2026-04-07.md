@@ -284,3 +284,12 @@ Implications:
 - Cleaned a few owner-facing homepage labels so the public site reads more like a client-facing business site.
 - Fixed a reveal-animation edge case in `public/site.js` by adding a fallback that forces `data-reveal` elements visible if the observer does not fire in time on smaller/mobile renders.
 - Verified the redesign locally with headless browser screenshots for desktop and mobile views before closing the work.
+
+## 2026-06-19 Reviews Hold And QwertyLock Return Path
+
+- User requested a visible way back from `/r` to the main SlendyStuff site.
+- Added a `Back to SlendyStuff` button to `public/r/index.html` and animated the QwertyLock background layers instead of leaving the tool page on a mostly static backdrop.
+- User stated there are no posted or received reviews yet and asked to remove the public reviews lane for now.
+- Removed reviews links from the main public navigation and the homepage footer, and removed the reviews URL from `public/sitemap.xml`.
+- Added a `Leave a Review` call-to-action section to `public/about.html` so the first real review can be collected directly.
+- Replaced `public/reviews.html` with a temporary noindex redirect/holding page that points visitors to `about.html#leave-review` until there is at least one real review ready to publish.

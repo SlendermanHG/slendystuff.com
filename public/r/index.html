@@ -119,6 +119,8 @@
         radial-gradient(circle at 16% 12%, rgba(60, 255, 129, 0.12), transparent 28%),
         radial-gradient(circle at 84% 30%, rgba(0, 128, 64, 0.13), transparent 30%),
         linear-gradient(135deg, #020604 0%, #06150b 52%, #020604 100%);
+      background-size: 140% 140%;
+      animation: qlAuroraDrift 24s ease-in-out infinite alternate;
       color: var(--ink);
       font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
       line-height: 1.4;
@@ -136,6 +138,22 @@
         linear-gradient(90deg, rgba(60, 255, 129, 0.03) 1px, transparent 1px);
       background-size: 24px 24px;
       mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.35));
+      animation: qlGridShift 18s linear infinite;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -14%;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 22% 28%, rgba(184, 255, 208, 0.1), transparent 0 22%),
+        radial-gradient(circle at 76% 24%, rgba(60, 255, 129, 0.12), transparent 0 24%),
+        radial-gradient(circle at 58% 76%, rgba(0, 128, 64, 0.1), transparent 0 26%);
+      filter: blur(28px);
+      opacity: 0.72;
+      animation: qlGlowSweep 22s ease-in-out infinite alternate;
     }
 
     .matrix-rain {
@@ -163,6 +181,21 @@
     @keyframes matrixFall {
       from { transform: translateY(-15vh); }
       to { transform: translateY(125vh); }
+    }
+
+    @keyframes qlAuroraDrift {
+      0% { background-position: 0% 0%, 100% 0%, 0% 0%; }
+      100% { background-position: 10% 8%, 88% 18%, 100% 100%; }
+    }
+
+    @keyframes qlGridShift {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(0, 24px, 0); }
+    }
+
+    @keyframes qlGlowSweep {
+      0% { transform: translate3d(-2%, -1%, 0) scale(1); }
+      100% { transform: translate3d(3%, 2%, 0) scale(1.08); }
     }
 
     main {
@@ -657,6 +690,14 @@
       background: linear-gradient(145deg, rgba(4, 24, 14, 0.9), rgba(1, 8, 5, 0.86));
     }
 
+    .easy-header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
     .easy-header h1 {
       font-size: clamp(2.35rem, 11vw, 4.6rem);
     }
@@ -666,12 +707,20 @@
       margin-top: 6px;
     }
 
-    .easy-header button {
+    .easy-header button,
+    .easy-header .button {
       min-width: 116px;
       background: var(--accent);
       color: #001507;
       border-color: var(--accent);
       text-shadow: none;
+    }
+
+    .easy-header .button {
+      background: rgba(0, 12, 6, 0.86);
+      color: var(--ink);
+      border-color: var(--line);
+      text-shadow: 0 0 8px rgba(60, 255, 129, 0.25);
     }
 
     .easy-workspace {
@@ -917,7 +966,8 @@
       .easy-app { width: min(calc(100% - 14px), 560px); }
       .easy-header { flex-direction: row; align-items: center; }
       .easy-header h1 { font-size: clamp(1.7rem, 9vw, 2.7rem); }
-      .easy-header button { min-width: 92px; }
+      .easy-header button,
+      .easy-header .button { min-width: 92px; }
       .easy-panel { border-radius: 18px; padding: 10px; }
       .message-card textarea { min-height: 150px; }
       .easy-actions { grid-template-columns: 1fr; }
@@ -930,6 +980,13 @@
       .easy-header h1 {
         max-width: 100%;
         overflow-wrap: anywhere;
+      }
+      .easy-header-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+      .easy-header-actions > * {
+        flex: 1 1 0;
       }
       .dashboard-grid { grid-template-columns: 1fr; }
       .advanced-actions { grid-template-columns: 1fr 1fr; }
@@ -955,7 +1012,10 @@
         <h1>QwertyLock Private Chat</h1>
         <p class="local-note">slendystuff.com/r</p>
       </div>
-      <button id="startConversationBtn" type="button">Start</button>
+      <div class="easy-header-actions">
+        <a class="button" href="/index.html">Back to SlendyStuff</a>
+        <button id="startConversationBtn" type="button">Start</button>
+      </div>
     </header>
 
     <p class="status" id="status" role="status" aria-live="polite"></p>
