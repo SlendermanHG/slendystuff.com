@@ -45,6 +45,15 @@ function initNav() {
 function initReveal() {
   const targets = document.querySelectorAll("[data-reveal]");
   if (!targets.length) return;
+  const revealAll = () => {
+    targets.forEach((target) => target.classList.add("is-visible"));
+  };
+
+  if (!("IntersectionObserver" in window)) {
+    revealAll();
+    return;
+  }
+
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
@@ -55,6 +64,7 @@ function initReveal() {
   }, { threshold: 0.15 });
 
   targets.forEach((target) => observer.observe(target));
+  window.setTimeout(revealAll, 1400);
 }
 
 function initRotator() {
