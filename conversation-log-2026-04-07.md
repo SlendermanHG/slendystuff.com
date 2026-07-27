@@ -302,3 +302,11 @@ Implications:
 - Preserved the existing software-page license CTA change and the planned launch pricing card already added by the user, while fixing the pricing separators to plain ASCII.
 - Updated `public/site.js` rotator messaging so the homepage motion copy matches the revised customer-facing tone.
 - Verified the refreshed home, services, and software pages locally with headless browser screenshots before preparing the live deploy.
+
+## 2026-07-27 Background Asset Fix
+
+- User reported that the background images did not show on the refreshed site.
+- Confirmed the design was still relying on gradient-only layers rather than real image assets.
+- Added `public/assets/ambient-field.svg` and `public/assets/signal-grid.svg` as actual background artwork.
+- Updated `public/styles.css` so the site background now uses those SVG assets behind the existing motion and color layers.
+- Re-verified the homepage locally to confirm the new background image layers render visibly.
