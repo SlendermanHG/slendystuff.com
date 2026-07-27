@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1400" role="img" aria-label="Blue signal grid background">
+  <defs>
+    <pattern id="grid" width="96" height="96" patternUnits="userSpaceOnUse">
+      <path d="M96 0H0V96" fill="none" stroke="#62d8ff" stroke-opacity=".08" stroke-width="1"/>
+    </pattern>
+    <pattern id="diag" width="72" height="72" patternUnits="userSpaceOnUse" patternTransform="rotate(18)">
+      <path d="M0 36H72" stroke="#5f8cff" stroke-opacity=".055" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1800" height="1400" fill="url(#grid)"/>
+  <rect width="1800" height="1400" fill="url(#diag)"/>
+</svg>
