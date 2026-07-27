@@ -293,3 +293,12 @@ Implications:
 - Removed reviews links from the main public navigation and the homepage footer, and removed the reviews URL from `public/sitemap.xml`.
 - Added a `Leave a Review` call-to-action section to `public/about.html` so the first real review can be collected directly.
 - Replaced `public/reviews.html` with a temporary noindex redirect/holding page that points visitors to `about.html#leave-review` until there is at least one real review ready to publish.
+
+## 2026-07-27 Customer-Facing Refresh Continuation
+
+- User requested one more overhaul focused on customer-facing wording, fuller use of the page width, and pink accent treatment while keeping the underlying site structure.
+- Reworked the shared visual system in `public/styles.css` toward a wider layout, brighter pink signal accents, animated ambient background motion, and more open section spacing.
+- Rewrote the public copy on `public/index.html`, `public/about.html`, `public/services.html`, `public/contact.html`, `public/community.html`, and `public/software.html` so the site speaks to prospective clients instead of site ownership or internal planning.
+- Preserved the existing software-page license CTA change and the planned launch pricing card already added by the user, while fixing the pricing separators to plain ASCII.
+- Updated `public/site.js` rotator messaging so the homepage motion copy matches the revised customer-facing tone.
+- Verified the refreshed home, services, and software pages locally with headless browser screenshots before preparing the live deploy.
