@@ -171,6 +171,29 @@ function initYear() {
   });
 }
 
+function initSoftwareCheckout() {
+  if (pageName !== "software") return;
+  const buttons = document.querySelectorAll(".software-buy");
+  const status = document.querySelector("#software-checkout-status");
+  buttons.forEach((button) => button.addEventListener("click", async () => {
+    buttons.forEach((item) => { item.disabled = true; });
+    if (status) status.textContent = "Opening secure Stripe checkout…";
+    try {
+      const response = await fetch("/license-api/checkout/session", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ productId: "point-of-sale", planId: button.dataset.plan })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.url) throw new Error(result.error || "Checkout is temporarily unavailable.");
+      window.location.assign(result.url);
+    } catch (error) {
+      if (status) status.textContent = error.message;
+      buttons.forEach((item) => { item.disabled = false; });
+    }
+  }));
+}
+
 fetchStaticConfig()
   .then((config) => {
     setSiteConfig(config);
@@ -180,6 +203,8 @@ fetchStaticConfig()
     setSiteConfig(defaultSiteConfig);
     applySiteConfig();
   });
+
+initSoftwareCheckout();
 
 initNav();
 initReveal();
