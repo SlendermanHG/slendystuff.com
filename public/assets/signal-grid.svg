@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1400" role="img" aria-label="Signal grid background">
+  <defs>
+    <pattern id="grid" width="96" height="96" patternUnits="userSpaceOnUse">
+      <path d="M96 0H0V96" fill="none" stroke="#ffb0cb" stroke-opacity="0.12" stroke-width="1"/>
+    </pattern>
+    <pattern id="diag" width="72" height="72" patternUnits="userSpaceOnUse" patternTransform="rotate(18)">
+      <rect width="72" height="72" fill="none"/>
+      <path d="M0 36H72" stroke="#ff78aa" stroke-opacity="0.08" stroke-width="1"/>
+    </pattern>
+    <radialGradient id="maskGlow" cx="50%" cy="40%" r="58%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.72"/>
+      <stop offset="52%" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1800" height="1400" fill="url(#grid)"/>
+  <rect width="1800" height="1400" fill="url(#diag)" opacity="0.48"/>
+  <ellipse cx="900" cy="560" rx="920" ry="620" fill="url(#maskGlow)"/>
+</svg>

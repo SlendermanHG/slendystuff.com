@@ -38,11 +38,14 @@ body {
   color: var(--ink);
   font: 16px/1.72 var(--font-ui);
   background:
+    url("/assets/ambient-field.svg"),
     radial-gradient(circle at 10% 10%, rgba(255, 156, 188, 0.2), transparent 0 24rem),
     radial-gradient(circle at 84% 12%, rgba(141, 211, 204, 0.13), transparent 0 28rem),
     radial-gradient(circle at 58% 42%, rgba(200, 134, 118, 0.1), transparent 0 34rem),
     linear-gradient(180deg, #141722 0%, #0a0d15 44%, #06070d 100%);
-  background-size: 132% 132%;
+  background-size: cover, 132% 132%;
+  background-position: center top, 0% 0%;
+  background-repeat: no-repeat, no-repeat;
   animation: ambientDrift 28s ease-in-out infinite alternate;
   overflow-x: hidden;
   position: relative;
@@ -59,9 +62,12 @@ body::after {
 
 body::before {
   background:
+    url("/assets/signal-grid.svg"),
     linear-gradient(rgba(255, 171, 200, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 171, 200, 0.035) 1px, transparent 1px);
-  background-size: 96px 96px;
+  background-size: cover, 96px 96px, 96px 96px;
+  background-position: center top, 0 0, 0 0;
+  background-repeat: no-repeat, repeat, repeat;
   mask-image: radial-gradient(circle at center, black 18%, transparent 82%);
   opacity: 0.5;
 }
@@ -84,10 +90,10 @@ body::after {
 
 @keyframes ambientDrift {
   0% {
-    background-position: 0% 0%, 100% 0%, 50% 30%, 0% 0%;
+    background-position: center top, 0% 0%, 100% 0%, 50% 30%, 0% 0%;
   }
   100% {
-    background-position: 8% 5%, 92% 18%, 56% 42%, 0% 100%;
+    background-position: center top, 8% 5%, 92% 18%, 56% 42%, 0% 100%;
   }
 }
 
