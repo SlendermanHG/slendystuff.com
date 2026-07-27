@@ -179,7 +179,7 @@ function initSoftwareCheckout() {
     buttons.forEach((item) => { item.disabled = true; });
     if (status) status.textContent = "Opening secure Stripe checkout…";
     try {
-      const response = await fetch("/license-api/checkout/session", {
+      const response = await fetch("https://api.slendystuff.com/checkout/session", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ productId: "point-of-sale", planId: button.dataset.plan })
