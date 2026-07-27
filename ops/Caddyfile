@@ -7,5 +7,9 @@
 }
 
 {$SITE_DOMAIN} {
-	reverse_proxy 127.0.0.1:4173
+    handle_path /license-api/* {
+        reverse_proxy 127.0.0.1:4317
+    }
+
+    reverse_proxy 127.0.0.1:4173
 }

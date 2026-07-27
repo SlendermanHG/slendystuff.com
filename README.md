@@ -59,6 +59,22 @@ If you deploy on Render and want config changes to survive restarts and deploys,
 - any Twitch or YouTube links that should change
 - set `ADMIN_PASSWORD` in the host environment
 
+## Licensing
+
+The separate `G:\AI ZONE\Licensing` workspace contains the private SLendyStuff
+License Center and licensing API. The public customer page is
+[`public/license.html`](./public/license.html). In production, run the
+licensing service on port `4317` beside this site and use the Caddy routes in
+[`ops/Caddyfile`](./ops/Caddyfile):
+
+- `/license-api/*` forwards to the licensing API.
+
+The private generator stays local or behind a separate admin VPN; it is not
+proxied through the public website.
+
+The public page only verifies a purchase key. Never expose the generator,
+admin token, GitHub token, or signing private key to customers.
+
 ## Runtime Files
 
 - [`server.js`](./server.js)

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'">
+  <title>Register Software License | SlendyStuff</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/license.css">
+</head>
+<body data-page="license">
+  <header class="site-header"><div class="site-header-inner">
+    <a class="brand-lockup" href="/index.html" aria-label="SlendyStuff home"><span class="brand-mark" aria-hidden="true"></span><span class="brand-copy"><strong>SlendyStuff</strong><span>custom tools, software, and useful things</span></span></a>
+    <nav class="site-nav" data-nav><a href="/index.html">Home</a><a href="/software.html">Software</a><a href="/contact.html">Contact</a></nav>
+    <div class="header-actions"><a class="chip-link" href="/software.html">Back to software</a><button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle navigation">+</button></div>
+  </div></header>
+  <main><section class="page-hero"><div class="page-shell"><article class="hero-panel license-hero"><div class="eyebrow">Customer registration</div><h1>Register your SlendyStuff software.</h1><p>Tell us who is using the software, choose what you purchased, and enter the key from your purchase email.</p></article></div></section>
+    <section class="section"><div class="page-shell license-layout"><article class="license-card"><h2>Register a purchase key</h2><p class="muted">Registration connects your key to your name or business and the product you purchased.</p><form id="license-form"><label for="product-id">Product purchased</label><select id="product-id" name="productId" required><option value="">Choose a product</option><option value="qwertylock">QwertyLock Private Chat — Free</option><option value="point-of-sale">Point of Sale</option><option value="event-organizer">Event Organizer</option><option value="custom">Custom SlendyStuff Software</option></select><div id="product-note" class="product-note" aria-live="polite"></div><div id="registration-fields"><label for="full-name">Your name</label><input id="full-name" name="fullName" autocomplete="name" placeholder="Your name"><label for="business-name">Business name</label><input id="business-name" name="businessName" autocomplete="organization" placeholder="Optional business name"><label for="license-key">Purchase key</label><input id="license-key" name="key" autocomplete="off" spellcheck="false" placeholder="SLENDY-..." required><button class="button primary" type="submit">Register key</button></div></form><div id="license-result" class="license-result" aria-live="polite"></div></article><aside class="license-side"><h3>Before you register</h3><p>Use the exact product and key from your purchase. QwertyLock is free and does not need a key. Custom software is handled separately.</p><a class="button" href="/contact.html">Contact SlendyStuff</a></aside></div></section>
+  </main><footer class="footer"><div class="page-shell footer-shell"><div class="brand-copy"><strong>SlendyStuff</strong><span>customer software access</span></div></div></footer>
+  <script src="/site.js"></script><script src="/license.js"></script>
+</body>
+</html>
