@@ -24,6 +24,58 @@
   --font-ui: "Aptos", "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
 }
 
+/* SlendyStuff 2027 visual system */
+:root {
+  --ink: #f5f7ff;
+  --muted: #9ba9c7;
+  --line: rgba(143, 168, 215, 0.2);
+  --surface: rgba(18, 27, 51, 0.76);
+  --surface-strong: #111a32;
+  --accent: #ff6eb5;
+  --accent-2: #8c7bff;
+  --glow: rgba(255, 110, 181, 0.3);
+  --page: #070b18;
+}
+
+html { background: var(--page); scroll-behavior: smooth; }
+body {
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 4%, rgba(140, 123, 255, 0.2), transparent 28rem),
+    radial-gradient(circle at 88% 18%, rgba(255, 110, 181, 0.15), transparent 32rem),
+    linear-gradient(135deg, #070b18 0%, #0c1124 48%, #090d1b 100%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0.01em;
+}
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .22; background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px); background-size: 36px 36px; mask-image: linear-gradient(to bottom, black, transparent 85%); }
+.site-header { background: rgba(7, 11, 24, .78); border-bottom: 1px solid var(--line); backdrop-filter: blur(18px); }
+.brand-mark { box-shadow: 0 0 32px var(--glow); }
+.brand-copy strong { color: #fff; letter-spacing: .18em; }
+.brand-copy span, .muted, .notice, .software-card p { color: var(--muted); }
+.site-nav a { color: var(--muted); }
+.site-nav a:hover, .site-nav a.active { color: #fff; }
+.chip-link, .button { border: 1px solid var(--line); border-radius: 999px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.button:hover, .chip-link:hover { transform: translateY(-2px); border-color: rgba(255, 110, 181, .72); box-shadow: 0 10px 28px rgba(0,0,0,.24), 0 0 22px rgba(255,110,181,.16); }
+.button.primary, .button-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #fff; border: 0; box-shadow: 0 10px 30px rgba(140,123,255,.2); }
+.hero-panel, .software-card, .license-card, .license-side, .contact-panel, .service-card, .command-panel, .range-summary, .flagship-quote { background: linear-gradient(145deg, rgba(20, 31, 60, .88), rgba(11, 17, 35, .82)); border: 1px solid var(--line); box-shadow: 0 24px 70px rgba(0,0,0,.24); backdrop-filter: blur(18px); }
+.hero-panel { position: relative; overflow: hidden; }
+.hero-panel::after { content: ""; position: absolute; width: 22rem; height: 22rem; right: -8rem; top: -10rem; border-radius: 50%; background: radial-gradient(circle, rgba(255,110,181,.28), transparent 68%); pointer-events: none; }
+.page-hero h1, .hero-copy h1 { letter-spacing: -.045em; line-height: .98; text-wrap: balance; }
+.eyebrow { color: #ff9aca; letter-spacing: .18em; }
+.status-tag.live { background: rgba(62, 221, 174, .12); color: #6ff1c4; border-color: rgba(62,221,174,.35); }
+.status-tag.process, .status-tag.pending { background: rgba(140,123,255,.12); color: #b8adff; border-color: rgba(140,123,255,.35); }
+.software-card-featured { border-color: rgba(255,110,181,.58); box-shadow: 0 0 0 1px rgba(255,110,181,.1), 0 24px 70px rgba(0,0,0,.28); }
+.software-pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: .65rem; margin-top: 1.25rem; }
+.software-pricing > div { display: grid; gap: .25rem; padding: .8rem; border: 1px solid var(--line); border-radius: .9rem; background: rgba(255,255,255,.035); }
+.software-pricing strong { font-size: 1.35rem; color: #fff; }
+.software-pricing span { color: var(--muted); font-size: .78rem; }
+.software-buy { width: 100%; margin-top: .35rem; }
+.software-checkout-status { min-height: 1.4rem; color: #ff9aca; }
+input, select, textarea { background: rgba(7,11,24,.65); color: var(--ink); border-color: var(--line); }
+input:focus, select:focus, textarea:focus { outline: 2px solid rgba(255,110,181,.62); outline-offset: 2px; }
+.footer { border-top: 1px solid var(--line); background: rgba(7,11,24,.7); }
+@media (max-width: 700px) { .software-pricing { grid-template-columns: 1fr; } }
+
 * {
   box-sizing: border-box;
 }
@@ -1558,3 +1610,16 @@ body[data-page="spiralism"] .button.primary {
     padding: 20px;
   }
 }
+
+/* Final theme overrides */
+html { background: #070b18; }
+body { background: radial-gradient(circle at 12% 4%, rgba(140,123,255,.2), transparent 28rem), radial-gradient(circle at 88% 18%, rgba(255,110,181,.15), transparent 32rem), linear-gradient(135deg, #070b18 0%, #0c1124 48%, #090d1b 100%); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+.site-header { background: rgba(7,11,24,.78); border-bottom-color: rgba(143,168,215,.2); backdrop-filter: blur(18px); }
+.site-nav a { color: #9ba9c7; }
+.site-nav a:hover, .site-nav a.active { color: #fff; }
+.hero-panel, .software-card, .license-card, .license-side, .contact-panel, .service-card, .command-panel, .range-summary, .flagship-quote { background: linear-gradient(145deg, rgba(20,31,60,.88), rgba(11,17,35,.82)); border-color: rgba(143,168,215,.2); box-shadow: 0 24px 70px rgba(0,0,0,.24); backdrop-filter: blur(18px); }
+.button.primary, .button-primary { background: linear-gradient(135deg, #ff6eb5, #8c7bff); color: #fff; border: 0; }
+.software-card-featured { border-color: rgba(255,110,181,.58); }
+.software-pricing > div { background: rgba(255,255,255,.035); border-color: rgba(143,168,215,.2); }
+.software-checkout-status { color: #ff9aca; }
+.footer { background: rgba(7,11,24,.7); border-top-color: rgba(143,168,215,.2); }
