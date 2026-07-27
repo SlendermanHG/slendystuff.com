@@ -1612,14 +1612,21 @@ body[data-page="spiralism"] .button.primary {
 }
 
 /* Final theme overrides */
+:root { --pink: #5f8cff; --pink-strong: #b7c9ff; --pink-soft: rgba(95,140,255,.18); --line-strong: rgba(98,216,255,.46); }
 html { background: #070b18; }
-body { background: radial-gradient(circle at 12% 4%, rgba(140,123,255,.2), transparent 28rem), radial-gradient(circle at 88% 18%, rgba(255,110,181,.15), transparent 32rem), linear-gradient(135deg, #070b18 0%, #0c1124 48%, #090d1b 100%); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+body { background-image: url('/assets/ambient-field.svg'), url('/assets/signal-grid.svg'), radial-gradient(circle at 12% 4%, rgba(89,130,255,.2), transparent 28rem), linear-gradient(135deg, #070b18 0%, #0c1124 48%, #090d1b 100%); background-position: center top, center top, center, center; background-size: cover, 720px 720px, auto, auto; background-attachment: fixed; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
 .site-header { background: rgba(7,11,24,.78); border-bottom-color: rgba(143,168,215,.2); backdrop-filter: blur(18px); }
+.hero-panel::after { background: radial-gradient(circle, rgba(98,216,255,.24), transparent 68%); }
 .site-nav a { color: #9ba9c7; }
 .site-nav a:hover, .site-nav a.active { color: #fff; }
 .hero-panel, .software-card, .license-card, .license-side, .contact-panel, .service-card, .command-panel, .range-summary, .flagship-quote { background: linear-gradient(145deg, rgba(20,31,60,.88), rgba(11,17,35,.82)); border-color: rgba(143,168,215,.2); box-shadow: 0 24px 70px rgba(0,0,0,.24); backdrop-filter: blur(18px); }
-.button.primary, .button-primary { background: linear-gradient(135deg, #ff6eb5, #8c7bff); color: #fff; border: 0; }
-.software-card-featured { border-color: rgba(255,110,181,.58); }
+.button.primary, .button-primary { background: linear-gradient(135deg, #5f8cff, #62d8ff); color: #fff; border: 0; }
+.button:hover, .chip-link:hover { border-color: rgba(98,216,255,.72); box-shadow: 0 10px 28px rgba(0,0,0,.24), 0 0 22px rgba(98,216,255,.16); }
+.software-card-featured { border-color: rgba(98,216,255,.58); }
+.status-tag.process, .status-tag.pending { background: rgba(95,140,255,.12); color: #b7c9ff; border-color: rgba(95,140,255,.35); }
+.eyebrow { color: #8edfff; }
+.software-checkout-status { color: #8edfff; }
+.inline-actions .button:not(.primary) { color: #b7c9ff; border-color: rgba(95,140,255,.38); }
+.inline-actions .button:not(.primary):hover { border-color: rgba(98,216,255,.72); }
 .software-pricing > div { background: rgba(255,255,255,.035); border-color: rgba(143,168,215,.2); }
-.software-checkout-status { color: #ff9aca; }
 .footer { background: rgba(7,11,24,.7); border-top-color: rgba(143,168,215,.2); }
