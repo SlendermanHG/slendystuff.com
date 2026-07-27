@@ -1615,6 +1615,8 @@ body[data-page="spiralism"] .button.primary {
 :root { --pink: #5f8cff; --pink-strong: #b7c9ff; --pink-soft: rgba(95,140,255,.18); --line-strong: rgba(98,216,255,.46); }
 html { background: #070b18; }
 body { background-image: url('/assets/ambient-field-blue.svg'), url('/assets/signal-grid-blue.svg'), radial-gradient(circle at 12% 4%, rgba(89,130,255,.2), transparent 28rem), linear-gradient(135deg, #070b18 0%, #0c1124 48%, #090d1b 100%); background-position: center top, center top, center, center; background-size: cover, 720px 720px, auto, auto; background-attachment: fixed; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+body::before { background-image: url('/assets/signal-grid-blue.svg'), linear-gradient(rgba(98,216,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(98,216,255,.02) 1px, transparent 1px); }
+body::after { background: radial-gradient(circle at 22% 28%, rgba(255,255,255,.05), transparent 0 18rem), radial-gradient(circle at 72% 34%, rgba(98,216,255,.08), transparent 0 18rem), radial-gradient(circle at 84% 74%, rgba(140,123,255,.08), transparent 0 20rem), repeating-linear-gradient(118deg, transparent 0 34px, rgba(98,216,255,.02) 34px 35px, transparent 35px 68px); }
 .site-header { background: rgba(7,11,24,.78); border-bottom-color: rgba(143,168,215,.2); backdrop-filter: blur(18px); }
 .hero-panel::after { background: radial-gradient(circle, rgba(98,216,255,.24), transparent 68%); }
 .site-nav a { color: #9ba9c7; }
@@ -1638,3 +1640,16 @@ body[data-page="software"] .software-card::after,
 body[data-page="software"] .software-grid,
 body[data-page="software"] .footer-shell { background: transparent !important; border: 0 !important; box-shadow: none !important; backdrop-filter: none !important; }
 body[data-page="software"] .software-pricing > div { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: .4rem 0; }
+
+/* Keep page introductions compact and readable across every section. */
+.page-hero .hero-panel {
+  max-width: 1160px;
+  margin-inline: auto;
+  padding: clamp(28px, 4vw, 54px) clamp(24px, 5vw, 64px) clamp(30px, 4vw, 48px) !important;
+}
+.page-hero h1 {
+  max-width: 20ch;
+  font-size: clamp(3rem, 5.8vw, 5.4rem);
+  line-height: .94;
+}
+body[data-page="software"] .page-hero .hero-panel { max-width: 1100px; }
