@@ -71,10 +71,10 @@ function initRotator() {
   const node = document.querySelector("[data-rotate]");
   if (!node) return;
   const phrases = [
-    "Remote support for people who need the problem handled without a runaround.",
-    "Website rebuilds and maintenance that stay practical after launch.",
-    "Custom bots and workflows for teams that have outgrown generic tools.",
-    "Technical help that leaves you clearer than you were before."
+    "Fast, practical support when something important is not working the way it should.",
+    "Modern websites and rebuilds that feel better to use and easier to trust.",
+    "Custom systems and workflow tools built around the way your operation actually runs.",
+    "Technical help that leaves you with a clearer path forward, not more confusion."
   ];
   let index = 0;
   setInterval(() => {
@@ -130,7 +130,6 @@ function initMailtoForms() {
 }
 
 function applySiteConfig(config = getSiteConfig()) {
-
   document.querySelectorAll("[data-config-link]").forEach((node) => {
     const key = node.dataset.configLink;
     const value = config[key];
