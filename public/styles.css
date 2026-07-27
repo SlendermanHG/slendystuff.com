@@ -1631,3 +1631,6 @@ body { background-image: url('/assets/ambient-field.svg'), url('/assets/signal-g
 .software-pricing > div { background: rgba(255,255,255,.035); border-color: rgba(143,168,215,.2); }
 .footer { background: rgba(7,11,24,.7); border-top-color: rgba(143,168,215,.2); }
 .software-card:not(.software-card-featured) { background: transparent; border-color: transparent; box-shadow: none; backdrop-filter: none; }
+body[data-page="software"] .software-card,
+body[data-page="software"] .software-card-featured { background: transparent !important; border: 0 !important; box-shadow: none !important; backdrop-filter: none !important; }
+body[data-page="software"] .software-pricing > div { background: transparent; border: 0; padding: .4rem 0; }
