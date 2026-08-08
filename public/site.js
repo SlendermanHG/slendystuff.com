@@ -171,7 +171,9 @@ function initYear() {
   });
 }
 
-function initSoftwareCheckout() {
+/* function initSoftwareCheckout() {
+  return;
+//
   if (pageName !== "software") return;
   const buttons = document.querySelectorAll(".software-buy");
   const status = document.querySelector("#software-checkout-status");
@@ -192,7 +194,7 @@ function initSoftwareCheckout() {
       buttons.forEach((item) => { item.disabled = false; });
     }
   }));
-}
+*/
 
 fetchStaticConfig()
   .then((config) => {
@@ -203,8 +205,6 @@ fetchStaticConfig()
     setSiteConfig(defaultSiteConfig);
     applySiteConfig();
   });
-
-initSoftwareCheckout();
 
 initNav();
 initReveal();
