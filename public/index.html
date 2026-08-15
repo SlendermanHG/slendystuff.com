@@ -12,17 +12,15 @@
     .maintenance-shell { width: min(100% - 40px, 980px); }
     .maintenance-panel { position: relative; overflow: hidden; padding: clamp(28px, 6vw, 72px); border: 1px solid rgba(143,168,215,.28); border-radius: 32px; background: linear-gradient(145deg, rgba(20,31,60,.94), rgba(11,17,35,.9)); box-shadow: 0 30px 100px rgba(0,0,0,.46); }
     .maintenance-panel::after { content: ""; position: absolute; width: 26rem; height: 26rem; right: -10rem; top: -12rem; border-radius: 50%; background: radial-gradient(circle, rgba(255,110,181,.28), transparent 68%); pointer-events: none; }
-    .maintenance-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 56px; }
+    .maintenance-brand { display: flex; align-items: center; margin-bottom: 42px; }
     .maintenance-logo { display: block; width: min(390px, 72vw); height: auto; filter: drop-shadow(0 14px 30px rgba(255, 47, 146, .18)); }
-    .maintenance-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.2fr .8fr; gap: 42px; align-items: end; }
-    .maintenance-page h1 { max-width: 10ch; margin: 0; color: #fff; font-size: clamp(3.2rem, 8vw, 7.2rem); line-height: .9; letter-spacing: -.06em; }
-    .maintenance-lead { max-width: 52ch; margin: 24px 0 0; color: #d7deef; font-size: 1.15rem; }
+    .maintenance-grid { position: relative; z-index: 1; max-width: 720px; }
+    .maintenance-page h1 { max-width: 12ch; margin: 0; color: #fff; font-size: clamp(3rem, 7vw, 6rem); line-height: .94; letter-spacing: -.06em; }
+    .maintenance-lead { max-width: 54ch; margin: 24px 0 0; color: #d7deef; font-size: 1.15rem; }
     .maintenance-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
-    .maintenance-note { padding: 22px; border: 1px solid rgba(255,110,181,.24); border-radius: 22px; background: rgba(7,11,24,.48); }
-    .maintenance-note code { display: block; margin-bottom: 14px; color: #ff9aca; }
-    .maintenance-note strong { display: block; color: #fff; font-size: 1.1rem; }
-    .maintenance-note p { margin: 10px 0 0; color: #9ba9c7; }
-    .maintenance-command { position: relative; z-index: 1; margin-top: 24px; }
+    .maintenance-note { max-width: 54ch; margin-top: 34px; padding: 18px 20px; border-left: 2px solid #ff2f92; color: #c5cde0; background: rgba(7,11,24,.35); }
+    .maintenance-note strong { display: block; color: #fff; font-size: 1rem; }
+    .maintenance-note p { margin: 7px 0 0; color: #9ba9c7; }
     .maintenance-footer { margin-top: 28px; color: #9ba9c7; font-size: .9rem; }
     @media (max-width: 760px) { .maintenance-grid { grid-template-columns: 1fr; } .maintenance-brand { margin-bottom: 36px; } }
   </style>
@@ -36,24 +34,19 @@
         </div>
         <div class="maintenance-grid">
           <div>
-            <div class="eyebrow">Signal refresh in progress</div>
-            <h1 id="maintenance-title">The next version is taking shape.</h1>
-            <p class="maintenance-lead">SlendyStuff is reworking its public home base into a clearer, sharper place for practical technical support, customer-ready websites, and secure tools.</p>
+            <div class="eyebrow">A small site refresh</div>
+            <h1 id="maintenance-title">SlendyStuff is getting a little work done.</h1>
+            <p class="maintenance-lead">I’m taking the site offline for a bit while I clean things up and make room for what’s next. The usual support, website, and systems work is still here.</p>
             <div class="maintenance-actions">
               <a class="button primary" href="mailto:support@slendystuff.com">Email support</a>
-              <a class="button" href="https://twitch.tv/slendermanhg" target="_blank" rel="noreferrer">Follow the signal</a>
             </div>
           </div>
-          <aside class="maintenance-note slink-intro">
-            <div class="slink-intro-sprite" role="img" aria-label="Slink, the SlendyStuff fox"></div>
-            <div><div class="eyebrow">Meet Slink</div><strong>The signal is being tuned.</strong><p>Existing work is backed up while SlendyStuff gets a sharper public home. New support, websites, and secure tools are coming through soon.</p></div>
+          <aside class="maintenance-note">
+            <strong>Need something in the meantime?</strong>
+            <p>Send a note to support@slendystuff.com and I’ll get back to you.</p>
           </aside>
         </div>
-        <section class="command-panel maintenance-command" aria-label="SlendyStuff update status">
-          <div class="terminal-head"><div class="terminal-dots" aria-hidden="true"><span></span><span></span><span></span></div><div class="terminal-title">slendystuff.rebrand.status</div></div>
-          <div class="command-list"><div><span>&gt;</span> preserve_the_signal --steady</div><div><span>&gt;</span> refresh_the_home --clear --customer-ready</div><div><span>&gt;</span> return_online --soon</div></div>
-        </section>
-        <p class="maintenance-footer">For urgent support, email support@slendystuff.com.</p>
+        <p class="maintenance-footer">Thanks for your patience while I get it into better shape.</p>
       </section>
     </div>
   </main>
