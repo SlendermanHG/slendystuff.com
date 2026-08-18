@@ -4,23 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="SlendyStuff is taking a short pause while the site gets cleaned up. Support is still available by email.">
-  <title>SlendyStuff | Site Refresh</title>
+  <meta name="description" content="SlendyStuff is refreshing its public site. Support and new systems are on the way.">
+  <title>SlendyStuff | Signal Refresh In Progress</title>
   <link rel="stylesheet" href="/styles.css?v=maintenance-20260814">
   <style>
     .maintenance-page { min-height: 100vh; display: grid; place-items: center; padding: 32px 0; }
     .maintenance-shell { width: min(100% - 40px, 980px); }
     .maintenance-panel { position: relative; overflow: hidden; padding: clamp(28px, 6vw, 72px); border: 1px solid rgba(143,168,215,.28); border-radius: 32px; background: linear-gradient(145deg, rgba(20,31,60,.94), rgba(11,17,35,.9)); box-shadow: 0 30px 100px rgba(0,0,0,.46); }
     .maintenance-panel::after { content: ""; position: absolute; width: 26rem; height: 26rem; right: -10rem; top: -12rem; border-radius: 50%; background: radial-gradient(circle, rgba(255,110,181,.28), transparent 68%); pointer-events: none; }
-    .maintenance-brand { display: flex; align-items: center; margin-bottom: 42px; }
-    .maintenance-logo { display: block; width: min(390px, 72vw); height: auto; filter: drop-shadow(0 14px 30px rgba(255, 47, 146, .18)); }
-    .maintenance-grid { position: relative; z-index: 1; max-width: 720px; }
-    .maintenance-page h1 { max-width: 12ch; margin: 0; color: #fff; font-size: clamp(3rem, 7vw, 6rem); line-height: .94; letter-spacing: -.06em; }
-    .maintenance-lead { max-width: 54ch; margin: 24px 0 0; color: #d7deef; font-size: 1.15rem; }
+    .maintenance-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 56px; }
+    .maintenance-brand-mark { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,110,181,.5); background: radial-gradient(circle, rgba(255,110,181,.9) 0 8%, transparent 10%), conic-gradient(#8c7bff, #ff6eb5, #8dd3cc, #8c7bff); box-shadow: 0 0 30px rgba(255,110,181,.34); }
+    .maintenance-brand strong { display: block; color: #fff; letter-spacing: .18em; font-size: .92rem; }
+    .maintenance-brand span { display: block; color: #9ba9c7; font-size: .85rem; margin-top: 4px; }
+    .maintenance-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1.2fr .8fr; gap: 42px; align-items: end; }
+    .maintenance-page h1 { max-width: 10ch; margin: 0; color: #fff; font-size: clamp(3.2rem, 8vw, 7.2rem); line-height: .9; letter-spacing: -.06em; }
+    .maintenance-lead { max-width: 52ch; margin: 24px 0 0; color: #d7deef; font-size: 1.15rem; }
     .maintenance-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
-    .maintenance-note { max-width: 54ch; margin-top: 34px; padding: 18px 20px; border-left: 2px solid #ff2f92; color: #c5cde0; background: rgba(7,11,24,.35); }
-    .maintenance-note strong { display: block; color: #fff; font-size: 1rem; }
-    .maintenance-note p { margin: 7px 0 0; color: #9ba9c7; }
+    .maintenance-note { padding: 22px; border: 1px solid rgba(255,110,181,.24); border-radius: 22px; background: rgba(7,11,24,.48); }
+    .maintenance-note code { display: block; margin-bottom: 14px; color: #ff9aca; }
+    .maintenance-note strong { display: block; color: #fff; font-size: 1.1rem; }
+    .maintenance-note p { margin: 10px 0 0; color: #9ba9c7; }
     .maintenance-footer { margin-top: 28px; color: #9ba9c7; font-size: .9rem; }
     @media (max-width: 760px) { .maintenance-grid { grid-template-columns: 1fr; } .maintenance-brand { margin-bottom: 36px; } }
   </style>
@@ -30,23 +33,26 @@
     <div class="maintenance-shell">
       <section class="maintenance-panel" aria-labelledby="maintenance-title">
         <div class="maintenance-brand">
-          <img class="maintenance-logo" src="/assets/ssbranding-logo-dark.png?v=20260815" alt="SlendyStuff fox and orbit logo">
+          <span class="maintenance-brand-mark" aria-hidden="true"></span>
+          <div><strong>SLENDYSTUFF</strong><span>support · websites · secure tools · systems</span></div>
         </div>
         <div class="maintenance-grid">
           <div>
-            <div class="eyebrow">A small site refresh</div>
-            <h1 id="maintenance-title">SlendyStuff is getting a little work done.</h1>
-            <p class="maintenance-lead">I’m taking the site offline for a bit while I clean things up and make room for what’s next. The usual support, website, and systems work is still here.</p>
+            <div class="eyebrow">Signal refresh in progress</div>
+            <h1 id="maintenance-title">The next version is taking shape.</h1>
+            <p class="maintenance-lead">SlendyStuff is reworking its public home base into a clearer, sharper place for practical technical support, customer-ready websites, and secure tools.</p>
             <div class="maintenance-actions">
               <a class="button primary" href="mailto:support@slendystuff.com">Email support</a>
+              <a class="button" href="https://twitch.tv/slendermanhg" target="_blank" rel="noreferrer">Follow the signal</a>
             </div>
           </div>
           <aside class="maintenance-note">
-            <strong>Need something in the meantime?</strong>
-            <p>Send a note to support@slendystuff.com and I’ll get back to you.</p>
+            <code>&gt; rebrand --steady --secure</code>
+            <strong>Short pause. Better systems soon.</strong>
+            <p>Existing work is being backed up while the site, hosting, and DNS move into a cleaner setup. Thanks for your patience while the signal gets tuned.</p>
           </aside>
         </div>
-        <p class="maintenance-footer">Thanks for your patience while I get it into better shape.</p>
+        <p class="maintenance-footer">For urgent support, email support@slendystuff.com.</p>
       </section>
     </div>
   </main>
