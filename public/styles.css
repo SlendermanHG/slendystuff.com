@@ -222,6 +222,15 @@ select {
   position: relative;
 }
 
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 0 28px rgba(255, 47, 146, 0.22);
+}
+
 .brand-mark::before,
 .brand-mark::after {
   content: "";
@@ -257,6 +266,25 @@ select {
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
+
+.brand-copy em {
+  color: var(--muted);
+  font-size: 0.7em;
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.brand-pet { width: 52px; height: 56px; overflow: hidden; flex: 0 0 auto; }
+.brand-pet-sprite { display: block; width: 52px; height: 56px; background: url('/assets/slink.webp') 0 0 / 416px 620px no-repeat; animation: slink-brand-idle 1.2s steps(8) infinite; }
+@keyframes slink-brand-idle { from { background-position: 0 0; } to { background-position: -364px 0; } }
+.slink-intro { display: flex; align-items: center; gap: 1.2rem; padding: 1.2rem 1.35rem; border: 1px solid rgba(255, 120, 170, .28); border-radius: 1rem; background: linear-gradient(145deg, rgba(31, 37, 72, .88), rgba(14, 19, 38, .82)); }
+.slink-intro-sprite { width: 96px; height: 104px; flex: 0 0 auto; background: url('/assets/slink.webp') 0 0 / 768px 1144px no-repeat; animation: slink-brand-large-idle 1.2s steps(8) infinite; }
+@keyframes slink-brand-large-idle { from { background-position: 0 0; } to { background-position: -672px 0; } }
+.slink-intro h2 { margin: .2rem 0 .45rem; }
+.slink-intro p { margin: 0; }
+@media (prefers-reduced-motion: reduce) { .brand-pet-sprite, .slink-intro-sprite { animation: none; } }
+@media (max-width: 640px) { .brand-pet { display: none; } .slink-intro { align-items: flex-start; } }
+@media (prefers-reduced-motion: reduce) { .brand-pet-sprite { animation: none; } }
 
 .software-card-featured { border-color: rgba(255, 120, 170, 0.72); }
 .software-pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; margin-top: 1.2rem; }
