@@ -7,8 +7,16 @@ const path = require('node:path');
 const repo = 'SlendermanHG/slendystuff.com';
 const tag = 'v0.5.1.0';
 const name = 'SlendyStuffClicker.exe';
-const hash = 'f0631675c1aed4e12b077376dadd90ef4a7787bbb1faaf2efdf893870aff1cc3';
-const size = 1007104;
+const hash = 'eb5770592c6a5c2a2c1c6044775e5b5db1e8a8942663c7fac226ae7a8d540dd5';
+const size = 1007616;
+
+function assembleApprovedBinary() {
+  const root = path.join(__dirname, 'releases', '0.5.1.0');
+  const binary = Buffer.concat([1,2,3,4].map(n => fs.readFileSync(path.join(root, name + '.part' + n))));
+  if (binary.length !== size || crypto.createHash('sha256').update(binary).digest('hex') !== hash) throw Error('Unapproved publication parts');
+  fs.writeFileSync(path.join(root, name), binary);
+  return binary;
+}
 
 function verifyAsset(asset) {
   if (!asset || asset.name !== name || asset.size !== size || asset.state !== 'uploaded' || asset.digest !== 'sha256:' + hash ||
@@ -59,5 +67,5 @@ async function publish(env = process.env, request = fetch) {
   console.log('Verified approved public preview: ' + release.html_url);
   return release;
 }
-module.exports = {publish, verifyAsset};
+module.exports = {publish, verifyAsset, assembleApprovedBinary};
 if (require.main === module) publish().catch(error => {console.error(error.message);process.exitCode = 1;});

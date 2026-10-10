@@ -24,14 +24,16 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+      - name: Assemble reviewed binary from publication parts
+        run: node -e "require('./ops/publish-approved-clicker.cjs').assembleApprovedBinary()"
       - name: Verify approved Windows binary
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $binary = Get-Item -LiteralPath 'ops/releases/0.5.1.0/SlendyStuffClicker.exe'
-          if ($binary.Length -ne 1007104) { throw 'Unexpected binary size' }
+          if ($binary.Length -ne 1007616) { throw 'Unexpected binary size' }
           $digest = (Get-FileHash -LiteralPath $binary.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($digest -ne 'f0631675c1aed4e12b077376dadd90ef4a7787bbb1faaf2efdf893870aff1cc3') { throw 'Unapproved binary' }
+          if ($digest -ne 'eb5770592c6a5c2a2c1c6044775e5b5db1e8a8942663c7fac226ae7a8d540dd5') { throw 'Unapproved binary' }
           $metadata = [Diagnostics.FileVersionInfo]::GetVersionInfo($binary.FullName)
           if ($metadata.FileVersion -ne '0.5.1.0' -or $metadata.ProductVersion -ne '0.5.1.0') { throw 'Version mismatch' }
           $assembly = [Reflection.AssemblyName]::GetAssemblyName($binary.FullName)

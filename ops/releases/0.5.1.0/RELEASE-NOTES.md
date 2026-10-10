@@ -22,7 +22,7 @@ Setup writes the companion mod to the chosen game folder and stores local pairin
 ## Current limitations
 
 - This EXE is **unsigned**. Windows may warn or block it; some devices offer no individual override. Do not disable Windows protection. A warning or the absence of a warning does not prove a file is safe.
-- Website feedback and in-app diagnostic sending are **not activated yet**. They will send only after the protected SlendyStuff reporting service is configured and delivery is verified. Diagnostics can be reviewed before sending and exclude names, local paths, pairing keys, game saves and device identifiers.
+- The app's **Website feedback** button opens the feedback section at slendystuff.com without sending logs. Direct diagnostic sending is withheld until Cloudflare delivery is verified. Website feedback submission is enabled only when its protected service is available.
 - Isolated checks passed for the app, privacy filtering, resource guards, golden-cookie handling, restart/save failure cases and public startup. A full live Steam restart cycle and overnight stability have not yet been verified. The precise cause of the previous long-session memory growth remains unconfirmed.
 - Trusted code signing, tamper resistance and automatic update installation remain unfinished. SHA-256 identifies this download; it does not prove publisher identity or make an unsigned EXE tamper-proof.
 
@@ -30,7 +30,7 @@ Setup writes the companion mod to the chosen game folder and stores local pairin
 
 - Internal/file/product version: **0.5.1.0**
 - File: **SlendyStuffClicker.exe**
-- Size: **1,007,104 bytes**
-- SHA-256: `f0631675c1aed4e12b077376dadd90ef4a7787bbb1faaf2efdf893870aff1cc3`
+- Size: **1,007,616 bytes**
+- SHA-256: `eb5770592c6a5c2a2c1c6044775e5b5db1e8a8942663c7fac226ae7a8d540dd5`
 
 Visit [SlendyStuffClicker](https://slendystuff.com/slendystuffclicker/) for setup guidance, public download counts and announcements.
