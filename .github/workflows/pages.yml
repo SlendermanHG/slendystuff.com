@@ -5,6 +5,10 @@ on:
     branches:
       - main
   workflow_dispatch:
+  release:
+    types: [published]
+  schedule:
+    - cron: '17,47 * * * *'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -32,6 +36,11 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+
+      - name: Refresh public SlendyStuffClicker download counts
+        run: node ops/refresh-clicker-stats.cjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3

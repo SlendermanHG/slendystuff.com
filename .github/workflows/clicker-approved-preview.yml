@@ -1,0 +1,44 @@
+name: Publish approved SlendyStuffClicker v0.5.1.0
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/clicker-approved-preview.yml'
+      - 'ops/releases/0.5.1.0/**'
+      - 'ops/publish-approved-clicker.cjs'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: slendystuffclicker-approved-0-5-1-0
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'SlendermanHG/slendystuff.com' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Assemble reviewed binary from publication parts
+        run: node -e "require('./ops/publish-approved-clicker.cjs').assembleApprovedBinary()"
+      - name: Verify approved Windows binary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $binary = Get-Item -LiteralPath 'ops/releases/0.5.1.0/SlendyStuffClicker.exe'
+          if ($binary.Length -ne 1007616) { throw 'Unexpected binary size' }
+          $digest = (Get-FileHash -LiteralPath $binary.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($digest -ne 'eb5770592c6a5c2a2c1c6044775e5b5db1e8a8942663c7fac226ae7a8d540dd5') { throw 'Unapproved binary' }
+          $metadata = [Diagnostics.FileVersionInfo]::GetVersionInfo($binary.FullName)
+          if ($metadata.FileVersion -ne '0.5.1.0' -or $metadata.ProductVersion -ne '0.5.1.0') { throw 'Version mismatch' }
+          $assembly = [Reflection.AssemblyName]::GetAssemblyName($binary.FullName)
+          if ($assembly.Version.ToString() -ne '0.5.1.0') { throw 'Assembly version mismatch' }
+      - name: Publish this owner-approved manual preview only
+        run: node ops/publish-approved-clicker.cjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
