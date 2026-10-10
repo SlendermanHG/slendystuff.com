@@ -41,3 +41,10 @@ test('Bad upload identity never publishes',async()=>{
   const m=mock([{method:'GET',value:release},{method:'POST',value:{...asset,digest:'unknown'}}]);
   await assert.rejects(publish(env,m.request),/match approval/);assert.equal(m.calls.length,2);
 });
+test('GitHub untagged draft URL is accepted only before publishing; public URL must use exact version',async()=>{
+  const draftAsset={...asset,browser_download_url:'https://github.com/SlendermanHG/slendystuff.com/releases/download/untagged-6488b2f2ab2f1a059392/SlendyStuffClicker.exe'};
+  verifyAsset(draftAsset,true);assert.throws(()=>verifyAsset(draftAsset,false));
+  const d={...release,assets:[draftAsset]},p={...release,draft:false,assets:[asset]};
+  const m=mock([{method:'GET',value:d},{method:'GET',value:d},{method:'PATCH',value:p}]);await publish(env,m.request);
+  assert.equal(m.calls.length,3);assert.equal(m.calls.filter(c=>c.options.method==='POST').length,0);
+});

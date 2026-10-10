@@ -18,9 +18,14 @@ function assembleApprovedBinary() {
   return binary;
 }
 
-function verifyAsset(asset) {
+function verifyAsset(asset, draft = false) {
+  const prefix = `https://github.com/${repo}/releases/download/`;
+  const expected = prefix + tag + '/' + name;
+  // GitHub gives draft assets an untagged URL until the release is published.
+  const draftUrl = draft && typeof asset?.browser_download_url === 'string' && asset.browser_download_url.startsWith(prefix) &&
+    /^untagged-[a-f0-9]{20}\/SlendyStuffClicker\.exe$/.test(asset.browser_download_url.slice(prefix.length));
   if (!asset || asset.name !== name || asset.size !== size || asset.state !== 'uploaded' || asset.digest !== 'sha256:' + hash ||
-      asset.browser_download_url !== `https://github.com/${repo}/releases/download/${tag}/${name}`) throw Error('Release asset does not match approval');
+      (asset.browser_download_url !== expected && !draftUrl)) throw Error('Release asset does not match approval');
 }
 
 async function publish(env = process.env, request = fetch) {
@@ -55,12 +60,12 @@ async function publish(env = process.env, request = fetch) {
   if (release.assets.length === 0) {
     if (release.draft !== true || release.target_commitish !== env.GITHUB_SHA) throw Error('Cannot alter an existing published or unrelated release');
     const upload = `https://uploads.github.com/repos/${repo}/releases/${release.id}/assets?name=${name}`;
-    verifyAsset(await api(upload, 'POST', binary, true));
-  } else verifyAsset(release.assets[0]);
+    verifyAsset(await api(upload, 'POST', binary, true), true);
+  } else verifyAsset(release.assets[0], release.draft === true);
   // Read back uploaded identity before making the draft public. Never replace assets.
   release = await api(`${base}/releases/${release.id}`);
   if (release.assets.length !== 1) throw Error('Expected exactly one downloadable EXE');
-  verifyAsset(release.assets[0]);
+  verifyAsset(release.assets[0], release.draft === true);
   if (release.draft) release = await api(`${base}/releases/${release.id}`, 'PATCH', {draft:false,prerelease:true,make_latest:'false'});
   if (release.draft !== false || release.tag_name !== tag || release.prerelease !== true || release.assets.length !== 1) throw Error('Public release not confirmed');
   verifyAsset(release.assets[0]);
