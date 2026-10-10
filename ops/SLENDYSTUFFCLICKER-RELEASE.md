@@ -25,3 +25,7 @@ SlendyStuffClicker v0.5.1.0 is a free portable Windows preview for a supported S
 - Preview voluntary diagnostics before sending through SlendyStuff's reporting service when activated.
 
 This EXE is unsigned; Windows may warn or block it. No installer is included. First-time setup writes a companion mod to the game folder and keeps local pairing/settings and bounded logs. The full Steam restart cycle and overnight behavior need live verification; isolated tests do not prove either.
+
+## Approved v0.5.1.0 publication
+
+The owner approved publishing the page and this exact EXE on October 9, 2026. The narrowly scoped clicker-approved-preview workflow publishes only that version from main after checking the fixed binary hash, size and Windows metadata. Its notes are in ops/releases/0.5.1.0/RELEASE-NOTES.md. It cannot publish future versions or replace an existing asset. This manual unsigned preview does not change the separate trusted automatic-update gate. The approved public binary is retained in ops/releases/0.5.1.0 for reproducible release upload, outside the public website directory.
