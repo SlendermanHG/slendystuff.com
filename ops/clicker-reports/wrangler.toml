@@ -1,0 +1,27 @@
+name = "slendystuffclicker-reports"
+main = "worker.js"
+compatibility_date = "2026-10-09"
+workers_dev = false
+preview_urls = false
+routes = [{ pattern = "reports.slendystuff.com", custom_domain = true }]
+
+[observability]
+enabled = false
+
+[[send_email]]
+name = "EMAIL"
+destination_address = "slender@slendystuff.com"
+allowed_sender_addresses = ["diagnostics@slendystuff.com"]
+
+[[ratelimits]]
+name = "BURST"
+namespace_id = "51043821"
+simple = { limit = 3, period = 60 }
+
+[[durable_objects.bindings]]
+name = "BUDGET"
+class_name = "ReportBudget"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ReportBudget"]
