@@ -1,0 +1,16 @@
+SlendyStuffClicker v0.5.1.0 — creator and sharing notes
+
+Official page: https://slendystuff.com/slendystuffclicker/
+Setup guide and captioned walkthrough: https://slendystuff.com/slendystuffclicker/setup/
+Free EXE and versioned release notes: https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.1.0
+
+Free portable Windows preview for Cookie Clicker on Steam. Uses a companion mod to send game actions, leaving the system mouse free. Supports optional normal golden-cookie collection and selected building/upgrade auto-buy with a reserve. Auto-buy is off by default. Browser/mobile versions are unsupported.
+
+The video uses genuine app screenshots and labeled synthetic game actions, not live Steam footage.
+
+Disclosure: an independent SlendyStuff production, not endorsed by the game developers or OP Auto Clicker. Unsigned preview; Windows may warn or block it. Restart the game and clicker at least every six hours. A full live Steam restart cycle and overnight stability remain unverified. No paid review or endorsement is requested.
+
+Share the official page so readers receive current setup, update and Windows notes. Please describe the tool honestly and do not imply affiliation, proven overnight stability or universal Windows compatibility.
+
+Feedback: https://slendystuff.com/slendystuffclicker/#feedback
+Contact: slender@slendystuff.com
