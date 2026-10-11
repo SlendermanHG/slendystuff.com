@@ -3,7 +3,7 @@ const defaultSiteConfig = {
   supportEmail: "support@slendystuff.com",
   discordUrl: "https://discord.gg/your-invite",
   twitchUrl: "https://twitch.tv/slendermanhg",
-  youtubeUrl: "https://youtube.com/@slendermanhg",
+  youtubeUrl: "https://www.youtube.com/@slendystuff",
   schedulerUrl: ""
 };
 
