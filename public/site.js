@@ -2,7 +2,7 @@ const pageName = document.body.dataset.page || "";
 const defaultSiteConfig = {
   supportEmail: "support@slendystuff.com",
   discordUrl: "https://discord.gg/your-invite",
-  twitchUrl: "https://twitch.tv/slendermanhg",
+  twitchUrl: "https://twitch.tv/slendystuff",
   youtubeUrl: "https://www.youtube.com/@slendystuff",
   schedulerUrl: ""
 };
