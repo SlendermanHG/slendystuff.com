@@ -8,7 +8,7 @@ Free portable Windows preview for Cookie Clicker on Steam. Uses a companion mod 
 
 The video uses genuine app screenshots and labeled synthetic game actions, not live Steam footage.
 
-Disclosure: an independent SlendyStuff production, not endorsed by the game developers or OP Auto Clicker. Unsigned preview; Windows may warn or block it. Restart the game and clicker at least every six hours. A full live Steam restart cycle and overnight stability remain unverified. No paid review or endorsement is requested.
+Disclosure: an independent SlendyStuff production, not endorsed by the game developers or competing tool developers. Unsigned preview; Windows may warn or block it. Restart the game and clicker at least every six hours. A full live Steam restart cycle and overnight stability remain unverified. No paid review or endorsement is requested.
 
 Share the official page so readers receive current setup, update and Windows notes. Please describe the tool honestly and do not imply affiliation, proven overnight stability or universal Windows compatibility.
 
