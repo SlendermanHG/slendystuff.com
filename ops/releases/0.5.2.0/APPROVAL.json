@@ -1,0 +1,12 @@
+{
+  "version": "0.5.2.0",
+  "asset": "SlendyStuffClicker.exe",
+  "size": 1103360,
+  "sha256": "b18a24248dc61e3dcbaa62613303679d9eddd182643d7eefb884832b11a68755",
+  "releaseReady": true,
+  "ownerApproved": true,
+  "approvalDate": "2026-10-12",
+  "policy": "manual-unsigned-preview",
+  "liveSteamChecksPassed": false,
+  "longSessionChecksPassed": false
+}

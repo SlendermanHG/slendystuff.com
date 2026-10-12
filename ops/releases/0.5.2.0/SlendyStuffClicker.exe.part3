@@ -1,0 +1,247 @@
+reserve),num(G.unbuffedCps || G.cookiesPs)*o.productionReserve); if(o.luckyReserve) r=Math.max(r,num(G.cookiesPs)*6000); return r; }
+    function buffs() { return Object.keys(G.buffs || {}).slice(0,32).map(function(k){var b=G.buffs[k];return {name:text(b.name || k,80),seconds:Math.ceil(num(b.time)/(G.fps || 30))};}); }
+    function activeBonus() { return buffs().length > 0; }
+    function milestone(a, category, current, threshold, rate, action, cost) {
+        var left=Math.max(0,threshold-num(current)), eta=rate>0?left/rate:null;
+        var state=left===0?'Ready now':category==='Buildings'&&left<=1?'Close to completion':rate>0&&eta<=600?'Close to completion':'Prerequisites needed';
+        if (eta===null&&category==='Production') state='Waiting or random';
+        return {name:text(a.name,100),id:a.id,category:category,state:state,progress:text(num(current).toPrecision(5)+' / '+threshold.toPrecision(5),80),actions:action,cost:num(cost),eta:eta===null?null:Math.min(eta,1e12),left:Math.min(left,1e12),score:state==='Ready now'?0:state==='Close to completion'?1:3,reason:rate>0?'Estimated from current production; bonuses may change the time':'Requires the listed normal game actions',shadow:a.pool==='shadow'};
+    }
+    function rule(a,o) {
+        if (a.name==='Cheated cookies taste awful') return null;
+        if(a.vanilla===0) { var manual=milestone(a,'Other',0,1,0,'Review the mod-added requirement in the game',0);manual.state='Needs manual review';manual.reason='Mod-added conditions have no verified adapter';return manual; }
+        var r, objects=G.ObjectsById || [], bank=G.BankAchievements || [], cps=G.CpsAchievements || [];
+        if (bank.includes(a)) return milestone(a,'Production',G.cookiesEarned,a.threshold,num(G.cookiesPs),'Keep producing cookies',0);
+        if (cps.includes(a)) return milestone(a,'Production',G.cookiesPs,a.threshold,0,'Increase production through the selected shop rules',0);
+        for (var i=0;i<Math.min(objects.length,32);i++) { var b=objects[i];
+            if (Object.keys(b.tieredAchievs || {}).some(function(k){return b.tieredAchievs[k]===a;})) { var t=G.Tiers && G.Tiers[a.tier]; if(t&&Number.isFinite(t.achievUnlock)) { r=milestone(a,'Buildings',b.amount,t.achievUnlock,0,'Buy '+b.name,typeof b.getSumPrice==='function'?b.getSumPrice(Math.max(0,t.achievUnlock-b.amount)):b.getPrice());r.building=b.id;r.goal=t.achievUnlock;return r;} }
+            var p=(b.productionAchievs || []).find(function(p){return p.achiev===a;}); if(p) return milestone(a,'Production',b.totalCookies,p.pow,num(b.storedTotalCps)*num(G.globalCpsMult || 1),'Wait for '+b.name+' production',0);
+        }
+        var cursor={Click:1,'Double-click':2,'Mouse wheel':50,'Of Mice and Men':100,'The Digital':200,'Extreme polydactyly':300,'Dr. T':400,'Thumbs, phalanges, metacarpals':500,'With her finger and her thumb':600,'Gotta hand it to you':700,"The devil's workshop":800,'All on deck':900,'A round of applause':1000};
+        if(cursor[a.name]&&objects[0]) {var c=objects[0], goal=cursor[a.name];r=milestone(a,'Buildings',c.amount,goal,0,'Buy Cursor',typeof c.getSumPrice==='function'?c.getSumPrice(Math.max(0,goal-c.amount)):c.getPrice());r.building=0;r.goal=goal;return r;}
+        var clicks=['Clicktastic','Clickathlon','Clickolympics','Clickorama','Clickasmic','Clickageddon','Clicknarok','Clickastrophe','Clickataclysm','The ultimate clickdown','All the other kids with the pumped up clicks','One...more...click...','Clickety split',"Ain't that a click in the head","What's not clicking"];
+        if(clicks.includes(a.name)) return milestone(a,'Clicks',G.handmadeCookies,Math.pow(10,3+2*clicks.indexOf(a.name)),0,'Enable main-cookie clicks',0);
+        var gold={'Golden cookie':1,'Lucky cookie':7,'A stroke of luck':27,Fortune:77,Leprechaun:777,"Black cat's paw":7777,'Seven horseshoes':27777};
+        if(gold[a.name]) {r=milestone(a,'Clicks',G.goldenClicks,gold[a.name],0,'Collect naturally appearing golden cookies',0);r.state=r.left===0?'Ready now':'Waiting or random';r.reason='Appearance timing and effects remain native and random';return r;}
+        var totals={Builder:100,Architect:500,Engineer:1000,'Lord of Constructs':2500,'Grand design':5000,Ecumenopolis:7500,Myriad:10000};
+        if(totals[a.name])return milestone(a,'Buildings',objects.reduce(function(sum,b){return sum+num(b.amount);},0),totals[a.name],0,'Buy selected buildings under your shop limits',0);
+        var wrinkle={Itchscratcher:1,Wrinklesquisher:50,Moistburster:200}; if(wrinkle[a.name]) {r=milestone(a,'Wrinklers',G.wrinklersPopped,wrinkle[a.name],0,'Pop feeding wrinklers under your chosen rules',0);if(!num(G.elderWrath)){r.state='Prerequisites needed';r.reason='Unlock wrinkler access first';}return r;}
+        var deer={'Oh deer':1,'Sleigh of hand':50,'Reindeer sleigher':200}; if(deer[a.name]) {r=milestone(a,'Seasonal',G.reindeerClicked,deer[a.name],0,'Collect reindeer',0);r.season='christmas';if(G.season!=='christmas')r.state='Season unavailable';else if(r.left>0)r.state='Waiting or random';return r;}
+        if(['Neverclick','True Neverclick','Hardcore'].includes(a.name)) {var hardcore=a.name==='Hardcore',validRun=G.ascensionMode===1||G.resets===0,eligible=validRun&&(hardcore?G.UpgradesOwned===0:G.cookieClicks<=(a.name==='Neverclick'?15:0));r=milestone(a,'Challenges',G.cookiesEarned,hardcore?1e9:1e6,num(G.cookiesPs),hardcore?'Produce without buying upgrades':'Produce without main-cookie clicks',0);if(!eligible){r.state='Ineligible this run';r.reason='Existing run conditions are broken. A fresh challenge run needs your decision.';r.score=9;}r.challenge=true;return r;}
+        if(a.name==='Four-leaf cookie') {r=milestone(a,'Challenges',G.shimmerTypes&&G.shimmerTypes.golden&&G.shimmerTypes.golden.n,4,0,'Hold golden and wrath cookies on screen until four exist',0);r.state=r.left===0?'Ready now':'Waiting or random';r.challenge=true;r.reason='Random timing; collection is held until the game confirms this achievement';return r;}
+        var collection={'Spooky cookies':['halloween',7],'Let it snow':['christmas',7],'Lovely cookies':['valentines',7],'The hunt is on':['easter',1],'Egging on':['easter',7],'Mass Easteria':['easter',14],'Hide & seek champion':['easter',20]};
+        if(collection[a.name]) {var v=collection[a.name],names=lists(v[0]).slice(0,v[0]==='christmas'?7:64),unlocked=v[0]==='easter';var count=names.filter(function(n){var u=G.Upgrades&&G.Upgrades[n];return u&&(unlocked?(u.unlocked||u.bought):u.bought);}).length;r=milestone(a,'Seasonal',count,v[1],0,unlocked?'Collect native egg drops':'Collect and buy missing seasonal cookies',0);r.season=v[0];r.state=r.left===0?'Ready now':G.season!==v[0]&&v[0]!=='valentines'?'Season unavailable':'Waiting or random';r.reason='Drop chances are random; unlocked drops and purchases reset on ascension';return r;}
+        if(a.name==='Coming to town'||a.name==='All hail Santa'){r=milestone(a,'Seasonal',G.santaLevel,a.name==='Coming to town'?6:14,0,'Enable Santa progression with a spending budget',0);if(!has('A festive hat'))r.state='Prerequisites needed';return r;}
+        if(a.name==='Eldeer'){r=milestone(a,'Seasonal',0,1,0,'Hold a reindeer until Elder frenzy is active',0);r.state=G.season==='christmas'?'Waiting or random':'Season unavailable';r.season='christmas';return r;}
+        if(a.name==='Last Chance to See'){r=milestone(a,'Wrinklers',0,1,0,'Explicitly approve popping a shiny wrinkler',0);r.state='Manual decision';r.reason='Shiny wrinklers are protected; no automatic sacrifice';return r;}
+        if(a.name==='In the garden of Eden (baby)'){var garden=mini(2),filled=0,tiles=0;if(garden&&Array.isArray(garden.plot))for(var gy=0;gy<6;gy++)for(var gx=0;gx<6;gx++){if(garden.plot[gy]&&garden.plot[gy][gx]&&garden.plot[gy][gx][0]>0)filled++;if(garden.isTileUnlocked&&garden.isTileUnlocked(gx,gy))tiles++;}r=milestone(a,'Minigames',filled,36,0,'Fill all 36 Garden tiles with plants',0);r.state=!garden||tiles<36?'Prerequisites needed':filled<36?'Manual decision':'Ready now';r.reason=tiles<36?'Unlock the full Garden plot first':'Counts planted tiles, not seeds unlocked';return r;}
+        var minigame={'Botany enthusiast':[2,'harvestsTotal',100],'Green, aching thumb':[2,'harvestsTotal',1000],'Bibbidi-bobbidi-boo':[7,'spellsCastTotal',9],"I'm the wiz":[7,'spellsCastTotal',99],'A wizard is you':[7,'spellsCastTotal',999]};
+        if(minigame[a.name]){var spec=minigame[a.name],mg=mini(spec[0]);r=milestone(a,'Minigames',mg&&mg[spec[1]],spec[2],0,'Use the relevant minigame controls',0);r.state=!mg?'Prerequisites needed':a.name==='Seedless to nay'?'Manual decision':'Waiting or random';r.reason=!mg?'Unlock this minigame with an explicitly approved building level':'Use normal actions; seed mutation and spell backfires remain random';return r;}
+        r=milestone(a,'Other',0,1,0,'Review the requirement in the game',0);r.state='Needs manual review';r.reason='No verified requirement adapter for this achievement';r.score=10;return r;
+    }
+    function rank(o, now) {
+        var all=G.AchievementsById;
+        if(!supported||!Array.isArray(all)||all.length>2048){rows=[];target=null;rankingPending=false;return;}
+        if (scan===0 && now-lastScan<1500) return;
+        var start=performance.now(),n=0;
+        while(scan<all.length&&n++<48&&performance.now()-start<2){var a=all[scan++];if(!a||a.won){if(a&&a.won&&!completed.has(a.name)){if(completed.size>=2048)completed.clear();completed.add(a.name);if(o.pin===a.name)log('Game confirms completion: '+a.name);}continue;}var r=rule(a,o);if(r&&(!r.shadow||o.shadows)&&o.categories.includes(r.category)&&!o.excluded.includes(a.name))scanRows.push(r);}
+        if(scan<all.length)return;
+        scan=0;lastScan=now;
+        var order={'Ready now':0,'Close to completion':1,'Prerequisites needed':3,'Waiting or random':5,'Season unavailable':6,'Manual decision':7,'Ineligible this run':9,'Needs manual review':10};
+        scanRows.forEach(function(r){r.score=order[r.state];if(r.season&&G.season===r.season&&r.state!=='Waiting or random'){var w=natural(new Date());if(w&&w.id===r.season&&w.end-Date.now()<2*86400000)r.score-=0.5;}});
+        scanRows.sort(function(a,b){if(a.name===o.pin)return -1;if(b.name===o.pin)return 1;return a.score-b.score||(a.cost<=num(G.cookies)?0:1)-(b.cost<=num(G.cookies)?0:1)||a.left-b.left||(a.eta||1e12)-(b.eta||1e12)||a.id-b.id;});
+        rows=scanRows;scanRows=[];target=rows.find(function(r){return o.pin&&!won(o.pin)?r.name===o.pin:r.score<7;})||null;rankingPending=false;
+    }
+    function prepare(o,now) {
+        var key=JSON.stringify([o.main,o.completionist,o.assist,o.shadows,o.pin,won(o.pin),o.categories,o.excluded,G.resets,G.season]);
+        if(reset!==G.resets){reset=G.resets;fed.clear();seasonLock='';pending=null;log('Ascension changed: current-run seasonal progress was refreshed');}
+        if(key!==selection || target&&won(target.name)) {selection=key;scan=0;scanRows=[];rows=[];target=null;lastScan=-Infinity;rankingPending=true;preparedAt=-Infinity;}
+        if(preparedAt===now)return;preparedAt=now;rank(o,now);
+    }
+    // Protection is evaluated live on every pulse, independently of the slower ranking scan.
+    function policy(o) { var name=o.completionist&&(o.assist||o.pin)?(o.pin&&!won(o.pin)?o.pin:(target&&target.name)):'';if(won(name))name='';var hold=o.completionist&&o.assist&&rankingPending;return {main:!hold&&o.main&&!['Neverclick','True Neverclick'].includes(name),upgrades:!hold&&name!=='Hardcore',golden:!hold&&name!=='Four-leaf cookie',deer:!hold&&(name!=='Eldeer'||!!(G.hasBuff&&G.hasBuff('Elder frenzy'))),hold:hold,target:name}; }
+    function shop(options,o,allowUpgrades,execute) {
+        var retained=reserve(o,options), available=num(G.cookies)-retained, best=null;
+        if(!supported||G.buyMode!==1||G.promptOn||available<0||(o.protectBuffs&&activeBonus())) return {reason:'Reserve, active bonus, prompt or Sell mode protects spending',reserve:retained};
+        function consider(item,building,priority){if(!item||typeof item.getPrice!=='function'||typeof item.buy!=='function')return;var price=item.getPrice(),gain=0,known=false;if(!Number.isFinite(price)||price<0||price>available)return;
+            if(building){gain=num(item.storedCps)*num(G.globalCpsMult || 1);known=gain>0;}else if(item.pool==='cookie'&&typeof item.power==='number'){gain=num(G.cookiesPs)*item.power/100;known=gain>0;}else if(item.buildingTie&&item.tier!=null){gain=num(item.buildingTie.storedTotalCps)*num(G.globalCpsMult || 1);known=gain>0;}
+            var score=o.shopMode==='cheapest'?price/priority:known?price/gain/priority:1e290+price;
+            if(!best||score<best.score)best={item:item,building:building,price:price,gain:gain,known:known,score:score};}
+        var selected=options.buildings.slice();
+        if(o.completionist&&o.assist&&target&&target.building!=null&&target.state!=='Ineligible this run'&&selected.includes(target.building))selected=[target.building];
+        selected.forEach(function(id){var b=G.ObjectsById&&G.ObjectsById[id],r=o.buildingRules.find(function(r){return r.id===id;});if(!b||b.locked)return;var ceiling=r&&r.target>0?r.target:r&&r.cap>0?r.cap:Infinity;if(r&&r.cap>0)ceiling=Math.min(ceiling,r.cap);if(target&&o.completionist&&o.assist&&target.building===id)ceiling=Math.min(ceiling,target.goal);if(num(b.amount)<ceiling)consider(b,true,r?r.priority:1);});
+        var store=G.UpgradesInStore,begin=performance.now();if(allowUpgrades&&Array.isArray(store)&&store.length<=2048)for(var i=0;i<store.length&&performance.now()-begin<2;i++){var u=store[i];if(!u||!u.unlocked||u.bought||!options.upgrades.includes(u.pool)||u.priceLumps>0||u.clickFunction||u.choicesFunction||u.canBuyFunc||u.vanilla===0||(u.isVaulted&&u.isVaulted())||['Chocolate egg','A crumbly egg','A festive hat'].includes(u.name))continue;consider(u,false,1);}
+        if(!best)return {reason:'No selected purchase fits the reserve and targets',reserve:retained};
+        var view={name:text(best.item.name,100),price:best.price,gain:best.gain,payoff:best.known?best.price/best.gain:null,reason:best.known?'Estimated production payoff; synergy may change it':'Production gain is unknown; lowest-price fallback',reserve:retained};
+        if(execute){var it=best.item,p=it.getPrice();if(!Number.isFinite(p)||p<0||p>num(G.cookies)-reserve(o,options)||G.promptOn||G.buyMode!==1||G.OnAscend)return view;var before=best.building?it.amount:it.bought;if(best.building)it.buy(1);else it.buy();view.purchased=(best.building?it.amount:it.bought)>before;}
+        return view;
+    }
+    function popWrinkler(w) { if(w&&w.phase>0&&Number.isFinite(w.hp)&&w.hp>0.5){w.hp=0;G.recalculateGains=1;counters.wrinklers++;log('Requested native wrinkler payout');return true;}return false; }
+    function observeWrinklers(now){var keys=new Set();(Array.isArray(G.wrinklers)?G.wrinklers:[]).slice(0,32).forEach(function(w){if(!w||w.phase!==2||num(w.sucked)===0||!Number.isFinite(w.hp)||w.hp<=0.5){fed.delete(w);return;}keys.add(w);if(!fed.has(w))fed.set(w,now);});fed.forEach(function(v,w){if(!keys.has(w))fed.delete(w);});}
+    function wrinklerView(o,now){var all=(Array.isArray(G.wrinklers)?G.wrinklers:[]).slice(0,32),alive=all.filter(function(w){return w&&w.phase>0&&Number.isFinite(w.hp)&&w.hp>0.5;});var p=policy(o),ready=0;
+        var items=all.map(function(w,i){if(!w||w.phase===0)return null;var age=fed.has(w)?Math.max(0,(now-fed.get(w))/1000):0,wait=Math.max(0,o.feedSeconds-age,o.wrinklerMode==='timed'?o.wrinklerSeconds-age:0),reason='Ready to pop',eligible=false;
+            if(!Number.isFinite(w.hp)||w.hp<=0.5)reason='Payout requested; waiting for game';
+            else if(w.type===1&&o.protectShiny)reason='Shiny protected';
+            else if(w.phase!==2)reason='Approaching; not attached yet';
+            else if(num(w.sucked)<=0)reason='Attached; no stored cookies yet';
+            else if(!o.wrinklers)reason='Automatic popping is off';
+            else if(G.promptOn||G.OnAscend||G.AscendTimer>0)reason='Game is paused or showing a prompt';
+            else if(p.hold)reason='Waiting for achievement rules';
+            else if(o.wrinklerMode==='keep'&&alive.length<=o.keep)reason='Keeping '+o.keep+'; '+alive.length+' active';
+            else if(wait>0)reason='Feeding wait: '+Math.ceil(wait)+' sec';
+            else if(num(w.sucked)<o.storedMinimum)reason='Below stored-cookie minimum';
+            else if(o.seasonFarm&&['halloween','easter'].includes(G.season)&&w.sucked<1)reason='Waiting for seasonal payout minimum';
+            else {eligible=true;ready++;}
+            return {slot:i+1,type:w.type===1?'Shiny':'Normal',phase:w.phase,stored:num(w.sucked),feedingSeconds:Math.floor(age),waitSeconds:Math.ceil(wait),reason:reason,eligible:eligible};}).filter(Boolean);
+        return {active:alive.length,ready:ready,requested:counters.wrinklers,items:items,summary:!o.wrinklers?'Automatic popping is off':alive.length===0?'No active wrinklers in the game':o.wrinklerMode==='keep'&&alive.length<=o.keep?'Keeping all '+alive.length+' active wrinklers. Lower the keep count or choose a different rule.':ready?'Ready to pop '+ready+'; at most one per second':'Waiting for attachment, feeding, or your selected limits'};
+    }
+    function wrinklers(o,now){if(!o.wrinklers||!Array.isArray(G.wrinklers)||G.wrinklers.length>32)return false;observeWrinklers(now);var view=wrinklerView(o,now),item=view.items.find(function(w){return w.eligible;});return item?popWrinkler(G.wrinklers[item.slot-1]):false;}
+    function shimmers(command,o,p,steady){if(G.promptOn||!Array.isArray(G.shimmers)||G.shimmers.length>2048)return;
+        var start=performance.now();for(var i=0;i<G.shimmers.length&&performance.now()-start<1;i++){var s=G.shimmers[i],kind=s&&s.type==='reindeer'?'reindeer':s&&s.type==='golden'?(s.force==='cookie storm drop'?'storm':s.wrath?'wrath':'golden'):'';
+            // The native forced storm reward is independent of its seasonal picture
+            // and wrath flag. Ordinary wrath cookies still require their own opt-in.
+            var allow=kind==='reindeer'?o.reindeer&&p.deer:kind==='wrath'?o.wrath&&p.golden:kind==='golden'||kind==='storm'?command.collectGolden&&p.golden:false;
+            if(allow&&s.life>0&&typeof s.pop==='function'&&!attempts.has(s)){attempts.add(s);s.pop();counters[kind]++;return;}}
+    }
+    function stamp(parts){return parts.map(function(v){return text(v,240);}).join('|');}
+    function makeQuote(key,label,cost,fingerprint,run,reason){var old=quotes.get(key);if(old&&old.fingerprint===fingerprint&&old.cost===cost&&performance.now()-old.created<=30000){old.run=run;old.reason=reason;return old;}var q={key:key,id:String(++quoteSerial),label:text(label,220),cost:num(cost),fingerprint:fingerprint,run:run,reason:text(reason),created:performance.now()};quotes.set(key,q);return q;}
+    function quoteView(o,b){var seen=new Set(),result=[],r=reserve(o,b), spend=function(cost){return Number.isFinite(cost)&&cost>=0&&num(G.cookies)-cost>=r;};
+        function add(key,label,cost,fp,run,reason){seen.add(key);var q=makeQuote(key,label,cost,fp,run,reason);result.push({key:q.key,id:q.id,label:q.label,cost:q.cost,reason:q.reason,available:!reason});}
+        var seasons=G.seasons||{};Object.keys(seasons).slice(0,5).forEach(function(id){var u=seasons[id].triggerUpgrade;if(!u)return;var price=typeof u.getPrice==='function'?u.getPrice():NaN;
+            add('season:'+id,'Switch to '+({christmas:'Christmas',halloween:'Halloween',valentines:"Valentine's Day",easter:'Easter',fools:'Business Day'}[id]||id)+' for 24 hours',price,stamp([G.resets,G.season,G.seasonUses,price]),function(){if(typeof u.buy==='function')u.buy();seasonLock=id;},!has('Season switcher')||!u.unlocked?'Season Switcher required':G.season===id?'Already active':seasonLock&&seasonLock!==id?'Stop the selected season first':!spend(price)?'Reserve protects this purchase':'');});
+        // Exceptional zero-payout/shiny pops are individual approvals, never automatic rules.
+        (G.wrinklers||[]).slice(0,32).forEach(function(w,i){if(w&&w.phase>0)add('wrinkler:'+i,'Pop '+(w.type===1?'SHINY ':'')+'wrinkler '+(i+1)+'; stored '+num(w.sucked)+'; may pay zero',0,stamp([G.resets,i,w.phase,w.type,w.sucked>0]),function(){popWrinkler(w);},'');});
+        quotes.forEach(function(q,key){if(!seen.has(key))quotes.delete(key);});
+        return result.slice(0,320);
+    }
+    function objectsStamp(){return (G.ObjectsById||[]).slice(0,32).map(function(b){return b.amount;}).join(',');}
+    function stockCost(m,g){return num(G.cookiesPsRawHighest)*num(m.getGoodPrice(g))*(1+0.2*Math.pow(0.95,num(m.brokers)));}
+    function execute(request,o,b,now){if(!request||request.id===handled)return false;handled=request.id;var q=quotes.get(request.key);
+        if(!q||q.id!==request.quote||q.reason||now-q.created>30000){log('Action cancelled: preview expired or game state changed');return false;}
+        // Rebuild the quote and compare the live preconditions before any spending or sacrifice.
+        var previous=q;quoteView(o,b);q=quotes.get(request.key);if(!q||q.fingerprint!==previous.fingerprint||q.cost!==previous.cost||q.reason){log('Action cancelled: resources or requirements changed');return false;}
+        if(o.completionist&&policy(o).target&&/^(ascend|sell:|dragon:|aura:|special:)/.test(request.key)){log('Stop Completionist before a conflicting destructive action');return false;}
+        q.run();log('Approved action: '+q.label);return true;
+    }
+    function tick(command,o,now,fresh){
+        if(command.releaseSeason&&command.releaseSeason!==released){released=command.releaseSeason;seasonLock='';log('Selected season released; no automatic switch was purchased');}
+        if(session!==command.session){session=command.session;tradeSpent=0;lastAction=-Infinity;handled='';fed.clear();}
+        if(!supported)return;
+        prepare(o,now);
+        if(pending){if(now>=pendingUntil){pending=null;backfireUntil=now+60000;log('Spell result delayed; automatic casting held for one minute');}return;}
+        var p=policy(o);
+        if(command.running&&fresh&&!p.hold&&!G.promptOn&&!G.OnAscend&&G.T>=3){
+            if(now-lastAction>=1000){lastAction=now;var acted=execute(command.action,o,command.autoBuy,now);
+                if(!acted)acted=wrinklers(o,now);
+
+            }
+        }
+        if(now-lastTick>=1000){lastTick=now;var seasons=seasonView(o,new Date()),garden=mini(2),gr=mini(7),pant=mini(6),market=mini(5),can=G.canLumps&&G.canLumps();
+            var actions=quoteView(o,command.autoBuy);
+            // Snapshot is purpose-built: no bakery name, account identifiers, save text or secrets.
+            snapshot={schema:1,version:text(G.version,20),supported:supported,season:text(G.season,20),resets:num(G.resets),cookies:num(G.cookies),production:num(G.cookiesPs),tradeSpent:tradeSpent,buffs:buffs(),seasons:seasons,goals:rows.slice(o.goalPage*256,(o.goalPage+1)*256),goalTotal:rows.length,goalPage:o.goalPage,target:target,policy:policy(o),shop:shop(command.autoBuy,o,p.upgrades,false),wrinklers:wrinklerView(o,now),counters:Object.assign({},counters),history:history.slice(),actions:actions,
+                lumps:{available:num(G.lumps),status:!can?'Locked':Date.now()-G.lumpT>=G.lumpRipeAge?'Ripe':Date.now()-G.lumpT>=G.lumpMatureAge?'Mature (harvest can fail)':'Growing',seconds:can?Math.max(0,Math.ceil((G.lumpT+G.lumpRipeAge-Date.now())/1000)):0},
+                tools:{garden:garden?'Seeds '+garden.plantsUnlockedN+'/'+garden.plantsN+'; harvests '+garden.harvests+(garden.freeze?'; frozen':''):'Unlock Farm level 1',grimoire:gr?'Mana '+Math.floor(gr.magic)+'/'+gr.magicM+'; spells '+gr.spellsCastTotal:'Unlock Wizard tower level 1',pantheon:pant?'Worship swaps '+pant.swaps:'Unlock Temple level 1',dragon:'Level '+num(G.dragonLevel)+'; petting needs the open dragon panel',stock:market?'Profit '+text(market.profit)+'; run budget spent '+tradeSpent:'Unlock Bank level 1',ascension:'Potential prestige '+num(G.ascendMeterLevel)+'; prepare: save, review wrinklers, rare harvests and Chocolate egg; select the native challenge mode after ascension',auraAdvice:'Production: Radiant Appetite / Breath of Milk; clicks: Dragonflight; wrinklers: Dragon Guts. Review your build before sacrificing.'},
+                stocks:market?(market.goodsById||[]).slice(0,32).map(function(g){return {name:text(g.name,60),price:num(g.val),stock:num(g.stock),cost:stockCost(market,g),advice:g.val<=o.stockBuy?'Below buy target':g.val>=o.stockSell?'Above sell target':'Watch'};}):[],seedGoals:garden?(garden.plantsById||[]).slice(0,36).filter(function(p){return !p.unlocked;}).map(function(p){return text(p.name,60);}):[],steam:'Game-earned flags only; Steam delivery is not independently confirmed'};
+        }
+    }
+    return {validate:valid,prepare:prepare,policy:policy,tick:tick,shimmers:shimmers,shop:shop,inspect:function(){return supported?Object.assign({schema:1,version:text(G.version,20),supported:true},snapshot):{schema:1,version:text(G.version,20),supported:false,history:['Advanced actions stopped: installed game version needs adapter review']};},seasonView:seasonView,natural:natural,easter:easter,rule:rule,reserve:reserve,execute:execute,quotes:quoteView,counters:counters};
+}
+
+(function () {
+    'use strict';
+    Game.registerMod('cursor free cookie clicker', {
+        init: function () {
+            var token = '__PAIRING_TOKEN__';
+            if (!/^[a-f0-9]{64}$/.test(token)) return;
+            var session = '', instance = '', sequence = -1, clicks = 0, purchases = 0;
+            var busy = false, state = 'ready', lastReport = -Infinity, lastBudget = -Infinity, credit = 0;
+            var maxRate = 99999, maxBatch = 256;
+            var recent = new Array(maxRate), recentHead = 0, recentSize = 0, lastBuy = -Infinity;
+            var silence = function () {};
+            var faulted = false, terminated = false;
+            var boot = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function (n) { return n.toString(16).padStart(2, '0'); }).join('');
+            var restartHandled = '', restarting = false;
+            var automation = SlendyAutomation(Game), telemetryBusy=false, telemetryAt=-Infinity;
+            function sendTelemetry(steady) {
+                if(telemetryBusy || steady-telemetryAt<1000 || !session) return;
+                var data=JSON.stringify(automation.inspect());if(data.length>524288)throw new Error('Progress exceeded its safety bound');
+                telemetryAt=steady;telemetryBusy=true;
+                var abort=new AbortController(), timeout=setTimeout(function(){abort.abort();},1000);
+                // text/plain keeps this paired local JSON report a simple CORS request.
+                fetch(base+'/telemetry?token='+token+'&session='+encodeURIComponent(session)+'&boot='+boot,{method:'POST',headers:{'Content-Type':'text/plain'},body:data,cache:'no-store',signal:abort.signal})
+                    .then(function(r){if(!r.ok)throw new Error('Progress rejected');return r.text();})
+                    .catch(function(){ /* State acknowledgments, not progress, hold the running lease. */ })
+                    .then(function(){clearTimeout(timeout);telemetryBusy=false;});
+            }
+            var supportsRestart = typeof App !== 'undefined' && App && typeof App.quit === 'function' && typeof Game.WriteSave === 'function' &&
+                typeof send === 'function' && typeof localStorageGet === 'function';
+            var base = 'http://127.0.0.1:43821';
+            function report() {
+                if (busy) return;
+                busy = true;
+                var controller = new AbortController();
+                var timeout = setTimeout(function () { controller.abort(); }, 1000);
+                fetch(base + '/state?token=' + token + '&session=' + encodeURIComponent(session) + '&clicks=' + clicks + '&purchases=' + purchases + '&state=' + state + '&boot=' + boot + '&restartSupported=' + (supportsRestart ? '1' : '0'),
+                    { cache: 'no-store', signal: controller.signal })
+                    .then(function (r) {
+                        // Drain each small response before another request; never leave body streams unread.
+                        if (!r.ok) throw new Error('Controller unavailable');
+                        return r.text();
+                    })
+                    .catch(function () { state = 'disconnected'; })
+                    .then(function () { clearTimeout(timeout); busy = false; });
+            }
+            function restartReply(id, outcome) {
+                var abort = new AbortController(), timeout = setTimeout(function () { abort.abort(); }, 1500);
+                return fetch(base + '/restart?token=' + token + '&session=' + encodeURIComponent(session) + '&boot=' + boot + '&id=' + id + '&result=' + outcome + '&clicks=' + clicks + '&purchases=' + purchases,
+                    { cache: 'no-store', signal: abort.signal }).then(function (response) {
+                        if (!response.ok) throw new Error('Restart not approved');
+                        return response.json();
+                    }).then(function (response) {
+                        if (!response || response.accepted !== true) throw new Error('Restart not approved');
+                    }).finally(function () { clearTimeout(timeout); });
+            }
+            async function saveAndQuit(id) {
+                restarting = true; credit = 0; state = 'paused';
+                try {
+                    if (!supportsRestart || Game.OnAscend || Game.AscendTimer > 0 || Game.T < 3 || Game.isSaving) throw new Error('Game is not ready to save');
+                    Game.WriteSave();
+                    var expected = localStorageGet(Game.SaveTo);
+                    if (typeof expected !== 'string' || expected.length < 10 || expected.length > 4194304) throw new Error('Invalid save');
+                    var deadline = performance.now() + 18000;
+                    while (Game.isSaving) {
+                        if (performance.now() > deadline) throw new Error('Save deadline');
+                        await new Promise(function (resolve) { setTimeout(resolve, 100); });
+                    }
+                    // The game's "saved" callback fires on write failure too. Compare actual disk read-back.
+                    var actual = await new Promise(function (resolve, reject) {
+                        var timeout = setTimeout(function () { reject(new Error('Read-back deadline')); }, 3000);
+                        send('load', function (data) { clearTimeout(timeout); resolve(data); });
+                    });
+                    if (actual !== expected) throw new Error('Save read-back mismatch');
+                    await restartReply(id, 'saved');
+                    App.quit();
+                } catch (error) {
+                    state = 'error'; faulted = true;
+                    try { await restartReply(id, 'failed'); } catch (ignored) {}
+                    restarting = false; report();
+                }
+            }
+            function validBuy(options) {
+                return options && typeof options.enabled === 'boolean' && Number.isFinite(options.reserve) && options.reserve >= 0 && options.reserve <= 1e300 &&
+                    Array.isArray(options.buildings) && options.buildings.length <= 32 &&
+                    options.buildings.every(function (id, i, ids) { return Number.isInteger(id) && id >= 0 && id <= 1023 && ids.indexOf(id) === i; }) &&
+                    Array.isArray(options.upgrades) && options.upgrades.length <= 3 &&
+                    options.upgrades.every(function (pool, i, pools) { return (pool === '' || pool === 'cookie' || pool === 'tech') && pools.indexOf(pool) === i; });
+            }
+            // Only fresh executable pulses click; no document timers, mouse APIs, or keyboard hooks.
+            var events = new EventSource(base + '/events?token=' + token);
+            events.onmessage = function (event) {
+                if (terminated) return;
+                try {
+                    var command = JSON.parse(event.data), now = Date.now(), steady = performance.now(), previousState = state;
+                    if (command.protocol !== 6 || !/^[a-f0-9]{32}$/.test(command.session) || !/^[a-f0-9]{32}$/.test(command.instance) ||
+                        !Number.isSafeInteger(command.sequence) || command.sequence < 0 || !Number.isSafeInteger(command.issuedAt) || Math.abs(now - command.issuedAt) > 1000 ||
+                        !Number.isInteger(command.cps) || command.cps < 1 || command.cps > maxRate || !Number.isSafeInteger(command.limit) || command.limit < 0 || command.limit > 1000000000 ||
+                        typeof command.running !== 'boolean' || typeof command.safetyStopped !== 'boolean' || typ
