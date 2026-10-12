@@ -8,6 +8,7 @@ const notes = fs.readFileSync(__dirname + '/releases/0.5.2.0/RELEASE-NOTES.md','
 const asset = {name:'SlendyStuffClicker.exe',size:1103360,state:'uploaded',digest:'sha256:b18a24248dc61e3dcbaa62613303679d9eddd182643d7eefb884832b11a68755',browser_download_url:'https://github.com/SlendermanHG/slendystuff.com/releases/download/v0.5.2.0/SlendyStuffClicker.exe'};
 const release = {id:123,tag_name:'v0.5.2.0',prerelease:true,draft:true,body:notes,assets:[],target_commitish:env.GITHUB_SHA,html_url:'https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.0'};
 test('Publication parts reconstruct the exact approved binary',()=>{ assert.equal(assembleApprovedBinary().length,1103360); });
+test('Windows checkout cannot normalize publication fragment line endings',()=>{assert.match(fs.readFileSync(__dirname+'/../.gitattributes','utf8'),/^ops\/releases\/\*\*\/SlendyStuffClicker\.exe\.part\* -text$/m);});
 function mock(sequence) {
   const calls=[];
   const request=async(url,options)=>{calls.push({url,options});const next=sequence.shift();assert.ok(next,'Unexpected network request');assert.equal(options.method,next.method);return {ok:next.status!==404,status:next.status||200,json:async()=>structuredClone(next.value)};};
