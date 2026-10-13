@@ -13,7 +13,7 @@ A free portable Windows auto clicker and companion mod for Cookie Clicker on Ste
 - Wrinkler rules, shop targets and reserves, seasonal progress and Completionist guidance.
 - Saved profiles, live status, resource checks and a manual update check.
 
-[Download and setup](https://slendystuff.com/slendystuffclicker/) · [Setup guide](https://slendystuff.com/slendystuffclicker/setup/) · [Current release: v0.5.2.0](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.0) · [Previous releases](https://github.com/SlendermanHG/slendystuff.com/releases)
+[Download and setup](https://slendystuff.com/slendystuffclicker/) · [Setup guide](https://slendystuff.com/slendystuffclicker/setup/) · [Current release: v0.5.2.5](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.5) · [Previous releases](https://github.com/SlendermanHG/slendystuff.com/releases)
 
 The download is one EXE. Companion setup adds a mod to the game folder; pairing settings, profiles and bounded logs stay on the computer. The release tag matches the app's internal four-part version.
 

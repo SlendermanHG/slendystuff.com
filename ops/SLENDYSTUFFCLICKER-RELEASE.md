@@ -1,11 +1,12 @@
 # SlendyStuffClicker release reference
 
-SlendyStuffClicker is distributed as one portable Windows EXE through versioned GitHub releases. The current public preview is [v0.5.2.0](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.0); [v0.5.1.0](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.1.0) remains available.
+SlendyStuffClicker is distributed as one portable Windows EXE through versioned GitHub releases. The current public preview is [v0.5.2.5](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.5); earlier previews remain available.
 
 ## Published downloads
 
 | Version | File | Bytes | SHA-256 |
 | --- | --- | ---: | --- |
+| 0.5.2.5 | SlendyStuffClicker.exe | 1,135,104 | f0af39b2cb11b82a65ea0012afce0c0ed81e674f0af7fd94ae930dd4233c0e14 |
 | 0.5.2.0 | SlendyStuffClicker.exe | 1,103,360 | b18a24248dc61e3dcbaa62613303679d9eddd182643d7eefb884832b11a68755 |
 | 0.5.1.0 | SlendyStuffClicker.exe | 1,007,616 | eb5770592c6a5c2a2c1c6044775e5b5db1e8a8942663c7fac226ae7a8d540dd5 |
 
