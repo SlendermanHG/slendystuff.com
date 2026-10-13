@@ -9,3 +9,5 @@
 @media(max-width:760px){.clicker-hero{padding-top:30px}.clicker-intro h1{font-size:clamp(2rem,8.7vw,3rem)}.clicker-comparison,.clicker-faq{padding:40px 0}.clicker-comparison h2,.clicker-faq h2{font-size:1.7rem}}
 .comparison-sources{margin-top:18px;padding:18px 20px;border:1px solid #35344b;border-radius:8px;background:#13172b}.comparison-sources summary{cursor:pointer;color:#eee6ff;font-weight:650;line-height:1.6}.comparison-sources summary:focus-visible{outline:3px solid #c3b2ff;outline-offset:4px}.comparison-sources p{font-size:.85rem;max-width:920px}.comparison-sources[open] summary{color:var(--clicker-pink)}
 .comparison-hint{display:none}@media(max-width:760px){.comparison-hint{display:block;font-size:.8rem;color:var(--clicker-violet)!important}}
+
+.clicker-disclaimers{margin:24px 0;padding:0;display:block;color:#a6b0cd;font-size:.82rem;line-height:1.7}.clicker-disclaimers p{margin:12px 0;font-size:inherit;font-weight:400}.guide-disclaimers p{font-size:.85rem;line-height:1.7}

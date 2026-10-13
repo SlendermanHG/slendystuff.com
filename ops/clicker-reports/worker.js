@@ -10,7 +10,7 @@ const number = (value, max, integer = false) => typeof value === "number" && Num
 
 export function sanitizeDiagnostics(input) {
   if (!object(input) || input.schema !== 1 || input.app !== "SlendyStuffClicker" || !version(input.appVersion) || input.controllerProtocol !== 5 || !states.has(input.state) || !reasons.has(input.currentSafetyCode) || typeof input.logReadIncomplete !== "boolean" || !number(input.clicksThisRun, 1e9, true) || !number(input.purchasesThisRun, 1e9, true) || !Array.isArray(input.events) || input.events.length > 200) throw new Error("Invalid report");
-  const limits = { cps:9999, limit:1e9, clicks:1e9, purchases:1e9, gameHandles:1e7, gameProcesses:1024, controllerHandles:1e7 };
+  const limits = { cps:99999, limit:1e9, clicks:1e9, purchases:1e9, gameHandles:1e7, gameProcesses:1024, controllerHandles:1e7 };
   const events = input.events.map(event => {
     if (!object(event) || !["start", "start_blocked", "safety_stop", "resource_sample"].includes(event.event)) throw new Error("Invalid event");
     const clean = { event: event.event };

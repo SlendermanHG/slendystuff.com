@@ -61,3 +61,5 @@ test('feedback only sends visitor text and fixed category to Slender',async()=>{
   const f=fixture();assert.equal((await handle(request({category:'suggestion',message:'Please add a setting.',to:'PRIVATE',deviceId:'PRIVATE'},'b'.repeat(32),'feedback'),f.env)).status,200);
   assert.equal(f.calls.length,1);assert.equal(f.calls[0].to,'slender@slendystuff.com');assert(!JSON.stringify(f.calls[0]).includes('PRIVATE'));assert(!f.calls[0].attachments);
 });
+
+test('supported requested rates remain numeric and private fields are stripped',()=>{const r=report();r.appVersion='0.5.2.0';r.events=[{event:'start',cps:99999,path:'PRIVATE'}];const clean=sanitizeDiagnostics(r);assert.equal(clean.events[0].cps,99999);assert(!JSON.stringify(clean).includes('PRIVATE'));r.events[0].cps=100000;assert.equal(sanitizeDiagnostics(r).events[0].cps,undefined);});

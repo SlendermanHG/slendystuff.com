@@ -15,7 +15,7 @@
       return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(data));
     } finally {clearTimeout(timer);}
   }
-  json('/stats/slendystuffclicker.json').then(stats => {
+  Promise.all([json('/stats/slendystuffclicker.json'),json('/slendystuffclicker/product.json')]).then(([stats,product]) => {
     if(stats.status !== 'ok' || !Number.isSafeInteger(stats.totalDownloads) || stats.totalDownloads < 0 || !Array.isArray(stats.versions) || stats.versions.length > 1000) throw Error('Unavailable');
     const checked = Date.parse(stats.checkedAt); if(!Number.isFinite(checked) || checked > Date.now() + 60000) throw Error('Invalid date');
     byId('download-count').textContent = stats.totalDownloads.toLocaleString();
@@ -26,7 +26,7 @@
       version.textContent = 'v' + item.version; count.textContent = item.downloads.toLocaleString(); li.append(version,count); byId('version-counts').append(li);
     }
     const current = stats.current;
-    if(current && validVersion(current.version) && /^https:\/\/github\.com\/SlendermanHG\/slendystuff\.com\/releases\/download\/v[0-9.]+\/SlendyStuffClicker\.exe$/.test(current.url) && current.url.includes('/v' + current.version + '/') && /^[a-f0-9]{64}$/.test(current.sha256) && Number.isSafeInteger(current.size) && current.size > 0 && Date.now() - checked <= 5400000) {
+    if(product.releaseReady === true && validVersion(product.version) && current && current.version === product.version && current.sha256 === product.sha256 && current.size === product.size && validVersion(current.version) && /^https:\/\/github\.com\/SlendermanHG\/slendystuff\.com\/releases\/download\/v[0-9.]+\/SlendyStuffClicker\.exe$/.test(current.url) && current.url.includes('/v' + current.version + '/') && /^[a-f0-9]{64}$/.test(current.sha256) && Number.isSafeInteger(current.size) && current.size > 0 && Date.now() - checked <= 5400000) {
       const link = byId('download'); link.href = current.url; link.removeAttribute('aria-disabled'); link.removeAttribute('tabindex');
       byId('download-version').textContent = 'v' + current.version;
       byId('release-status').textContent = `GitHub release · ${(current.size/1048576).toFixed(1)} MB · SHA-256: ${current.sha256}`;
