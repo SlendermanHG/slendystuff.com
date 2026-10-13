@@ -22,6 +22,7 @@
   <meta name="twitter:title" content="QwertyLock Private Chat">
   <meta name="twitter:description" content="Browser-encrypted private message links for text, SMS, MMS, and chat.">
   <meta name="twitter:image" content="https://slendystuff.com/qwertylock-secure-card.png">
+  <link rel="stylesheet" href="/styles.css?v=20260727-6">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -1003,21 +1004,51 @@
       .matrix-rain { display: none; }
     }
   </style>
+  <link rel="stylesheet" href="/r/chat-theme.css">
   <link rel="icon" href="/favicon.ico" type="image/x-icon">
 </head>
-<body>
+<body data-page="qwertylock">
   <div class="matrix-rain" id="matrixRain" aria-hidden="true"></div>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand-lockup" href="/" aria-label="SlenderFox, SlendyStuff home">
+        <img class="brand-logo" src="/assets/ssbranding-logo-dark.png" alt="SlenderFox fox mark">
+        <span class="brand-copy">
+          <strong>SlenderFox</strong>
+          <span>SlendyStuff · support, websites, secure tools, systems</span>
+        </span>
+      </a>
+      <nav class="site-nav" data-nav aria-label="Main navigation" id="chat-site-nav">
+        <a href="/" data-page="home">Home</a>
+        <a href="/about.html" data-page="about">About</a>
+        <a href="/services.html" data-page="services">Services</a>
+        <a href="/software.html" data-page="software">Software</a>
+        <a href="/r/" data-page="qwertylock" aria-current="page">Private Chat</a>
+        <a href="/community.html" data-page="community">Community</a>
+        <a href="/contact.html" data-page="contact">Contact</a>
+      </nav>
+      <div class="header-actions">
+        <a class="chip-link" href="/community.html">Discord</a>
+        <button class="nav-toggle" type="button" id="chat-menu-button" aria-expanded="false" aria-controls="chat-site-nav">Menu</button>
+      </div>
+    </div>
+  </header>
   <main class="easy-app">
     <header class="easy-header">
       <div>
+        <div class="eyebrow">QwertyLock · SlendyStuff</div>
         <h1>QwertyLock Private Chat</h1>
-        <p class="local-note">slendystuff.com/r</p>
+        <p class="local-note">Create a message link that is encrypted in your browser, then share it with someone you trust.</p>
       </div>
       <div class="easy-header-actions">
-        <a class="button" href="/index.html">Back to SlendyStuff</a>
-        <button id="startConversationBtn" type="button">Start</button>
+        <button class="primary" id="startConversationBtn" type="button">Start a message</button>
       </div>
     </header>
+
+    <section class="chat-intro" aria-label="How private chat works">
+      <p>Write a message and choose a shared phrase. QwertyLock encrypts the message in your browser and creates a link you can send by text or chat. The recipient needs both the link and the phrase to open it.</p>
+      <p>* For better privacy, share the phrase through a different channel. This tool does not guarantee anonymity or protect against compromised devices, screenshots, or someone viewing the screen.</p>
+    </section>
 
     <p class="status" id="status" role="status" aria-live="polite"></p>
 
@@ -1197,7 +1228,25 @@
     </div>
   </div>
 
+  <footer class="footer">
+    <div class="page-shell footer-shell">
+      <div>
+        <div class="brand-copy">
+          <strong>SlenderFox <em>by SlendyStuff</em></strong>
+          <span>support, websites, systems, and secure customer tools</span>
+        </div>
+        <p>Technical support, customer-ready websites, software tools, and practical systems work for people who need things working right.</p>
+      </div>
+      <div class="footer-links">
+        <a class="chip-link" href="/contact.html">Support</a>
+        <a class="chip-link" href="/community.html">Discord</a>
+        <a class="chip-link" href="/about.html">About</a>
+      </div>
+    </div>
+  </footer>
+
   <script src="/assets/qrcode-generator.js"></script>
+  <script src="/r/chat-navigation.js" defer></script>
   <script>
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.,?";
     const base32Alphabet = "abcdefghijklmnopqrstuvwxyz234567";

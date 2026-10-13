@@ -37,6 +37,9 @@ jobs:
         with:
           enablement: true
 
+      - name: Verify download counts and browser refresh behavior
+        run: node --test ops/site-analytics/test.mjs ops/site-analytics/downloads.test.mjs ops/test-counter-ui.cjs ops/test-clicker-stats.cjs
+
       - name: Refresh public SlendyStuffClicker download counts
         run: node ops/refresh-clicker-stats.cjs
         env:

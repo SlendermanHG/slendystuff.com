@@ -6,6 +6,7 @@ workers_dev = false
 preview_urls = false
 routes = [
   { pattern = "slendystuff.com/__analytics*", zone_name = "slendystuff.com" },
+  { pattern = "slendystuff.com/stats/slendystuffclicker.json", zone_name = "slendystuff.com" },
   { pattern = "slendystuff.com/index.html", zone_name = "slendystuff.com" },
   { pattern = "slendystuff.com/support.html", zone_name = "slendystuff.com" },
   { pattern = "slendystuff.com/catalog.html", zone_name = "slendystuff.com" },
