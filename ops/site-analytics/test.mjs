@@ -36,6 +36,13 @@ test('privacy signals and EU countries skip storage',async()=>{
   const european=req();Object.defineProperty(european,'cf',{value:{country:'DE'}});
   assert.equal((await worker.fetch(european,env)).status,204);assert.equal(points.length,0);
 });
+test('no-referrer POSTs work only with browser-controlled same-origin Fetch Metadata',async()=>{
+  const {env,points}=harness();
+  assert.equal((await worker.fetch(req(payload,{Origin:'null','Sec-Fetch-Site':'same-origin','Sec-Fetch-Mode':'cors'}),env)).status,204);
+  assert.equal((await worker.fetch(req(payload,{Origin:'null','Sec-Fetch-Site':'cross-site','Sec-Fetch-Mode':'cors'}),env)).status,403);
+  assert.equal((await worker.fetch(req(payload,{Origin:'null'}),env)).status,403);
+  assert.equal(points.length,1);
+});
 test('redirects point to actual equivalent pages and drop query secrets',async()=>{
   for(const [old,target] of [['/index.html','/'],['/support.html','/contact.html'],['/catalog.html','/software.html'],['/slendystuffclicker/index.html','/slendystuffclicker/'],['/slendystuffclicker/setup/index.html','/slendystuffclicker/setup/']]){
     const response=await worker.fetch(new Request('https://slendystuff.com'+old+'?key=private'),{});

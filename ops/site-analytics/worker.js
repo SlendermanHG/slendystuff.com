@@ -33,12 +33,16 @@ export default {
     }
     if (url.pathname !== '/__analytics' || url.search) return response(404);
     if (request.method !== 'POST') return response(405, null, {'Allow':'POST'});
-    if (request.headers.get('Origin') !== 'https://slendystuff.com') return response(403);
+    const origin = request.headers.get('Origin');
+    // A no-referrer policy can make same-origin POSTs serialize Origin as null.
+    // Fetch Metadata is browser-controlled: never accept opaque cross-site requests.
+    const privateSameOrigin = (origin === null || origin === 'null') && request.headers.get('Sec-Fetch-Site') === 'same-origin' && ['cors','same-origin'].includes(request.headers.get('Sec-Fetch-Mode'));
+    if (origin !== 'https://slendystuff.com' && !privateSameOrigin) return response(403);
     if (request.headers.get('DNT') === '1' || request.headers.get('Sec-GPC') === '1' || excludedCountries.has(request.cf?.country)) return response(204);
     if (!request.headers.get('Content-Type')?.startsWith('application/json')) return response(415);
     if (!env.DB || !env.EVENT_LIMIT) return response(503);
     if (Number(request.headers.get('Content-Length')) > 1024) return response(413);
-    // Transient rate-limit key only; never written to Analytics Engine.
+    // Transient rate-limit key only; never written to D1.
     try {
       const limit = await env.EVENT_LIMIT.limit({key:request.headers.get('CF-Connecting-IP') || 'unknown'});
       if (!limit.success) return response(429);
