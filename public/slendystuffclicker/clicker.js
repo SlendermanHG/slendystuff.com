@@ -50,6 +50,7 @@
     try {
       const result = await json(endpoint + '/api/feedback',4096,{method:'POST',headers:{'Content-Type':'application/json','X-Diagnostic-Submission':submission},body:JSON.stringify({category:byId('feedback-category').value,message:byId('feedback-message').value.trim()})});
       if(result.accepted !== true) throw Error('Not accepted');
+      document.dispatchEvent(new Event('slendystuff:feedback-accepted'));
       byId('feedback-status').textContent = 'Thank you. Your feedback was accepted for delivery to Slender.';available = false;
     } catch {uncertain = true;byId('feedback-status').textContent = 'Delivery could not be confirmed. Please check with Slender before sending again.';}
   });

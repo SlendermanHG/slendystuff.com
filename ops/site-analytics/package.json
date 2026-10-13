@@ -1,0 +1,1 @@
+{"name":"slendystuff-site-analytics","private":true,"type":"module","scripts":{"test":"node --test test.mjs","check":"node --check worker.js","deploy":"wrangler deploy"}}

@@ -1,0 +1,30 @@
+name = "slendystuff-site-analytics"
+main = "worker.js"
+account_id = "bdc683d8caf97d76f7b858872079d607"
+compatibility_date = "2026-10-12"
+workers_dev = false
+preview_urls = false
+routes = [
+  { pattern = "slendystuff.com/__analytics*", zone_name = "slendystuff.com" },
+  { pattern = "slendystuff.com/index.html", zone_name = "slendystuff.com" },
+  { pattern = "slendystuff.com/support.html", zone_name = "slendystuff.com" },
+  { pattern = "slendystuff.com/catalog.html", zone_name = "slendystuff.com" },
+  { pattern = "slendystuff.com/slendystuffclicker/index.html", zone_name = "slendystuff.com" },
+  { pattern = "slendystuff.com/slendystuffclicker/setup/index.html", zone_name = "slendystuff.com" }
+]
+
+[observability]
+enabled = false
+
+[[d1_databases]]
+binding = "DB"
+database_name = "slendystuff-site-analytics"
+database_id = "9c17a861-05b5-4eb2-bd02-964c174e0d72"
+
+[triggers]
+crons = ["23 5 * * *"]
+
+[[ratelimits]]
+name = "EVENT_LIMIT"
+namespace_id = "51043822"
+simple = { limit = 30, period = 60 }

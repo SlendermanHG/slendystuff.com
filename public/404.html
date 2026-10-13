@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; font-src 'self' data: https:; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://cloudflareinsights.com; font-src 'self' data: https:; object-src 'none'; base-uri 'self'; form-action 'self' mailto:; frame-ancestors 'none'">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>404 | SlendyStuff</title>
   <link rel="stylesheet" href="/styles.css?v=20260727-6">
@@ -17,12 +17,12 @@
           <h1>That path is not wired into this build.</h1>
           <p>The page you requested does not exist in the current SlendyStuff map.</p>
           <div class="hero-actions">
-            <a class="button primary" href="/index.html">Go Home</a>
+            <a class="button primary" href="/">Go Home</a>
             <a class="button" href="/contact.html">Contact</a>
           </div>
         </div>
       </article>
     </div>
   </main>
-</body>
+<script src="/analytics.js?v=20261012-1" defer></script></body>
 </html>
