@@ -4,10 +4,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const {publish, verifyAsset, assembleApprovedBinary} = require('./publish-approved-clicker.cjs');
 const env = {GITHUB_REPOSITORY:'SlendermanHG/slendystuff.com',GITHUB_REF:'refs/heads/main',GITHUB_EVENT_NAME:'push',GITHUB_SHA:'a'.repeat(40),GITHUB_TOKEN:'test-fixture-token'};
-const notes = fs.readFileSync(__dirname + '/releases/0.5.2.0/RELEASE-NOTES.md','utf8').replace(/\r\n/g,'\n');
-const asset = {name:'SlendyStuffClicker.exe',size:1103360,state:'uploaded',digest:'sha256:b18a24248dc61e3dcbaa62613303679d9eddd182643d7eefb884832b11a68755',browser_download_url:'https://github.com/SlendermanHG/slendystuff.com/releases/download/v0.5.2.0/SlendyStuffClicker.exe'};
-const release = {id:123,tag_name:'v0.5.2.0',prerelease:true,draft:true,body:notes,assets:[],target_commitish:env.GITHUB_SHA,html_url:'https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.0'};
-test('Publication parts reconstruct the exact approved binary',()=>{ assert.equal(assembleApprovedBinary().length,1103360); });
+const notes = fs.readFileSync(__dirname + '/releases/0.5.2.5/RELEASE-NOTES.md','utf8').replace(/\r\n/g,'\n');
+const asset = {name:'SlendyStuffClicker.exe',size:1135104,state:'uploaded',digest:'sha256:f0af39b2cb11b82a65ea0012afce0c0ed81e674f0af7fd94ae930dd4233c0e14',browser_download_url:'https://github.com/SlendermanHG/slendystuff.com/releases/download/v0.5.2.5/SlendyStuffClicker.exe'};
+const release = {id:123,tag_name:'v0.5.2.5',prerelease:true,draft:true,body:notes,assets:[],target_commitish:env.GITHUB_SHA,html_url:'https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.5'};
+test('Publication parts reconstruct the exact approved binary',()=>{ assert.equal(assembleApprovedBinary().length,1135104); });
 test('Windows checkout cannot normalize publication fragment line endings',()=>{assert.match(fs.readFileSync(__dirname+'/../.gitattributes','utf8'),/^ops\/releases\/\*\*\/SlendyStuffClicker\.exe\.part\* -text$/m);});
 function mock(sequence) {
   const calls=[];
@@ -27,7 +27,7 @@ test('Creates draft, uploads exact bytes, reads identity back before publishing 
   const m=mock([{method:'GET',status:404},{method:'POST',value:release},{method:'POST',value:asset},{method:'GET',value:uploaded},{method:'PATCH',value:publicRelease}]);
   const result=await publish(env,m.request);assert.equal(result.draft,false);assert.equal(m.sequence.length,0);
   const creation=JSON.parse(m.calls[1].options.body);assert.equal(creation.body,notes);assert.equal(creation.draft,true);assert.equal(creation.prerelease,true);
-  assert.equal(m.calls[2].options.body.length,1103360);assert.equal(m.calls[2].options.redirect,'error');
+  assert.equal(m.calls[2].options.body.length,1135104);assert.equal(m.calls[2].options.redirect,'error');
 });
 test('Exact published release is verified without any mutation',async()=>{
   const r={...release,draft:false,assets:[asset]};const m=mock([{method:'GET',value:r},{method:'GET',value:r}]);

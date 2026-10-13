@@ -1,0 +1,311 @@
+ction&&!u.canBuyFunc&&typeof u.buy==='function'&&typeof u.getPrice==='function';});
+        var prices=new Map();entries=entries.filter(function(u){var price=u.getPrice();if(!Number.isSafeInteger(price)||price<0||price>budget)return false;if(u.showIf&&!u.showIf())return false;prices.set(u,price);return true;});
+        // Each package includes unowned parents in dependency order. Bounded best-fit;
+        // live visibility, price, parents and balance are checked again before buying.
+        var best={items:[],spend:0},start=performance.now(),steps=0;
+        function packageFor(u,owned,visiting){if(u.bought||owned.has(u))return [];if(!prices.has(u)||visiting.has(u))return null;visiting.add(u);var result=[],parents=u.parents||[];if(!Array.isArray(parents)||parents.length>32)return null;for(var p of parents){if(p===-1)continue;if(typeof p==='string')p=G.Upgrades&&G.Upgrades[p];if(!p)return null;var chain=packageFor(p,new Set([...owned,...result]),visiting);if(chain===null)return null;result.push(...chain);}visiting.delete(u);result.push(u);return result;}
+        // Try every affordable initial package, then fill the remainder in best-fit
+        // order. The deadline/candidate limit prevents a large tree freezing the game.
+        for(var first=-1;first<entries.length&&steps<4096&&performance.now()-start<2;first++){
+            var owned=new Set(),items=[],spent=0,firstChain=first<0?[]:packageFor(entries[first],owned,new Set());if(firstChain===null)continue;
+            var initial=firstChain.reduce(function(n,u){return n+prices.get(u);},0);if(initial>budget)continue;firstChain.forEach(function(u){owned.add(u);items.push(u);});spent=initial;
+            while(items.length<256&&performance.now()-start<2){var chosen=null,price=-1;for(var u of entries){if(++steps>4096)break;var chain=packageFor(u,owned,new Set());if(!chain||!chain.length)continue;var cost=chain.reduce(function(n,it){return n+prices.get(it);},0);if(cost<=budget-spent&&cost>price){chosen=chain;price=cost;}}if(!chosen||steps>4096)break;chosen.forEach(function(u){owned.add(u);items.push(u);});spent+=price;}
+            if(spent>best.spend||spent===best.spend&&items.length>best.items.length)best={items:items,spend:spent};
+        }
+        best.reason='Bounded best-fit spending; choice upgrades are left for manual setup';return best;
+    }
+    function ascensionView(o,now){
+        var gain=prestigeGain(),chips=num(G.heavenlyChips),budget=G.OnAscend?chips:chips+gain;
+        if(now-planAt>=5000||!chipPlan){planAt=now;chipPlan=heavenlyPlan(budget);}
+        var hold=!o.ascensionAssistant?'Assistant is off':ascendError||ascendPhase==='saving'?'Saving before ascension':!G.OnAscend&&gain<o.ascendMinimum?'Waiting for minimum new prestige':!chipPlan.items.length?'No new automatic heavenly purchases fit the budget':'New heavenly upgrades fit the chip budget';
+        if(ascendError)hold=ascendError;
+        return {gain:gain,phase:ascendPhase,spend:chipPlan.spend,items:chipPlan.items.slice(0,32).map(function(u){return text(u.name,100);}),summary:hold+'\nNew prestige: '+gain+' / '+o.ascendMinimum+' minimum\nChip budget: '+budget+' ¬∑ Planned spending: '+chipPlan.spend+'\n'+chipPlan.items.slice(0,12).map(function(u){return text(u.name,100);}).join(', ')+'\n'+chipPlan.reason+'\n'+(cycleOwned?'This session owns the ascension cycle.':'Existing manual ascensions are not automatically completed.')};
+    }
+    function ascendTick(command,o,now,fresh){
+        liveCommand=command;if(fresh)lastFresh=now;
+        if(!command.running||!o.ascensionAssistant){saveSerial++;if(ascendPhase==='saving')ascendPhase='watching';return false;}
+        if(!fresh||ascendError||G.promptOn||G.AscendTimer>0||G.ReincarnateTimer>0||policy(o).target||rankingPending&&o.completionist&&o.assist)return false;
+        if(now-lastAscendAction<1000)return false;lastAscendAction=now;
+        if(G.OnAscend){
+            if(!cycleOwned)return false;
+            if(o.heavenlyBuy){var plan=heavenlyPlan(num(G.heavenlyChips)),u=plan.items[0];if(u){var price=u.getPrice(),parents=u.parents||[];
+                if(u.pool!=='prestige'||u.bought||u.canBePurchased!==1||u.showIf&&!u.showIf()||parents.some(function(p){if(p===-1)return false;if(typeof p==='string')p=G.Upgrades[p];return !p||!p.bought;})||price>num(G.heavenlyChips)||!Number.isSafeInteger(price)){ascendError='Heavenly purchase changed; review the tree manually';return false;}
+                var before=u.bought;u.buy();if(u.bought<=before){ascendError='Heavenly purchase did not complete; review manually';return false;}planAt=-Infinity;log('Bought heavenly upgrade: '+u.name);return true;
+            }}
+            if(o.autoReincarnate&&G.nextAscensionMode===0&&typeof G.Reincarnate==='function'){G.Reincarnate(1);cycleOwned=false;ascendPhase='watching';planAt=-Infinity;log('Reincarnated after the approved ascension cycle');return true;}
+            ascendPhase='awaiting reincarnation';return false;
+        }
+        if(ascendPhase==='saving'||!Number.isInteger(G.ascensionMode)||G.ascensionMode!==0||num(G.T)<3||activeBonus())return false;
+        var gain=prestigeGain();if(gain<o.ascendMinimum)return false;
+        var view=heavenlyPlan(num(G.heavenlyChips)+gain);
+        if(!view.items.length||typeof verifySave!=='function'||typeof G.Ascend!=='function')return false;
+        if(o.ascendPayouts){var stored=(G.wrinklers||[]).slice(0,32).filter(function(w){return w&&w.phase>0&&num(w.sucked)>0;});
+            if(stored.length){var payout=stored.find(function(w){return w.type!==1&&w.phase===2&&w.hp>0.5&&fed.has(w)&&(now-fed.get(w))/1000>=o.feedSeconds;});
+                if(payout){popWrinkler(payout);log('Collected a normal feeding wrinkler before ascension');return true;}return false;
+            }
+        }
+        var serial=++saveSerial,epoch=G.resets;ascendPhase='saving';log('Verifying a local save before the approved ascension');
+        Promise.resolve().then(function(){return verifySave();}).then(function(){
+            if(serial!==saveSerial||!liveCommand||!liveCommand.running||!liveCommand.gameplay.ascensionAssistant||performance.now()-lastFresh>250||G.resets!==epoch||G.OnAscend||G.AscendTimer>0||G.promptOn||policy(liveCommand.gameplay).target)return;
+            // Recompute viability after saving; no stale spending/reset approval.
+            var gainNow=prestigeGain(),check=heavenlyPlan(num(G.heavenlyChips)+gainNow);
+            if(gainNow<liveCommand.gameplay.ascendMinimum||!check.items.length||activeBonus()||liveCommand.gameplay.ascendPayouts&&(G.wrinklers||[]).some(function(w){return w&&w.phase>0&&num(w.sucked)>0;}))return;
+            cycleOwned=true;ascendPhase='ascending';G.Ascend(1);log('Requested native ascension after verified save');
+        }).catch(function(){if(serial===saveSerial){ascendError='Save verification failed; ascension stays stopped';log(ascendError);}}).finally(function(){if(serial===saveSerial&&ascendPhase==='saving')ascendPhase='watching';});return true;
+    }
+    function drawWrinklerCountdowns(){
+        if(!liveCommand||!liveCommand.running||!liveCommand.gameplay.wrinklerOverlay||!liveCommand.gameplay.wrinklers||performance.now()-lastFresh>250||!supported||G.OnAscend)return;
+        var ctx=G.LeftBackground;if(!ctx||typeof ctx.fillText!=='function')return;var o=liveCommand.gameplay,now=performance.now(),items=wrinklerView(o,now).items;
+        ctx.save();try{ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.95;
+            items.forEach(function(item){var w=G.wrinklers[item.slot-1];if(!w||!Number.isFinite(w.x)||!Number.isFinite(w.y)||w.hp<=0.5)return;var label=item.type==='Shiny'?'Protected':item.phase!==2?'Feed '+item.waitSeconds+'s':item.waitSeconds>0?item.waitSeconds+'s':item.eligible?'Ready':item.reason.startsWith('Keeping')?'Kept':item.stored<o.storedMinimum?'Minimum':!item.stored?'Not feeding':'Waiting';
+                var width=Math.min(130,ctx.measureText(label).width+12),x=w.x,y=w.y+30;ctx.fillStyle='#111a32';ctx.fillRect(x-width/2,y-10,width,20);ctx.fillStyle='#ff6eb5';ctx.fillText(label,x,y);
+            });
+        }finally{ctx.restore();}
+    }
+
+    function tick(command,o,now,fresh){
+        if(command.releaseSeason&&command.releaseSeason!==released){released=command.releaseSeason;seasonLock='';log('Selected season released; no automatic switch was purchased');}
+        if(session!==command.session){session=command.session;saveSerial++;ascendError='';cycleOwned=false;ascendPhase='watching';tradeSpent=0;lastAction=-Infinity;handled='';fed.clear();}
+        if(!supported)return;
+        prepare(o,now);observeWrinklers(now);ascendTick(command,o,now,fresh);
+        if(pending){if(now>=pendingUntil){pending=null;backfireUntil=now+60000;log('Spell result delayed; automatic casting held for one minute');}return;}
+        var p=policy(o);
+        if(command.running&&fresh&&!p.hold&&!G.promptOn&&!G.OnAscend&&G.T>=3){
+            if(now-lastAction>=1000){lastAction=now;var acted=execute(command.action,o,command.autoBuy,now);
+                if(!acted)acted=wrinklers(o,now);if(!acted)acted=pets(o,command.autoBuy);
+
+            }
+        }
+        if(now-lastTick>=1000){lastTick=now;var seasons=seasonView(o,new Date()),garden=mini(2),gr=mini(7),pant=mini(6),market=mini(5),can=G.canLumps&&G.canLumps();
+            var actions=quoteView(o,command.autoBuy);
+            // Snapshot is purpose-built: no bakery name, account identifiers, save text or secrets.
+            snapshot={schema:1,version:text(G.version,20),supported:supported,season:text(G.season,20),resets:num(G.resets),cookies:num(G.cookies),production:num(G.cookiesPs),tradeSpent:tradeSpent,buffs:buffs(),seasons:seasons,goals:rows.slice(o.goalPage*256,(o.goalPage+1)*256),goalTotal:rows.length,goalSummary:rankingPending?'Reading the installed achievement catalog...':rows.length+' matching achievements; sorted by readiness, cost and progress. Choose Suggest only, select a goal, then Pin selected. Filters and search apply to the full catalog.',goalPage:o.goalPage,target:target,policy:policy(o),shop:shop(command.autoBuy,o,p.upgrades,false),wrinklers:wrinklerView(o,now),pets:petView(o),ascension:ascensionView(o,now),counters:Object.assign({},counters),history:history.slice(),actions:actions,
+                lumps:{available:num(G.lumps),status:!can?'Locked':Date.now()-G.lumpT>=G.lumpRipeAge?'Ripe':Date.now()-G.lumpT>=G.lumpMatureAge?'Mature (harvest can fail)':'Growing',seconds:can?Math.max(0,Math.ceil((G.lumpT+G.lumpRipeAge-Date.now())/1000)):0},
+                tools:{garden:garden?'Seeds '+garden.plantsUnlockedN+'/'+garden.plantsN+'; harvests '+garden.harvests+(garden.freeze?'; frozen':''):'Unlock Farm level 1',grimoire:gr?'Mana '+Math.floor(gr.magic)+'/'+gr.magicM+'; spells '+gr.spellsCastTotal:'Unlock Wizard tower level 1',pantheon:pant?'Worship swaps '+pant.swaps:'Unlock Temple level 1',dragon:'Level '+num(G.dragonLevel)+'; petting needs the open dragon panel',stock:market?'Profit '+text(market.profit)+'; run budget spent '+tradeSpent:'Unlock Bank level 1',ascension:'Potential prestige '+num(G.ascendMeterLevel)+'; prepare: save, review wrinklers, rare harvests and Chocolate egg; select the native challenge mode after ascension',auraAdvice:'Production: Radiant Appetite / Breath of Milk; clicks: Dragonflight; wrinklers: Dragon Guts. Review your build before sacrificing.'},
+                stocks:market?(market.goodsById||[]).slice(0,32).map(function(g){return {name:text(g.name,60),price:num(g.val),stock:num(g.stock),cost:stockCost(market,g),advice:g.val<=o.stockBuy?'Below buy target':g.val>=o.stockSell?'Above sell target':'Watch'};}):[],seedGoals:garden?(garden.plantsById||[]).slice(0,36).filter(function(p){return !p.unlocked;}).map(function(p){return text(p.name,60);}):[],steam:'Game-earned flags only; Steam delivery is not independently confirmed'};
+        }
+    }
+    return {draw:drawWrinklerCountdowns,petView:petView,heavenlyPlan:heavenlyPlan,ascensionView:ascensionView,validate:valid,prepare:prepare,policy:policy,tick:tick,shimmers:shimmers,shop:shop,inspect:function(){return supported?Object.assign({schema:1,version:text(G.version,20),supported:true},snapshot):{schema:1,version:text(G.version,20),supported:false,history:['Advanced actions stopped: installed game version needs adapter review']};},seasonView:seasonView,natural:natural,easter:easter,rule:rule,reserve:reserve,execute:execute,quotes:quoteView,counters:counters};
+}
+
+(function () {
+    'use strict';
+    Game.registerMod('cursor free cookie clicker', {
+        init: function () {
+            var token = '__PAIRING_TOKEN__';
+            if (!/^[a-f0-9]{64}$/.test(token)) return;
+            var session = '', instance = '', sequence = -1, clicks = 0, purchases = 0;
+            var busy = false, state = 'ready', lastReport = -Infinity, lastBudget = -Infinity, credit = 0;
+            var maxRate = 99999, maxBatch = 256;
+            var recent = new Array(maxRate), recentHead = 0, recentSize = 0, lastBuy = -Infinity;
+            var silence = function () {};
+            var faulted = false, terminated = false;
+            var boot = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function (n) { return n.toString(16).padStart(2, '0'); }).join('');
+            var restartHandled = '', restarting = false;
+            var automation = SlendyAutomation(Game,verifyGameSave), telemetryBusy=false, telemetryAt=-Infinity;
+            function sendTelemetry(steady) {
+                if(telemetryBusy || steady-telemetryAt<1000 || !session) return;
+                var data=JSON.stringify(automation.inspect());if(data.length>524288)throw new Error('Progress exceeded its safety bound');
+                telemetryAt=steady;telemetryBusy=true;
+                var abort=new AbortController(), timeout=setTimeout(function(){abort.abort();},1000);
+                // text/plain keeps this paired local JSON report a simple CORS request.
+                fetch(base+'/telemetry?token='+token+'&session='+encodeURIComponent(session)+'&boot='+boot,{method:'POST',headers:{'Content-Type':'text/plain'},body:data,cache:'no-store',signal:abort.signal})
+                    .then(function(r){if(!r.ok)throw new Error('Progress rejected');return r.text();})
+                    .catch(function(){ /* State acknowledgments, not progress, hold the running lease. */ })
+                    .then(function(){clearTimeout(timeout);telemetryBusy=false;});
+            }
+            var supportsRestart = typeof App !== 'undefined' && App && typeof App.quit === 'function' && typeof Game.WriteSave === 'function' &&
+                typeof send === 'function' && typeof localStorageGet === 'function';
+            var base = 'http://127.0.0.1:43821';
+            function report() {
+                if (busy) return;
+                busy = true;
+                var controller = new AbortController();
+                var timeout = setTimeout(function () { controller.abort(); }, 1000);
+                fetch(base + '/state?token=' + token + '&session=' + encodeURIComponent(session) + '&clicks=' + clicks + '&purchases=' + purchases + '&state=' + state + '&boot=' + boot + '&restartSupported=' + (supportsRestart ? '1' : '0'),
+                    { cache: 'no-store', signal: controller.signal })
+                    .then(function (r) {
+                        // Drain each small response before another request; never leave body streams unread.
+                        if (!r.ok) throw new Error('Controller unavailable');
+                        return r.text();
+                    })
+                    .catch(function () { state = 'disconnected'; })
+                    .then(function () { clearTimeout(timeout); busy = false; });
+            }
+            function restartReply(id, outcome) {
+                var abort = new AbortController(), timeout = setTimeout(function () { abort.abort(); }, 1500);
+                return fetch(base + '/restart?token=' + token + '&session=' + encodeURIComponent(session) + '&boot=' + boot + '&id=' + id + '&result=' + outcome + '&clicks=' + clicks + '&purchases=' + purchases,
+                    { cache: 'no-store', signal: abort.signal }).then(function (response) {
+                        if (!response.ok) throw new Error('Restart not approved');
+                        return response.json();
+                    }).then(function (response) {
+                        if (!response || response.accepted !== true) throw new Error('Restart not approved');
+                    }).finally(function () { clearTimeout(timeout); });
+            }
+            async function verifyGameSave(){
+                if(!supportsRestart||Game.OnAscend||Game.AscendTimer>0||Game.T<3||Game.isSaving)throw new Error('Save unavailable');
+                Game.WriteSave();var expected=localStorageGet(Game.SaveTo);
+                if(typeof expected!=='string'||expected.length<10||expected.length>4194304)throw new Error('Save size');
+                var deadline=performance.now()+18000;while(Game.isSaving){if(performance.now()>deadline)throw new Error('Save deadline');await new Promise(function(resolve){setTimeout(resolve,100);});}
+                var actual=await new Promise(function(resolve,reject){var timeout=setTimeout(function(){reject(new Error('Read-back deadline'));},3000);send('load',function(data){clearTimeout(timeout);resolve(data);});});
+                if(actual!==expected)throw new Error('Read-back mismatch');
+            }
+            if(typeof Game.registerHook==='function')Game.registerHook('draw',function(){automation.draw();});
+            async function saveAndQuit(id) {
+                restarting = true; credit = 0; state = 'paused';
+                try {
+                    if (!supportsRestart || Game.OnAscend || Game.AscendTimer > 0 || Game.T < 3 || Game.isSaving) throw new Error('Game is not ready to save');
+                    Game.WriteSave();
+                    var expected = localStorageGet(Game.SaveTo);
+                    if (typeof expected !== 'string' || expected.length < 10 || expected.length > 4194304) throw new Error('Invalid save');
+                    var deadline = performance.now() + 18000;
+                    while (Game.isSaving) {
+                        if (performance.now() > deadline) throw new Error('Save deadline');
+                        await new Promise(function (resolve) { setTimeout(resolve, 100); });
+                    }
+                    // The game's "saved" callback fires on write failure too. Compare actual disk read-back.
+                    var actual = await new Promise(function (resolve, reject) {
+                        var timeout = setTimeout(function () { reject(new Error('Read-back deadline')); }, 3000);
+                        send('load', function (data) { clearTimeout(timeout); resolve(data); });
+                    });
+                    if (actual !== expected) throw new Error('Save read-back mismatch');
+                    await restartReply(id, 'saved');
+                    App.quit();
+                } catch (error) {
+                    state = 'error'; faulted = true;
+                    try { await restartReply(id, 'failed'); } catch (ignored) {}
+                    restarting = false; report();
+                }
+            }
+            function validBuy(options) {
+                return options && typeof options.enabled === 'boolean' && Number.isFinite(options.reserve) && options.reserve >= 0 && options.reserve <= 1e300 &&
+                    Array.isArray(options.buildings) && options.buildings.length <= 32 &&
+                    options.buildings.every(function (id, i, ids) { return Number.isInteger(id) && id >= 0 && id <= 1023 && ids.indexOf(id) === i; }) &&
+                    Array.isArray(options.upgrades) && options.upgrades.length <= 3 &&
+                    options.upgrades.every(function (pool, i, pools) { return (pool === '' || pool === 'cookie' || pool === 'tech') && pools.indexOf(pool) === i; });
+            }
+            // Only fresh executable pulses click; no document timers, mouse APIs, or keyboard hooks.
+            var events = new EventSource(base + '/events?token=' + token);
+            events.onmessage = function (event) {
+                if (terminated) return;
+                try {
+                    var command = JSON.parse(event.data), now = Date.now(), steady = performance.now(), previousState = state;
+                    if (command.protocol !== 7 || !/^[a-f0-9]{32}$/.test(command.session) || !/^[a-f0-9]{32}$/.test(command.instance) ||
+                        !Number.isSafeInteger(command.sequence) || command.sequence < 0 || !Number.isSafeInteger(command.issuedAt) || Math.abs(now - command.issuedAt) > 1000 ||
+                        !Number.isInteger(command.cps) || command.cps < 1 || command.cps > maxRate || !Number.isSafeInteger(command.limit) || command.limit < 0 || command.limit > 1000000000 ||
+                        typeof command.running !== 'boolean' || typeof command.safetyStopped !== 'boolean' || typeof command.overrideCooldown !== 'boolean' || typeof command.reduceEffects !== 'boolean' ||
+                        (!command.overrideCooldown && command.cps > 50) || !validBuy(command.autoBuy)) throw new Error('Invalid or expired pulse');
+                    if (command.collectGolden != null && typeof command.collectGolden !== 'boolean') throw new Error('Invalid golden-cookie setting');
+                    if(!automation.validate(command.gameplay)) throw new Error('Invalid gameplay settings');
+                    if(command.action!=null&&(!/^[a-f0-9]{32}$/.test(command.action.id)||typeof command.action.key!=='string'||command.action.key.length>100||!/^[a-z0-9:-]+$/.test(command.action.key)||!/^[0-9]{1,12}$/.test(command.action.quote)))throw new Error('Invalid approved action');
+                    if(command.releaseSeason!=null&&command.releaseSeason!==''&&!/^[a-f0-9]{32}$/.test(command.releaseSeason))throw new Error('Invalid season release');
+                    if (instance !== command.instance) {
+                        if (command.running) throw new Error('Controller must introduce itself stopped');
+                        instance = command.instance; sequence = -1; session = ''; credit = 0; lastBudget = steady;
+                    }
+                    if (command.sequence <= sequence) throw new Error('Replayed pulse');
+                    sequence = command.sequence;
+                    if (session !== command.session) { session = command.session; clicks = 0; purchases = 0; credit = 0; lastBudget = steady; faulted = false; }
+                    if (command.safetyStopped) {
+                        // A resource failure ends the connection as well as game actions.
+                        // Reloading the game is required; a delayed pulse cannot resume this instance.
+                        terminated = true; credit = 0; state = 'error'; events.close(); report(); return;
+                    }
+                    if (command.restartId != null && (!/^[a-f0-9]{32}$/.test(command.restartId) || command.running)) throw new Error('Invalid restart request');
+                    if (command.restartId || restarting) {
+                        credit = 0; lastBudget = steady; state = faulted ? 'error' : 'paused';
+                        if (command.restartId && command.restartId !== restartHandled && !restarting) {
+                            restartHandled = command.restartId; saveAndQuit(command.restartId);
+                        }
+                        if (steady - lastReport >= 1000) { lastReport = steady; report(); }
+                        return;
+                    }
+                    var elapsed = steady - lastBudget; lastBudget = steady;
+                    var gameplay=command.gameplay;automation.prepare(gameplay,steady);var protection=automation.policy(gameplay),advancedProcessed=false;
+                    if (!command.running) { credit = 0; state = command.limit > 0 && clicks >= command.limit ? 'complete' : 'stopped'; }
+                    else if ((command.limit > 0 && clicks >= command.limit) || clicks >= 1000000000) { credit = 0; state = 'complete'; }
+                    else if (faulted) { credit = 0; state = 'error'; }
+                    else if (protection.hold) {credit=0;state='paused';}
+                    else if (Game.promptOn || Game.OnAscend || Game.AscendTimer > 0 || Game.T < 3 || typeof Game.ClickCookie !== 'function' ||
+                        (command.overrideCooldown && !Number.isFinite(Game.lastClick))) { credit = 0; state = 'paused'; }
+                    else {
+                        state = 'clicking';
+                        if(!automation.inspect().supported)throw new Error('Unsupported game version');
+                        if (elapsed > 0 && elapsed <= 100) automation.shimmers(command,gameplay,protection,steady);
+                        // A native pop can earn the active goal immediately. Resolve its successor
+                        // before spending click credit or buying under the previous goal's policy.
+                        var refreshProtection=function(){automation.prepare(gameplay,steady);protection=automation.policy(gameplay);if(protection.hold||Game.promptOn||Game.OnAscend||Game.AscendTimer>0||Game.T<3){credit=0;state='paused';}};
+                        refreshProtection();
+                        // Independent actions get their bounded turn before the click batch can
+                        // consume the callback budget. A high rate must not starve wrinkler payouts.
+                        automation.tick(command,gameplay,steady,state==='clicking'&&elapsed>0&&elapsed<=100&&performance.now()-steady<8);advancedProcessed=true;
+                        refreshProtection();
+                        // Bounded callbacks; discard credit after a stall, with no catch-up queue.
+                        credit = elapsed >= 0 && elapsed <= 100 ? Math.min(maxBatch, credit + elapsed * command.cps / 1000) : 0;
+                        var canMain=protection.main&&state==='clicking',batch = canMain ? Math.floor(credit + 0.000001) : 0; credit = canMain ? credit-batch : 0;
+                        if (batch > 0) {
+                            var prefs = Game.prefs, particles = prefs && prefs.particles, numbers = prefs && prefs.numbers;
+                            var sound = Game.playCookieClickSound;
+                            var suppressEffects = command.reduceEffects || command.cps > 50;
+                            try {
+                                if (suppressEffects) {
+                                    if (prefs) { prefs.particles = 0; prefs.numbers = 0; }
+                                    if (typeof sound === 'function') Game.playCookieClickSound = silence;
+                                }
+                                for (var i = 0; i < batch; i++) {
+                                    if (performance.now() - steady >= 8) break;
+                                    if ((command.limit > 0 && clicks >= command.limit) || clicks >= 1000000000) { state = 'complete'; break; }
+                                    var timestamp = performance.now();
+                                    while (recentSize > 0 && timestamp - recent[recentHead] >= 1000) {
+                                        recentHead = (recentHead + 1) % maxRate; recentSize--;
+                                    }
+                                    if (recentSize >= maxRate) break;
+                                    var before = Game.cookieClicks, previous = Game.lastClick;
+                                    try {
+                                        if (command.overrideCooldown) Game.lastClick = Date.now() - 20;
+                                        Game.ClickCookie();
+                                    } finally {
+                                        if (command.overrideCooldown) Game.lastClick = Game.cookieClicks > before ? Math.max(previous, Game.lastClick) : previous;
+                                    }
+                                    if (Game.cookieClicks > before) {
+                                        clicks++; recent[(recentHead + recentSize) % maxRate] = timestamp; recentSize++;
+                                    }
+                                    if(protection.target&&Game.Achievements&&Game.Achievements[protection.target]&&Game.Achievements[protection.target].won){refreshProtection();if(protection.hold||!protection.main){credit=0;break;}}
+                                }
+                            } finally {
+                                if (suppressEffects) {
+                                    if (prefs) { prefs.particles = particles; prefs.numbers = numbers; }
+                                    if (typeof sound === 'function' && Game.playCookieClickSound === silence) Game.playCookieClickSound = sound;
+                                }
+                            }
+                        }
+                        if ((command.limit > 0 && clicks >= command.limit) || clicks >= 1000000000) state = 'complete';
+                        if (state === 'clicking' && command.autoBuy.enabled && elapsed > 0 && elapsed <= 100 && steady-lastBuy>=250 && performance.now() - steady < 8) {
+                            lastBuy=steady;var bought=automation.shop(command.autoBuy,gameplay,protection.upgrades,true);if(bought.purchased)purchases++;
+                        }
+                    }
+                    // One advanced decision per second, and bounded local progress scans. No timer catch-up.
+                    if(!advancedProcessed)automation.tick(command,gameplay,steady,command.running&&!faulted&&elapsed>0&&elapsed<=100&&performance.now()-steady<8);
+                    sendTelemetry(steady);
+                    if (steady - lastReport >= 1000 || (state === 'complete' && previousState !== 'complete')) { lastReport = steady; report(); }
+                } catch (error) { state = 'error'; credit = 0; faulted = true; report(); }
+            };
+            events.onerror = function () { state = 'disconnected'; faulted=true; credit=0; };
+        }
+    });
+})();
+    {
+  "Name": "SlendyStuffClicker",
+  "ID": "cursor free cookie clicker",
+  "Author": "SlendyStuff",
+  "Description": "A SlendyStuff Production. Independent background clicking, smart shop controls, wrinklers, seasonal progress, Completionist guidance and resource safety stops. Controlled by SlendyStuffClicker.exe without using your mouse.",
+  "ModVersion": 9,
+  "GameVersion": 2.053,
+  "Date": "12/10/2026",
+  "Dependencies": [],
+  "Disabled": 1,
+  "AllowSteamAchievs": 1,
+  "ControllerVersion": "0.5.2.5"
+}    ‚D âPNG
+
+   IHDR         ≤ß”0   IDATx⁄Ï˝i∞•˘}ˆ}ˇœsŒπkÔ≥wOœ>¿ $∏ÄAê wä¢ƒEñXîiÀV*¥eUßÏäcæH%v^8/óSN9±ùT9eß«…ñ,J2mS&Eq	IÄÿwÃæÙL/w9œÛœãsÓŸÓπ›=É0ÀÁ”ºú{œ=Á9K7™˛À˜ˇ˚ïùù35       ¿õZ„#       Ä                  "                 @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í        @        Ä                  í  

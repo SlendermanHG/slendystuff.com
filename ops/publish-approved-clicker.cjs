@@ -5,14 +5,14 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 const path = require('node:path');
 const repo = 'SlendermanHG/slendystuff.com';
-const tag = 'v0.5.2.0';
+const tag = 'v0.5.2.5';
 const name = 'SlendyStuffClicker.exe';
-const hash = 'b18a24248dc61e3dcbaa62613303679d9eddd182643d7eefb884832b11a68755';
-const size = 1103360;
+const hash = 'f0af39b2cb11b82a65ea0012afce0c0ed81e674f0af7fd94ae930dd4233c0e14';
+const size = 1135104;
 
 function assembleApprovedBinary() {
-  const root = path.join(__dirname, 'releases', '0.5.2.0');
-  const binary = Buffer.concat(Array.from({length:34},(_,i)=>i+1).map(n => fs.readFileSync(path.join(root, name + '.part' + n))));
+  const root = path.join(__dirname, 'releases', '0.5.2.5');
+  const binary = Buffer.concat(Array.from({length:35},(_,i)=>i+1).map(n => fs.readFileSync(path.join(root, name + '.part' + n))));
   if (binary.length !== size || crypto.createHash('sha256').update(binary).digest('hex') !== hash) throw Error('Unapproved publication parts');
   fs.writeFileSync(path.join(root, name), binary);
   return binary;
@@ -31,13 +31,13 @@ function verifyAsset(asset, draft = false) {
 async function publish(env = process.env, request = fetch) {
   if (env.GITHUB_REPOSITORY !== repo || env.GITHUB_REF !== 'refs/heads/main' || env.GITHUB_EVENT_NAME !== 'push' ||
       !/^[a-f0-9]{40}$/.test(env.GITHUB_SHA || '') || !env.GITHUB_TOKEN) throw Error('Approved main-branch publication context required');
-  const root = path.join(__dirname, 'releases', '0.5.2.0');
+  const root = path.join(__dirname, 'releases', '0.5.2.5');
   const binary = fs.readFileSync(path.join(root, name));
   const notes = fs.readFileSync(path.join(root, 'RELEASE-NOTES.md'), 'utf8').replace(/\r\n/g, '\n');
   if (binary.length !== size || crypto.createHash('sha256').update(binary).digest('hex') !== hash) throw Error('Unapproved binary');
-  if (!notes.startsWith('# SlendyStuffClicker v0.5.2.0\n') || !notes.includes(hash)) throw Error('Missing approved version and identity in notes');
+  if (!notes.startsWith('# SlendyStuffClicker v0.5.2.5\n') || !notes.includes(hash)) throw Error('Missing approved version and identity in notes');
   const product = JSON.parse(fs.readFileSync(path.join(root, 'APPROVAL.json'), 'utf8'));
-  if (product.version !== '0.5.2.0' || product.size !== size || product.sha256 !== hash || product.releaseReady !== true || product.ownerApproved !== true || product.policy !== 'manual-unsigned-preview') throw Error('Approved artifact manifest mismatch');
+  if (product.version !== '0.5.2.5' || product.size !== size || product.sha256 !== hash || product.releaseReady !== true || product.ownerApproved !== true || product.policy !== 'manual-unsigned-preview') throw Error('Approved artifact manifest mismatch');
   const base = `https://api.github.com/repos/${repo}`;
   async function api(url, method = 'GET', body, binaryBody = false, allow404 = false) {
     const parsed = new URL(url);

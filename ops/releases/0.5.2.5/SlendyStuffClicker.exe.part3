@@ -1,0 +1,212 @@
+y: [0, 1000000], stockSell: [0, 1000000], stockCap: [0, 10000], productionReserve: [0, 86400], maintenanceHours: [0, 24], backupCount: [0, 10], gardenX:[0,5], gardenY:[0,5] };
+        if (Object.keys(ranges).some(function (k) { return !Number.isFinite(o[k]) || o[k] < ranges[k][0] || o[k] > ranges[k][1]; })) return false;
+        if (!['keep', 'timed', 'threshold'].includes(o.wrinklerMode) || !['ripe', 'mature'].includes(o.lumpRule)) return false;
+        if (!['production', 'cheapest'].includes(o.shopMode)) return false;
+        if ([o.storedMinimum, o.stockBudget].some(function (n) { return !Number.isFinite(n) || n < 0 || n > 1e300; })) return false;
+        if (typeof o.pin !== 'string' || o.pin.length > 100 || !Array.isArray(o.excluded) || o.excluded.length > 128 || o.excluded.some(function (n) { return typeof n !== 'string' || n.length > 100; })) return false;
+        if (!Array.isArray(o.categories) || o.categories.length > 8 || o.categories.some(function (n) { return !['Buildings', 'Production', 'Clicks', 'Seasonal', 'Wrinklers', 'Minigames', 'Challenges', 'Other'].includes(n); })) return false;
+        if (!Array.isArray(o.buildingRules) || o.buildingRules.length > 32 || o.buildingRules.some(function (b) { return !b || !Number.isInteger(b.id) || b.id < 0 || b.id > 31 || !Number.isInteger(b.target) || b.target < 0 || b.target > 100000 || !Number.isInteger(b.cap) || b.cap < 0 || b.cap > 100000 || (b.cap > 0 && b.target > b.cap) || !Number.isInteger(b.priority) || b.priority < 1 || b.priority > 100; })) return false;
+        return new Set(o.buildingRules.map(function (b) { return b.id; })).size === o.buildingRules.length;
+    }
+    function easter(y) {
+        var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),v=h+l-7*m+114;
+        return new Date(y,Math.floor(v/31)-1,v%31+1);
+    }
+    function windows(y) { var end=easter(y),start=new Date(y,end.getMonth(),end.getDate()-7); return [
+        { id:'valentines',name:"Valentine's Day",start:new Date(y,1,10),end:new Date(y,1,15) },
+        { id:'fools',name:'Business Day',start:new Date(y,2,31),end:new Date(y,3,2) },
+        { id:'easter',name:'Easter',start:start,end:end },
+        { id:'halloween',name:'Halloween',start:new Date(y,9,24),end:new Date(y,9,31) },
+        { id:'christmas',name:'Christmas',start:new Date(y,11,15),end:new Date(y,11,31) } ]; }
+    function natural(date) { var day=new Date(date.getFullYear(),date.getMonth(),date.getDate()); return windows(date.getFullYear()).find(function (w) { return day >= w.start && day <= w.end; }); }
+    function dateText(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+    function lists(id) {
+        if(id==='halloween') return ['Skull cookies','Ghost cookies','Bat cookies','Slime cookies','Pumpkin cookies','Eyeball cookies','Spider cookies'];
+        if(id==='christmas') return ['Christmas tree biscuits','Snowflake biscuits','Snowman biscuits','Holly biscuits','Candy cane biscuits','Bell biscuits','Present biscuits'].concat(G.santaDrops || [], ['A festive hat',"Santa's dominion"]);
+        if(id==='valentines') return ['Pure heart biscuits','Ardent heart biscuits','Sour heart biscuits','Weeping heart biscuits','Golden heart biscuits','Eternal heart biscuits','Prism heart biscuits'];
+        if(id==='easter') return (G.easterEggs || []).slice(0,64);
+        return [];
+    }
+    function seasonView(o, date) {
+        var today = new Date(date.getFullYear(),date.getMonth(),date.getDate());
+        return windows(date.getFullYear()).map(function (w) {
+            var names=lists(w.id), present=names.filter(function (n) { return G.Upgrades && G.Upgrades[n]; });
+            var done=present.filter(has).length, unlocked=present.filter(function (n) { return G.Upgrades[n].unlocked || has(n); }).length;
+            var live=G.seasons && G.seasons[w.id], u=live && live.triggerUpgrade;
+            var next=w.end<today ? windows(date.getFullYear()+1).find(function(n){return n.id===w.id;}) : w;
+            var days=Math.ceil((next.start-today)/86400000), active=G.season===w.id;
+            var state=active?'Active':present.length && done===present.length?'Completed':has('Season switcher')&&u&&u.unlocked?'Available through Season Switcher':days>=0&&days<=o.noticeDays?'Upcoming':'Locked';
+            var missing=present.filter(function(n){return !has(n);});
+            var cost=missing.reduce(function(sum,n){var it=G.Upgrades[n];return sum+(it.unlocked&&typeof it.getPrice==='function'?num(it.getPrice()):0);},0);
+            return {id:w.id,name:w.name,state:state,window:dateText(next.start)+' to '+dateText(next.end)+' (planning)',days:Math.max(0,days),notice:o.noticeDays>0&&days>=0&&days<=o.noticeDays&&!active,done:done,total:present.length,unlocked:unlocked,missing:missing.slice(0,36),spending:cost,switchPrice:u&&typeof u.getPrice==='function'?num(u.getPrice()):0,
+                reason:!supported?'Installed game version needs review':w.id==='fools'?'Calendar event; no exclusive achievement required':w.id==='halloween'&&!num(G.elderWrath)?'Wrinkler access requires the Grandmapocalypse':w.id==='christmas'&&!has('A festive hat')?'Acquire a festive hat for Santa':missing.length?'Drops and purchases repeat after ascension':'Collection complete for this ascension',
+                achievements:({halloween:['Spooky cookies'],christmas:['Let it snow','Coming to town','All hail Santa','Reindeer sleigher','Eldeer'],valentines:['Lovely cookies'],easter:['The hunt is on','Egging on','Mass Easteria','Hide & seek champion'],fools:[]}[w.id]).map(function(n){return n+': '+(won(n)?'earned permanently':'not yet earned');})};
+        });
+    }
+    function reserve(o,b) { var r=Math.max(num(b.reserve),num(G.unbuffedCps || G.cookiesPs)*o.productionReserve); if(o.luckyReserve) r=Math.max(r,num(G.cookiesPs)*6000); return r; }
+    function buffs() { return Object.keys(G.buffs || {}).slice(0,32).map(function(k){var b=G.buffs[k];return {name:text(b.name || k,80),seconds:Math.ceil(num(b.time)/(G.fps || 30))};}); }
+    function activeBonus() { return buffs().length > 0; }
+    function milestone(a, category, current, threshold, rate, action, cost) {
+        var left=Math.max(0,threshold-num(current)), eta=rate>0?left/rate:null;
+        var state=left===0?'Ready now':category==='Buildings'&&left<=1?'Close to completion':rate>0&&eta<=600?'Close to completion':'Prerequisites needed';
+        if (eta===null&&category==='Production') state='Waiting or random';
+        return {name:text(a.name,100),id:a.id,category:category,state:state,progress:text(num(current).toPrecision(5)+' / '+threshold.toPrecision(5),80),actions:action,cost:num(cost),eta:eta===null?null:Math.min(eta,1e12),left:Math.min(left,1e12),score:state==='Ready now'?0:state==='Close to completion'?1:3,reason:rate>0?'Estimated from current production; bonuses may change the time':'Requires the listed normal game actions',shadow:a.pool==='shadow'};
+    }
+    function rule(a,o) {
+        if (a.name==='Cheated cookies taste awful') return null;
+        if(a.vanilla===0) { var manual=milestone(a,'Other',0,1,0,'Review the mod-added requirement in the game',0);manual.state='Needs manual review';manual.reason='Mod-added conditions have no verified adapter';return manual; }
+        var r, objects=G.ObjectsById || [], bank=G.BankAchievements || [], cps=G.CpsAchievements || [];
+        if (bank.includes(a)) return milestone(a,'Production',G.cookiesEarned,a.threshold,num(G.cookiesPs),'Keep producing cookies',0);
+        if (cps.includes(a)) return milestone(a,'Production',G.cookiesPs,a.threshold,0,'Increase production through the selected shop rules',0);
+        for (var i=0;i<Math.min(objects.length,32);i++) { var b=objects[i];
+            if (Object.keys(b.tieredAchievs || {}).some(function(k){return b.tieredAchievs[k]===a;})) { var t=G.Tiers && G.Tiers[a.tier]; if(t&&Number.isFinite(t.achievUnlock)) { r=milestone(a,'Buildings',b.amount,t.achievUnlock,0,'Buy '+b.name,typeof b.getSumPrice==='function'?b.getSumPrice(Math.max(0,t.achievUnlock-b.amount)):b.getPrice());r.building=b.id;r.goal=t.achievUnlock;return r;} }
+            var p=(b.productionAchievs || []).find(function(p){return p.achiev===a;}); if(p) return milestone(a,'Production',b.totalCookies,p.pow,num(b.storedTotalCps)*num(G.globalCpsMult || 1),'Wait for '+b.name+' production',0);
+        }
+        var cursor={Click:1,'Double-click':2,'Mouse wheel':50,'Of Mice and Men':100,'The Digital':200,'Extreme polydactyly':300,'Dr. T':400,'Thumbs, phalanges, metacarpals':500,'With her finger and her thumb':600,'Gotta hand it to you':700,"The devil's workshop":800,'All on deck':900,'A round of applause':1000};
+        if(cursor[a.name]&&objects[0]) {var c=objects[0], goal=cursor[a.name];r=milestone(a,'Buildings',c.amount,goal,0,'Buy Cursor',typeof c.getSumPrice==='function'?c.getSumPrice(Math.max(0,goal-c.amount)):c.getPrice());r.building=0;r.goal=goal;return r;}
+        var clicks=['Clicktastic','Clickathlon','Clickolympics','Clickorama','Clickasmic','Clickageddon','Clicknarok','Clickastrophe','Clickataclysm','The ultimate clickdown','All the other kids with the pumped up clicks','One...more...click...','Clickety split',"Ain't that a click in the head","What's not clicking"];
+        if(clicks.includes(a.name)) return milestone(a,'Clicks',G.handmadeCookies,Math.pow(10,3+2*clicks.indexOf(a.name)),0,'Enable main-cookie clicks',0);
+        var gold={'Golden cookie':1,'Lucky cookie':7,'A stroke of luck':27,Fortune:77,Leprechaun:777,"Black cat's paw":7777,'Seven horseshoes':27777};
+        if(gold[a.name]) {r=milestone(a,'Clicks',G.goldenClicks,gold[a.name],0,'Collect naturally appearing golden cookies',0);r.state=r.left===0?'Ready now':'Waiting or random';r.reason='Appearance timing and effects remain native and random';return r;}
+        var totals={Builder:100,Architect:500,Engineer:1000,'Lord of Constructs':2500,'Grand design':5000,Ecumenopolis:7500,Myriad:10000};
+        if(totals[a.name])return milestone(a,'Buildings',objects.reduce(function(sum,b){return sum+num(b.amount);},0),totals[a.name],0,'Buy selected buildings under your shop limits',0);
+        var wrinkle={Itchscratcher:1,Wrinklesquisher:50,Moistburster:200}; if(wrinkle[a.name]) {r=milestone(a,'Wrinklers',G.wrinklersPopped,wrinkle[a.name],0,'Pop feeding wrinklers under your chosen rules',0);if(!num(G.elderWrath)){r.state='Prerequisites needed';r.reason='Unlock wrinkler access first';}return r;}
+        var deer={'Oh deer':1,'Sleigh of hand':50,'Reindeer sleigher':200}; if(deer[a.name]) {r=milestone(a,'Seasonal',G.reindeerClicked,deer[a.name],0,'Collect reindeer',0);r.season='christmas';if(G.season!=='christmas')r.state='Season unavailable';else if(r.left>0)r.state='Waiting or random';return r;}
+        if(['Neverclick','True Neverclick','Hardcore'].includes(a.name)) {var hardcore=a.name==='Hardcore',validRun=G.ascensionMode===1||G.resets===0,eligible=validRun&&(hardcore?G.UpgradesOwned===0:G.cookieClicks<=(a.name==='Neverclick'?15:0));r=milestone(a,'Challenges',G.cookiesEarned,hardcore?1e9:1e6,num(G.cookiesPs),hardcore?'Produce without buying upgrades':'Produce without main-cookie clicks',0);if(!eligible){r.state='Ineligible this run';r.reason='Existing run conditions are broken. A fresh challenge run needs your decision.';r.score=9;}r.challenge=true;return r;}
+        if(a.name==='Four-leaf cookie') {r=milestone(a,'Challenges',G.shimmerTypes&&G.shimmerTypes.golden&&G.shimmerTypes.golden.n,4,0,'Hold golden and wrath cookies on screen until four exist',0);r.state=r.left===0?'Ready now':'Waiting or random';r.challenge=true;r.reason='Random timing; collection is held until the game confirms this achievement';return r;}
+        var collection={'Spooky cookies':['halloween',7],'Let it snow':['christmas',7],'Lovely cookies':['valentines',7],'The hunt is on':['easter',1],'Egging on':['easter',7],'Mass Easteria':['easter',14],'Hide & seek champion':['easter',20]};
+        if(collection[a.name]) {var v=collection[a.name],names=lists(v[0]).slice(0,v[0]==='christmas'?7:64),unlocked=v[0]==='easter';var count=names.filter(function(n){var u=G.Upgrades&&G.Upgrades[n];return u&&(unlocked?(u.unlocked||u.bought):u.bought);}).length;r=milestone(a,'Seasonal',count,v[1],0,unlocked?'Collect native egg drops':'Collect and buy missing seasonal cookies',0);r.season=v[0];r.state=r.left===0?'Ready now':G.season!==v[0]&&v[0]!=='valentines'?'Season unavailable':'Waiting or random';r.reason='Drop chances are random; unlocked drops and purchases reset on ascension';return r;}
+        if(a.name==='Coming to town'||a.name==='All hail Santa'){r=milestone(a,'Seasonal',G.santaLevel,a.name==='Coming to town'?6:14,0,'Enable Santa progression with a spending budget',0);if(!has('A festive hat'))r.state='Prerequisites needed';return r;}
+        if(a.name==='Eldeer'){r=milestone(a,'Seasonal',0,1,0,'Hold a reindeer until Elder frenzy is active',0);r.state=G.season==='christmas'?'Waiting or random':'Season unavailable';r.season='christmas';return r;}
+        if(a.name==='Last Chance to See'){r=milestone(a,'Wrinklers',0,1,0,'Explicitly approve popping a shiny wrinkler',0);r.state='Manual decision';r.reason='Shiny wrinklers are protected; no automatic sacrifice';return r;}
+        if(a.name==='In the garden of Eden (baby)'){var garden=mini(2),filled=0,tiles=0;if(garden&&Array.isArray(garden.plot))for(var gy=0;gy<6;gy++)for(var gx=0;gx<6;gx++){if(garden.plot[gy]&&garden.plot[gy][gx]&&garden.plot[gy][gx][0]>0)filled++;if(garden.isTileUnlocked&&garden.isTileUnlocked(gx,gy))tiles++;}r=milestone(a,'Minigames',filled,36,0,'Fill all 36 Garden tiles with plants',0);r.state=!garden||tiles<36?'Prerequisites needed':filled<36?'Manual decision':'Ready now';r.reason=tiles<36?'Unlock the full Garden plot first':'Counts planted tiles, not seeds unlocked';return r;}
+        var minigame={'Botany enthusiast':[2,'harvestsTotal',100],'Green, aching thumb':[2,'harvestsTotal',1000],'Bibbidi-bobbidi-boo':[7,'spellsCastTotal',9],"I'm the wiz":[7,'spellsCastTotal',99],'A wizard is you':[7,'spellsCastTotal',999]};
+        if(minigame[a.name]){var spec=minigame[a.name],mg=mini(spec[0]);r=milestone(a,'Minigames',mg&&mg[spec[1]],spec[2],0,'Use the relevant minigame controls',0);r.state=!mg?'Prerequisites needed':a.name==='Seedless to nay'?'Manual decision':'Waiting or random';r.reason=!mg?'Unlock this minigame with an explicitly approved building level':'Use normal actions; seed mutation and spell backfires remain random';return r;}
+        r=milestone(a,'Other',0,1,0,'Review the requirement in the game',0);r.state='Needs manual review';r.reason='No verified requirement adapter for this achievement';r.score=10;return r;
+    }
+    function rank(o, now) {
+        var all=G.AchievementsById;
+        if(!supported||!Array.isArray(all)||all.length>2048){rows=[];target=null;rankingPending=false;return;}
+        if (scan===0 && now-lastScan<1500) return;
+        var start=performance.now(),n=0;
+        while(scan<all.length&&n++<48&&performance.now()-start<2){var a=all[scan++];if(!a||a.won&&!o.includeEarned){if(a&&a.won&&!completed.has(a.name)){if(completed.size>=2048)completed.clear();completed.add(a.name);if(o.pin===a.name)log('Game confirms completion: '+a.name);}continue;}var r=rule(a,o);if(!r)continue;if(a.won){r.state='Earned';r.score=11;r.reason='The game confirms this achievement is permanently earned.';}r.requirement=text(a.desc||a.ddesc,400);if(o.goalSearch&&!text(a.name,100).toLowerCase().includes(o.goalSearch.toLowerCase()))continue;if((!r.shadow||o.shadows)&&o.categories.includes(r.category)&&!o.excluded.includes(a.name))scanRows.push(r);}
+        if(scan<all.length)return;
+        scan=0;lastScan=now;
+        var order={'Ready now':0,'Close to completion':1,'Prerequisites needed':3,'Waiting or random':5,'Season unavailable':6,'Manual decision':7,'Ineligible this run':9,'Needs manual review':10,'Earned':11};
+        scanRows.forEach(function(r){r.score=order[r.state];if(r.season&&G.season===r.season&&r.state!=='Waiting or random'){var w=natural(new Date());if(w&&w.id===r.season&&w.end-Date.now()<2*86400000)r.score-=0.5;}});
+        scanRows.sort(function(a,b){if(a.name===o.pin)return -1;if(b.name===o.pin)return 1;return a.score-b.score||(a.cost<=num(G.cookies)?0:1)-(b.cost<=num(G.cookies)?0:1)||a.left-b.left||(a.eta||1e12)-(b.eta||1e12)||a.id-b.id;});
+        rows=scanRows;scanRows=[];target=rows.find(function(r){return o.pin&&!won(o.pin)?r.name===o.pin:r.score<7;})||null;rankingPending=false;
+    }
+    function prepare(o,now) {
+        var key=JSON.stringify([o.main,o.completionist,o.assist,o.shadows,o.pin,won(o.pin),o.categories,o.excluded,o.includeEarned,o.goalSearch,G.resets,G.season]);
+        if(reset!==G.resets){reset=G.resets;fed.clear();seasonLock='';pending=null;log('Ascension changed: current-run seasonal progress was refreshed');}
+        if(key!==selection || target&&won(target.name)) {selection=key;scan=0;scanRows=[];rows=[];target=null;lastScan=-Infinity;rankingPending=true;preparedAt=-Infinity;}
+        if(preparedAt===now)return;preparedAt=now;rank(o,now);
+    }
+    // Protection is evaluated live on every pulse, independently of the slower ranking scan.
+    function policy(o) { var name=o.completionist&&(o.assist||o.pin)?(o.pin&&!won(o.pin)?o.pin:(target&&target.name)):'';if(won(name))name='';var hold=ascendPhase==='saving'||o.completionist&&o.assist&&rankingPending;return {main:!hold&&o.main&&!['Neverclick','True Neverclick'].includes(name),upgrades:!hold&&name!=='Hardcore',golden:!hold&&name!=='Four-leaf cookie',deer:!hold&&(name!=='Eldeer'||!!(G.hasBuff&&G.hasBuff('Elder frenzy'))),hold:hold,target:name}; }
+    function shop(options,o,allowUpgrades,execute) {
+        var retained=reserve(o,options), available=num(G.cookies)-retained, best=null;
+        if(!supported||G.buyMode!==1||G.promptOn||available<0||(o.protectBuffs&&activeBonus())) return {reason:'Reserve, active bonus, prompt or Sell mode protects spending',reserve:retained};
+        function consider(item,building,priority){if(!item||typeof item.getPrice!=='function'||typeof item.buy!=='function')return;var price=item.getPrice(),gain=0,known=false;if(!Number.isFinite(price)||price<0||price>available)return;
+            if(building){gain=num(item.storedCps)*num(G.globalCpsMult || 1);known=gain>0;}else if(item.pool==='cookie'&&typeof item.power==='number'){gain=num(G.cookiesPs)*item.power/100;known=gain>0;}else if(item.buildingTie&&item.tier!=null){gain=num(item.buildingTie.storedTotalCps)*num(G.globalCpsMult || 1);known=gain>0;}
+            var score=o.shopMode==='cheapest'?price/priority:known?price/gain/priority:1e290+price;
+            if(!best||score<best.score)best={item:item,building:building,price:price,gain:gain,known:known,score:score};}
+        var selected=options.buildings.slice(),petNeeds=o.petFocus&&o.petSacrifices&&!policy(o).target?petView(o).missing:[];if(petNeeds.length)selected=selected.filter(function(id){return petNeeds.some(function(n){return n.id===id;});});
+        if(o.completionist&&o.assist&&target&&target.building!=null&&target.state!=='Ineligible this run'&&selected.includes(target.building))selected=[target.building];
+        selected.forEach(function(id){var b=G.ObjectsById&&G.ObjectsById[id],r=o.buildingRules.find(function(r){return r.id===id;});if(!b||b.locked)return;var ceiling=r&&r.target>0?r.target:r&&r.cap>0?r.cap:Infinity;if(r&&r.cap>0)ceiling=Math.min(ceiling,r.cap);if(target&&o.completionist&&o.assist&&target.building===id)ceiling=Math.min(ceiling,target.goal);var petNeed=petNeeds.find(function(n){return n.id===id;});if(petNeed){ceiling=Math.max(ceiling===Infinity?0:ceiling,petNeed.amount);if(r&&r.cap>0)ceiling=Math.min(ceiling,r.cap);}if(num(b.amount)<ceiling)consider(b,true,r?r.priority:1);});
+        var store=G.UpgradesInStore,begin=performance.now();if(allowUpgrades&&Array.isArray(store)&&store.length<=2048)for(var i=0;i<store.length&&performance.now()-begin<2;i++){var u=store[i];if(!u||!u.unlocked||u.bought||!options.upgrades.includes(u.pool)||u.priceLumps>0||u.clickFunction||u.choicesFunction||u.canBuyFunc||u.vanilla===0||(u.isVaulted&&u.isVaulted())||['Chocolate egg','A crumbly egg','A festive hat'].includes(u.name))continue;consider(u,false,1);}
+        if(!best)return {reason:'No selected purchase fits the reserve and targets',reserve:retained};
+        var view={name:text(best.item.name,100),price:best.price,gain:best.gain,payoff:best.known?best.price/best.gain:null,reason:best.known?'Estimated production payoff; synergy may change it':'Production gain is unknown; lowest-price fallback',reserve:retained};
+        if(execute){var it=best.item,p=it.getPrice();if(!Number.isFinite(p)||p<0||p>num(G.cookies)-reserve(o,options)||G.promptOn||G.buyMode!==1||G.OnAscend)return view;var before=best.building?it.amount:it.bought;if(best.building)it.buy(1);else it.buy();view.purchased=(best.building?it.amount:it.bought)>before;}
+        return view;
+    }
+    function popWrinkler(w) { if(w&&w.phase>0&&Number.isFinite(w.hp)&&w.hp>0.5){w.hp=0;G.recalculateGains=1;counters.wrinklers++;log('Requested native wrinkler payout');return true;}return false; }
+    function observeWrinklers(now){var keys=new Set();(Array.isArray(G.wrinklers)?G.wrinklers:[]).slice(0,32).forEach(function(w){if(!w||w.phase!==2||num(w.sucked)===0||!Number.isFinite(w.hp)||w.hp<=0.5){fed.delete(w);return;}keys.add(w);if(!fed.has(w))fed.set(w,now);});fed.forEach(function(v,w){if(!keys.has(w))fed.delete(w);});}
+    function wrinklerView(o,now){var all=(Array.isArray(G.wrinklers)?G.wrinklers:[]).slice(0,32),alive=all.filter(function(w){return w&&w.phase>0&&Number.isFinite(w.hp)&&w.hp>0.5;});var p=policy(o),ready=0;
+        var items=all.map(function(w,i){if(!w||w.phase===0)return null;var age=fed.has(w)?Math.max(0,(now-fed.get(w))/1000):0,wait=Math.max(0,o.feedSeconds-age,o.wrinklerMode==='timed'?o.wrinklerSeconds-age:0),reason='Ready to pop',eligible=false;
+            if(!Number.isFinite(w.hp)||w.hp<=0.5)reason='Payout requested; waiting for game';
+            else if(w.type===1&&o.protectShiny)reason='Shiny protected';
+            else if(w.phase!==2)reason='Approaching; not attached yet';
+            else if(num(w.sucked)<=0)reason='Attached; no stored cookies yet';
+            else if(!o.wrinklers)reason='Automatic popping is off';
+            else if(G.promptOn||G.OnAscend||G.AscendTimer>0)reason='Game is paused or showing a prompt';
+            else if(p.hold)reason='Waiting for achievement rules';
+            else if(o.wrinklerMode==='keep'&&alive.length<=o.keep)reason='Keeping '+o.keep+'; '+alive.length+' active';
+            else if(wait>0)reason='Feeding wait: '+Math.ceil(wait)+' sec';
+            else if(num(w.sucked)<o.storedMinimum)reason='Below stored-cookie minimum';
+            else if(o.seasonFarm&&['halloween','easter'].includes(G.season)&&w.sucked<1)reason='Waiting for seasonal payout minimum';
+            else {eligible=true;ready++;}
+            return {slot:i+1,type:w.type===1?'Shiny':'Normal',phase:w.phase,stored:num(w.sucked),feedingSeconds:Math.floor(age),waitSeconds:Math.ceil(wait),reason:reason,eligible:eligible};}).filter(Boolean);
+        return {active:alive.length,ready:ready,requested:counters.wrinklers,items:items,summary:!o.wrinklers?'Automatic popping is off':alive.length===0?'No active wrinklers in the game':o.wrinklerMode==='keep'&&alive.length<=o.keep?'Keeping all '+alive.length+' active wrinklers. Lower the keep count or choose a different rule.':ready?'Ready to pop '+ready+'; at most one per second':'Waiting for attachment, feeding, or your selected limits'};
+    }
+    function wrinklers(o,now){if(!o.wrinklers||!Array.isArray(G.wrinklers)||G.wrinklers.length>32)return false;observeWrinklers(now);var view=wrinklerView(o,now),item=view.items.find(function(w){return w.eligible;});return item?popWrinkler(G.wrinklers[item.slot-1]):false;}
+    function shimmers(command,o,p,steady){if(G.promptOn||!Array.isArray(G.shimmers)||G.shimmers.length>2048)return;
+        var start=performance.now();for(var i=0;i<G.shimmers.length&&performance.now()-start<1;i++){var s=G.shimmers[i],kind=s&&s.type==='reindeer'?'reindeer':s&&s.type==='golden'?(s.force==='cookie storm drop'?'storm':s.wrath?'wrath':'golden'):'';
+            // The native forced storm reward is independent of its seasonal picture
+            // and wrath flag. Ordinary wrath cookies still require their own opt-in.
+            var allow=kind==='reindeer'?o.reindeer&&p.deer:kind==='wrath'?o.wrath&&p.golden:kind==='golden'||kind==='storm'?command.collectGolden&&p.golden:false;
+            if(allow&&s.life>0&&typeof s.pop==='function'&&!attempts.has(s)){attempts.add(s);s.pop();counters[kind]++;return;}}
+    }
+    function stamp(parts){return parts.map(function(v){return text(v,240);}).join('|');}
+    function makeQuote(key,label,cost,fingerprint,run,reason){var old=quotes.get(key);if(old&&old.fingerprint===fingerprint&&old.cost===cost&&performance.now()-old.created<=30000){old.run=run;old.reason=reason;return old;}var q={key:key,id:String(++quoteSerial),label:text(label,220),cost:num(cost),fingerprint:fingerprint,run:run,reason:text(reason),created:performance.now()};quotes.set(key,q);return q;}
+    function quoteView(o,b){var seen=new Set(),result=[],r=reserve(o,b), spend=function(cost){return Number.isFinite(cost)&&cost>=0&&num(G.cookies)-cost>=r;};
+        function add(key,label,cost,fp,run,reason){seen.add(key);var q=makeQuote(key,label,cost,fp,run,reason);result.push({key:q.key,id:q.id,label:q.label,cost:q.cost,reason:q.reason,available:!reason});}
+        var seasons=G.seasons||{};Object.keys(seasons).slice(0,5).forEach(function(id){var u=seasons[id].triggerUpgrade;if(!u)return;var price=typeof u.getPrice==='function'?u.getPrice():NaN;
+            add('season:'+id,'Switch to '+({christmas:'Christmas',halloween:'Halloween',valentines:"Valentine's Day",easter:'Easter',fools:'Business Day'}[id]||id)+' for 24 hours',price,stamp([G.resets,G.season,G.seasonUses,price]),function(){if(typeof u.buy==='function')u.buy();seasonLock=id;},!has('Season switcher')||!u.unlocked?'Season Switcher required':G.season===id?'Already active':seasonLock&&seasonLock!==id?'Stop the selected season first':!spend(price)?'Reserve protects this purchase':'');});
+        // Exceptional zero-payout/shiny pops are individual approvals, never automatic rules.
+        (G.wrinklers||[]).slice(0,32).forEach(function(w,i){if(w&&w.phase>0)add('wrinkler:'+i,'Pop '+(w.type===1?'SHINY ':'')+'wrinkler '+(i+1)+'; stored '+num(w.sucked)+'; may pay zero',0,stamp([G.resets,i,w.phase,w.type,w.sucked>0]),function(){popWrinkler(w);},'');});
+        quotes.forEach(function(q,key){if(!seen.has(key))quotes.delete(key);});
+        return result.slice(0,320);
+    }
+    function objectsStamp(){return (G.ObjectsById||[]).slice(0,32).map(function(b){return b.amount;}).join(',');}
+    function stockCost(m,g){return num(G.cookiesPsRawHighest)*num(m.getGoodPrice(g))*(1+0.2*Math.pow(0.95,num(m.brokers)));}
+    function execute(request,o,b,now){if(!request||request.id===handled)return false;handled=request.id;var q=quotes.get(request.key);
+        if(!q||q.id!==request.quote||q.reason||now-q.created>30000){log('Action cancelled: preview expired or game state changed');return false;}
+        // Rebuild the quote and compare the live preconditions before any spending or sacrifice.
+        var previous=q;quoteView(o,b);q=quotes.get(request.key);if(!q||q.fingerprint!==previous.fingerprint||q.cost!==previous.cost||q.reason){log('Action cancelled: resources or requirements changed');return false;}
+        if(o.completionist&&policy(o).target&&/^(ascend|sell:|dragon:|aura:|special:)/.test(request.key)){log('Stop Completionist before a conflicting destructive action');return false;}
+        q.run();log('Approved action: '+q.label);return true;
+    }
+    // Native identities, not pictures, remain authoritative across all seasonal skins.
+    function petView(o){
+        var level=Number.isInteger(G.dragonLevel)?G.dragonLevel:0,levels=G.dragonLevels||[],need=[],cookieCost=0;
+        if(o.petFocus&&level<levels.length-1){
+            if(level<=4)cookieCost=Math.pow(2,level)*1000000;
+            else if(level<levels.length-3)need=[{id:level-5,amount:100}];
+            else need=(G.ObjectsById||[]).slice(0,32).map(function(b){return {id:b.id,amount:level===levels.length-3?50:200};});
+        }
+        var missing=need.filter(function(n){var b=G.ObjectsById&&G.ObjectsById[n.id];return b&&num(b.amount)<n.amount;});
+        var drops=['Dragon scale','Dragon claw','Dragon fang','Dragon teddy bear'],remaining=drops.filter(function(n){var u=G.Upgrades&&G.Upgrades[n];return u&&!u.unlocked&&!u.bought;});
+        var status=!o.petFocus?'Dragon training focus is off':!has('A crumbly egg')?'Requires How to bake your dragon and A crumbly egg':!levels.length?'Dragon rules unavailable':level>=levels.length-1?'Dragon fully trained':need.length&&!o.petSacrifices?'Waiting for permission to sacrifice buildings':missing.length?'Needs '+missing.map(function(n){return (G.ObjectsById[n.id].name)+': '+n.amount;}).join(', '):'Next training step ready if its cost fits your reserve';
+        return {level:level,need:need,missing:missing,cookieCost:cookieCost,remaining:remaining,summary:status+'\nDragon level '+level+' / '+Math.max(0,levels.length-1)+'\nPetting drops left: '+(remaining.join(', ')||'None listed')+'\nPetting requires the open dragon panel; chance and time windows stay native.\nSanta: '+num(G.santaLevel)+' / '+Math.max(0,(G.santaLevels||[]).length-1)+(G.season==='christmas'?' (Christmas active)':' (waiting for Christmas; no automatic season purchase)')};
+    }
+    function pets(o,b){
+        if(G.promptOn||G.OnAscend||G.AscendTimer>0||policy(o).target||policy(o).hold)return false;
+        var view=petView(o),retained=reserve(o,b);
+        function buyNamed(n){var u=G.Upgrades&&G.Upgrades[n];if(!u||u.bought||!u.unlocked||u.pool==='prestige'||typeof u.getPrice!=='function'||typeof u.buy!=='function'||u.choicesFunction||u.priceLumps>0)return false;var price=u.getPrice();if(!Number.isFinite(price)||price<0||price>num(G.cookies)-retained)return false;var before=u.bought;u.buy();return u.bought>before;}
+        if(o.petFocus){
+            if(!has('A crumbly egg')&&has('How to bake your dragon')&&buyNamed('A crumbly egg')){log('Bought the dragon egg within reserve');return true;}
+            var level=G.dragonLevel,entry=(G.dragonLevels||[])[level];
+            if(has('A crumbly egg')&&entry&&level<G.dragonLevels.length-1&&typeof entry.cost==='function'&&typeof G.UpgradeDragon==='function'&&!view.missing.length&&(view.need.length?o.petSacrifices:view.cookieCost<=num(G.cookies)-retained)&&entry.cost()){
+                G.UpgradeDragon();log('Requested native dragon training step '+level);return true;
+            }
+        }
+        if(o.santaFocus&&G.season==='christmas'){
+            if(!has('A festive hat')&&buyNamed('A festive hat')){log('Bought the festive hat within reserve');return true;}
+            var cost=Math.pow(num(G.santaLevel)+1,num(G.santaLevel)+1);
+            if(has('A festive hat')&&Array.isArray(G.santaLevels)&&G.santaLevel<G.santaLevels.length-1&&Number.isFinite(cost)&&cost<=num(G.cookies)-retained&&typeof G.UpgradeSanta==='function'){G.UpgradeSanta();log('Requested native Santa upgrade');return true;}
+        }
+        if(o.dragonPet&&has('Pet the dragon')&&G.dragonLevel>=4&&G.specialTab==='dragon'&&typeof G.ClickSpecialPic==='function'&&view.remaining.length){G.ClickSpecialPic();return true;}
+        return false;
+    }
+    var ascendPhase='watching',ascendError='',cycleOwned=false,saveSerial=0,lastFresh=-Infinity,lastAscendAction=-Infinity,liveCommand=null,planAt=-Infinity,chipPlan=null;
+    function prestigeGain(){
+        if(typeof G.HowMuchPrestige!=='function'||!Number.isFinite(G.cookiesReset)||!Number.isFinite(G.cookiesEarned)||!Number.isSafeInteger(G.prestige))return 0;
+        var value=Math.floor(G.HowMuchPrestige(G.cookiesReset+G.cookiesEarned))-G.prestige;
+        return Number.isSafeInteger(value)&&value>0?value:0;
+    }
+    function heavenlyPlan(budget){
+        if(!Number.isSafeInteger(budget)||budget<0)return {items:[],spend:0,reason:'Chip balance needs manual review'};
+        var all=G.PrestigeUpgrades;if(!Array.isArray(all)||all.length>256)return {items:[],spend:0,reason:'Heavenly catalog unavailable'};
+        var entries=all.filter(function(u){return u&&u.pool==='prestige'&&!u.bought&&u.vanilla!==0&&!u.clickFunction&&!u.choicesFunction&&!u.activateFun
