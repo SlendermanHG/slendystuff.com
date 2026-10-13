@@ -27,17 +27,6 @@ The download is one EXE. Companion setup adds a mod to the game folder; pairing 
 
 [Send a bug report or suggestion](https://slendystuff.com/slendystuffclicker/#feedback). Include the app version, relevant settings and steps to reproduce an issue. Leave out game saves, passwords, pairing keys and personal details.
 
-## Website repository
-
-The public site is served from [public/](public/) through GitHub Pages. Cloudflare Workers provide separate hosted services for reporting and encrypted message links. Deployment and release tooling lives in [ops/](ops/).
-
-The optional Node server supports local development and server-hosted routes:
-
-```sh
-npm start
-```
-
-Server administration requires host-side authentication. Credentials and private licensing tools are configured separately and are not part of the public site. GitHub Pages serves static files; it does not run the Node administration API.
 
 ## Release reference
 
