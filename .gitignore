@@ -1,3 +1,7 @@
 data/qwertylock-messages.json
 ops/qwertylock-worker/.wrangler/
 local-private/
+
+# Local project records
+conversation-log-*.md
+prebuild-services-checklist-*.md

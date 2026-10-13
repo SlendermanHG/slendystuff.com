@@ -1,4 +1,4 @@
-name: Publish approved SlendyStuffClicker v0.5.2.0
+name: Publish SlendyStuffClicker v0.5.2.0
 
 on:
   push:
@@ -39,7 +39,11 @@ jobs:
           if ($metadata.FileVersion -ne '0.5.2.0' -or $metadata.ProductVersion -ne '0.5.2.0') { throw 'Version mismatch' }
           $assembly = [Reflection.AssemblyName]::GetAssemblyName($binary.FullName)
           if ($assembly.Version.ToString() -ne '0.5.2.0') { throw 'Assembly version mismatch' }
-      - name: Publish this owner-approved manual preview only
+      - name: Synchronize existing public release descriptions
+        run: node ops/sync-clicker-release-notes.cjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Publish the versioned manual preview
         run: node ops/publish-approved-clicker.cjs
         env:
           GITHUB_TOKEN: ${{ github.token }}

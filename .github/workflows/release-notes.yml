@@ -1,0 +1,33 @@
+name: Synchronize public release notes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ops/releases/*/RELEASE-NOTES.md'
+      - 'ops/sync-clicker-release-notes.cjs'
+      - 'ops/test-release-notes.cjs'
+      - '.github/workflows/release-notes.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: slendystuffclicker-release-notes
+  cancel-in-progress: false
+
+jobs:
+  notes:
+    if: github.repository == 'SlendermanHG/slendystuff.com' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Check release-note editing boundaries
+        run: node --test ops/test-release-notes.cjs
+      - name: Update existing public release descriptions
+        run: node ops/sync-clicker-release-notes.cjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

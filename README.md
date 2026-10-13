@@ -1,19 +1,44 @@
 # SlendyStuff
 
-Practical software, websites, technical support and gaming content from Slendy.
+Practical software, custom projects, technical services and gaming content from Slendy.
 
 [Visit SlendyStuff](https://slendystuff.com/) · [Software](https://slendystuff.com/software.html) · [Community](https://slendystuff.com/community.html) · [Contact](https://slendystuff.com/contact.html)
 
-## Website
+## SlendyStuffClicker
 
-Explore available services, software, project examples and community links on the official website. Contact SlendyStuff with the problem, goal or project you have in mind.
+A free portable Windows auto clicker and companion mod for Cookie Clicker on Steam. Actions happen inside the game, leaving the mouse free for another app or game.
 
-This repository contains the public website in `public/`, its styles and browser scripts, and supporting server and deployment code. GitHub Pages serves the static site. The optional Node server runs with `npm start`; host-side administration requires authentication configured outside the repository.
+- Independent clicking, golden-cookie collection and selected shop purchases.
+- Seasonal hearts, cookie-storm rewards, optional wrath cookies and Christmas reindeer.
+- Wrinkler rules, shop targets and reserves, seasonal progress and Completionist guidance.
+- Saved profiles, live status, resource checks and a manual update check.
 
-## Software downloads
+[Download and setup](https://slendystuff.com/slendystuffclicker/) · [Setup guide](https://slendystuff.com/slendystuffclicker/setup/) · [Current release: v0.5.2.0](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.0) · [Previous releases](https://github.com/SlendermanHG/slendystuff.com/releases)
 
-[SlendyStuffClicker](https://slendystuff.com/slendystuffclicker/) is a free portable Windows auto clicker and companion mod for Cookie Clicker on Steam. The official product page provides the current download, compatibility, setup instructions, release notes and feedback form.
+The download is one EXE. Companion setup adds a mod to the game folder; pairing settings, profiles and bounded logs stay on the computer. The release tag matches the app's internal four-part version.
 
-Release downloads are versioned. Read the notes for the selected version before updating, and obtain EXEs from the official page or its linked GitHub release.
+* The current preview is unsigned. Windows may warn or block it. Download from the official page or its linked release, and keep Windows protection enabled. SHA-256 checks download identity; it does not establish publisher trust.
 
-* SlendyStuffClicker is an independent project. Its unsigned previews may trigger Windows warnings. Keep Windows protection enabled and verify the download source.
+* Plan to save and fully restart the game and clicker at least every 12 hours, or sooner if memory grows or performance slows. Resource checks reduce risk but do not guarantee unattended stability. Earlier EXEs may display a six-hour reminder.
+
+* SlendyStuffClicker supports the Steam edition on 64-bit Windows and game version 2.053. It is independent of the game developers. Browser and mobile editions are not supported.
+
+## Feedback
+
+[Send a bug report or suggestion](https://slendystuff.com/slendystuffclicker/#feedback). Include the app version, relevant settings and steps to reproduce an issue. Leave out game saves, passwords, pairing keys and personal details.
+
+## Website repository
+
+The public site is served from [public/](public/) through GitHub Pages. Cloudflare Workers provide separate hosted services for reporting and encrypted message links. Deployment and release tooling lives in [ops/](ops/).
+
+The optional Node server supports local development and server-hosted routes:
+
+```sh
+npm start
+```
+
+Server administration requires host-side authentication. Credentials and private licensing tools are configured separately and are not part of the public site. GitHub Pages serves static files; it does not run the Node administration API.
+
+## Release reference
+
+[Versioned release information](ops/SLENDYSTUFFCLICKER-RELEASE.md) · [Reporting service](ops/clicker-reports/README.md)

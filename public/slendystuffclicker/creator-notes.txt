@@ -1,16 +1,20 @@
-SlendyStuffClicker v0.5.1.0 — creator and sharing notes
+SlendyStuffClicker — sharing information
 
 Official page: https://slendystuff.com/slendystuffclicker/
 Setup guide and captioned walkthrough: https://slendystuff.com/slendystuffclicker/setup/
-Free EXE and versioned release notes: https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.1.0
+Current release and notes: https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.0
+Previous releases: https://github.com/SlendermanHG/slendystuff.com/releases
 
-Free portable Windows preview for Cookie Clicker on Steam. Uses a companion mod to send game actions, leaving the system mouse free. Supports optional normal golden-cookie collection and selected building/upgrade auto-buy with a reserve. Auto-buy is off by default. Browser/mobile versions are unsupported.
+Free portable Windows preview for Cookie Clicker on Steam. Its companion mod sends native game actions while the system mouse stays free. Features include independent controls, golden-cookie and seasonal reward collection, optional wrath/reindeer collection, selected shop buying, targets and reserves, wrinkler rules, seasonal progress, Completionist guidance and saved profiles. Auto-buy and assisted gameplay options are off until enabled. Browser/mobile editions are unsupported.
 
-The video uses genuine app screenshots and labeled synthetic game actions, not live Steam footage.
+The setup video was recorded with v0.5.1.0. It uses genuine app screenshots and labeled synthetic actions; it is not live Steam footage.
 
-Disclosure: an independent SlendyStuff production, not endorsed by the game developers or competing tool developers. Unsigned preview; Windows may warn or block it. Restart the game and clicker at least every six hours. A full live Steam restart cycle and overnight stability remain unverified. No paid review or endorsement is requested.
+* Independent SlendyStuff production, not affiliated with or endorsed by the game or competing-tool developers.
+* Unsigned Windows preview; devices may warn or block it. Updates are manual.
+* Plan to save and fully restart both apps at least every 12 hours, or sooner if memory grows or performance slows. Resource checks do not guarantee unattended stability. Earlier EXEs may display a six-hour reminder.
+* Steam achievement delivery and representative long-session reliability are not certified by isolated tests.
 
-Share the official page so readers receive current setup, update and Windows notes. Please describe the tool honestly and do not imply affiliation, proven overnight stability or universal Windows compatibility.
+Share the official page for current download identity, setup, release notes and compatibility information. No paid review or endorsement is requested.
 
 Feedback: https://slendystuff.com/slendystuffclicker/#feedback
 Contact: slender@slendystuff.com
