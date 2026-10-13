@@ -10,6 +10,8 @@ Download-link clicks are not completed downloads or unique people. The product p
 
 The download-count endpoint reads published GitHub assets and caches verified results for five minutes. Visible product pages refresh automatically, and returning to a hidden page triggers a refresh. The displayed check time identifies the age of the result. Failed verification keeps the last known count labeled as outdated and disables the download link until verification succeeds. The scheduled Pages snapshot remains a fallback rather than the live counter's refresh source.
 
+Production uses `GITHUB_RELEASES_READ_TOKEN` as an encrypted Cloudflare secret, restricted to read-only access for the public repository. It is sent only to the fixed GitHub release API, never to visitors, the app, logs, repository files or redirected destinations. Rotate expiring tokens before their expiry; request failures remain visible through the counter's check status. No write or account permissions are needed.
+
 ## Privacy
 
 The custom D1 store contains aggregate counters grouped by UTC day, event, page, source category and release version. It stores no visitor identifiers, cookies, IP addresses, user-agent strings, full referrer URLs, query strings, form contents or per-person histories. Requests from the EU and UK, and requests signaling Do Not Track or Global Privacy Control, are excluded from this custom collector.

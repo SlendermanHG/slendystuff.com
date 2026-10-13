@@ -24,14 +24,14 @@ function downloadResponse(data) {
     'X-Content-Type-Options':'nosniff'
   }});
 }
-async function downloadStats(cache) {
+async function downloadStats(cache, readToken) {
   if (cache) {
     const saved = await cache.match(downloadCacheKey);
     if (saved) return saved;
   }
   if (!downloadRefresh) {
     downloadRefresh = (async () => {
-      const data = await refreshDownloadStats();
+      const data = await refreshDownloadStats({readToken});
       if (cache) await cache.put(downloadCacheKey, downloadResponse(data));
       return data;
     })().finally(() => {downloadRefresh = undefined;});
@@ -62,7 +62,7 @@ export default {
           request.headers.get('Sec-Fetch-Site') === 'cross-site') return response(403);
       try {
         const cache = env.DOWNLOAD_CACHE || globalThis.caches?.default;
-        const stats = await downloadStats(cache);
+        const stats = await downloadStats(cache, env.GITHUB_RELEASES_READ_TOKEN);
         return new Response(request.method === 'HEAD' ? null : stats.body, {
           status:stats.status,
           statusText:stats.statusText,

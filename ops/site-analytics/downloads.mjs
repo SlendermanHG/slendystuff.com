@@ -94,7 +94,8 @@ function validateAssetUrl(value, tag, name) {
   return value;
 }
 
-export async function refreshDownloadStats({fetcher = fetch, now = () => new Date()} = {}) {
+export async function refreshDownloadStats({fetcher = fetch, now = () => new Date(), readToken} = {}) {
+  assert(readToken === undefined || (typeof readToken === 'string' && /^github_pat_[A-Za-z0-9_]{40,255}$/.test(readToken)), 'Invalid read-only token configuration');
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), REQUEST_TIMEOUT_MS);
   try {
@@ -116,7 +117,7 @@ export async function refreshDownloadStats({fetcher = fetch, now = () => new Dat
       const url = `${API_URL}?per_page=${PAGE_SIZE}&page=${page}`;
       const response = await fetcher(url, {
         method:'GET',
-        headers:{Accept:'application/vnd.github+json', 'User-Agent':'SlendyStuff-site-analytics', 'X-GitHub-Api-Version':'2022-11-28'},
+        headers:{Accept:'application/vnd.github+json', 'User-Agent':'SlendyStuff-site-analytics', 'X-GitHub-Api-Version':'2022-11-28', ...(readToken ? {Authorization:'Bearer ' + readToken} : {})},
         redirect:'manual',
         signal:abort.signal
       });

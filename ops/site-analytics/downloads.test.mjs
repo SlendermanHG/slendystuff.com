@@ -28,6 +28,17 @@ function fetchHarness(releases, {productValue = product, headersByPage = {}} = {
   return {fetcher, requests};
 }
 
+test('restricted read token is sent only to the fixed GitHub API, never product metadata or response',async()=>{
+  const {fetcher,requests} = fetchHarness([[release('v0.5.2.0',[asset(1,'0.5.2.0')])]]);
+  const token = 'github_pat_' + 'x'.repeat(50);
+  const result = await refreshDownloadStats({fetcher,readToken:token});
+  assert.equal(requests[0].options.headers.Authorization,undefined);
+  assert.equal(requests[1].options.headers.Authorization,'Bearer '+token);
+  assert.equal(requests[1].options.redirect,'manual');
+  assert(!JSON.stringify(result).includes(token));
+  await assert.rejects(refreshDownloadStats({fetcher,readToken:'invalid\r\nheader'}));
+});
+
 test('aggregates published EXE asset counts, including previews and repeat downloads',async()=>{
   const {fetcher,requests} = fetchHarness([
     [
