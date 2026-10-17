@@ -11,9 +11,11 @@ A free portable Windows auto clicker and companion mod for Cookie Clicker on Ste
 - Independent clicking, golden-cookie collection and selected shop purchases.
 - Seasonal hearts, cookie-storm rewards, optional wrath cookies and Christmas reindeer.
 - Wrinkler rules, shop targets and reserves, seasonal progress and Completionist guidance.
-- Saved profiles, live status, resource checks and a manual update check.
+- Optional combo and spell assistance, Garden and sugar-lump harvesting, and budgeted Stock Market trading.
+- Grouped Gameplay settings, saved profiles, live status and resource checks.
+- Scheduled game restarts, optional private save backups and portable updates with your approval.
 
-[Download and setup](https://slendystuff.com/slendystuffclicker/) · [Setup guide](https://slendystuff.com/slendystuffclicker/setup/) · [Current release: v0.5.2.5](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.5) · [Previous releases](https://github.com/SlendermanHG/slendystuff.com/releases)
+[Download and setup](https://slendystuff.com/slendystuffclicker/) · [Setup guide](https://slendystuff.com/slendystuffclicker/setup/) · [Current release: v0.5.2.7](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.7) · [Previous releases](https://github.com/SlendermanHG/slendystuff.com/releases)
 
 The download is one EXE. Companion setup adds a mod to the game folder; pairing settings, profiles and bounded logs stay on the computer. The release tag matches the app's internal four-part version.
 

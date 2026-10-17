@@ -2,6 +2,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const repository='SlendermanHG/slendystuff.com';
 const releases=[
+  {id:415521772,version:'0.5.2.7',size:1228288,hash:'b7b426ecf2072176ccd82d99e5029304ac12639410ec55667b7ef5a5f7da7b7b'},
   {id:411310831,version:'0.5.2.5',size:1135104,hash:'f0af39b2cb11b82a65ea0012afce0c0ed81e674f0af7fd94ae930dd4233c0e14'},
   {id:408611146,version:'0.5.1.0',size:1007616,hash:'eb5770592c6a5c2a2c1c6044775e5b5db1e8a8942663c7fac226ae7a8d540dd5'},
   {id:411004925,version:'0.5.2.0',size:1103360,hash:'b18a24248dc61e3dcbaa62613303679d9eddd182643d7eefb884832b11a68755'}
