@@ -1,0 +1,238 @@
+   var cost=seed&&typeof garden.getCost==='function'?garden.getCost(seed):NaN,seedSelected=garden.seedSelected===o.gardenSeed;
+            add('garden:plant','Plant '+text(seed&&seed.name||('seed '+o.gardenSeed),80)+' at ('+o.gardenX+','+o.gardenY+')',cost,stamp([G.resets,o.gardenX,o.gardenY,o.gardenSeed,seedSelected,plantTile&&plantTile[0],garden.freeze,cost,retained]),function(){garden.clickTile(o.gardenX,o.gardenY);},!seed||!seed.unlocked||seed.plantable===false?'Seed is not unlocked or plantable':!unlockedTile?'Garden tile is locked':plantTile&&plantTile[0]?'Selected tile is occupied':!seedSelected?'Select this seed in the native Garden first':!available(cost)?'Reserve protects planting':'');
+        }
+        if(garden&&garden.plot&&typeof garden.harvest==='function'&&o.gardenHarvest){
+            for(var gy=0;gy<6;gy++)for(var gx=0;gx<6;gx++){
+                var tile=garden.plot[gy]&&garden.plot[gy][gx],plant=tile&&plants[tile[0]-1];
+                if(!plant||!tile[0])continue;
+                var locked=!plant.unlocked,immortal=!!plant.immortal,rare=!!plant.rare||['queenbeetLump','everdaisy','shriekbulb','goldenClover','duketater','drowsyfern'].includes(plant.key),maturePlant=Number.isFinite(plant.mature)&&num(tile[1])>=plant.mature;
+                var harvestReason=garden.freeze?'Garden is frozen':!locked?'Seed already unlocked':immortal?'Immortal plant protected':rare?'Rare plant protected':!maturePlant?'Plant is not mature':'';
+                add('garden:harvest:'+gx+':'+gy,'Harvest '+text(plant.name,80)+' at ('+gx+','+gy+')',0,stamp([G.resets,gx,gy,tile[0],tile[1],plant.unlocked,plant.immortal,plant.rare,garden.freeze]),function(x,y){return function(){garden.harvest(x,y);};}(gx,gy),harvestReason);
+                if(gx===o.gardenX&&gy===o.gardenY&&(immortal||rare||!locked))add('garden:manual-harvest','Harvest selected protected plant: '+text(plant.name,80)+'; removes this plant and may lose its benefits',0,stamp([G.resets,gx,gy,tile[0],tile[1],plant.unlocked,plant.immortal,plant.rare,garden.freeze]),function(x,y){return function(){garden.harvest(x,y);};}(gx,gy),garden.freeze?'Garden is frozen':!maturePlant?'Wait for maturity before reviewing this protected harvest':'');
+            }
+        }
+        function nativeElement(id){return typeof document!=='undefined'?document.getElementById(id):null;}
+        if(o.gardenSoilChange&&garden&&Array.isArray(garden.soilsById)&&garden.soilsById[o.gardenSoil]){
+            var soil=garden.soilsById[o.gardenSoil];
+            add('garden:soil','Change Garden soil to '+text(soil.name,60),0,stamp([G.resets,garden.soil,o.gardenSoil,garden.nextSoil,garden.freeze,garden.parent&&garden.parent.amount]),function(){nativeElement('gardenSoil-'+soil.id).click();},garden.soil===o.gardenSoil?'Soil already selected':garden.freeze?'Garden is frozen':Date.now()<garden.nextSoil?'Soil change cooldown':!garden.parent||num(garden.parent.amount)<soil.req?'More farms required':!nativeElement('gardenSoil-'+soil.id)?'Open the Garden first':'');
+        }
+        if(garden&&garden.tools&&garden.tools.freeze&&typeof garden.tools.freeze.func==='function'&&o.gardenFreeze)
+            add('garden:freeze','Turn Garden '+(garden.freeze?'growth on':'freeze on'),0,stamp([G.resets,!!garden.freeze]),function(){garden.tools.freeze.func.call(nativeElement('gardenTool-'+garden.tools.freeze.id));},!nativeElement('gardenTool-'+garden.tools.freeze.id)?'Open the Garden first':'');
+        if(garden&&typeof garden.convert==='function'&&o.gardenSacrifice)
+            add('garden:sacrifice','Sacrifice the Garden: lose seeds and plants for native rewards',0,stamp([G.resets,garden.plantsUnlockedN,garden.harvests,garden.freeze,(garden.plot||[]).slice(0,6).map(function(row){return (row||[]).slice(0,6).map(function(t){return t?t[0]+':'+t[1]:'-';}).join(',');}).join(';')]),function(){garden.convert();},garden.plantsUnlockedN<garden.plantsN?'Unlock every seed first':'');
+
+        var gr=mini(7),spell=o.spells&&!o.combo&&gr&&Array.isArray(gr.spellsById)?gr.spellsById[o.spellId]:null;
+        var fail=gr&&spell&&typeof gr.getFailChance==='function'?gr.getFailChance(spell):NaN,spellCost=gr&&spell&&typeof gr.getSpellCost==='function'?gr.getSpellCost(spell):NaN;
+        if(o.spells&&!o.combo&&spell&&gr)add('spell:cast:'+o.spellId,'Cast '+text(spell.name,80)+' (native backfire '+(Number.isFinite(fail)?Math.round(fail*1000)/10+'%':'unavailable')+')',0,stamp([o.spellId,gr.magic>=spellCost&&gr.magic>=gr.magicM*o.manaPercent/100,gr.magicM,spellCost,fail,positiveBonus(),o.manaPercent,o.spellFailMax,o.spellBuff,G.resets]),function(){gr.castSpell(spell);counters.spells++;backfireUntil=performance.now()+60000;pending=!!(gr.spells&&gr.spells["gambler's fever dream"]===spell);pendingUntil=performance.now()+3000;},!gr.castSpell?'Native cast method unavailable':!Number.isFinite(fail)||!Number.isFinite(spellCost)?'Native spell quote unavailable':gr.magic<spellCost||gr.magicM<=0||gr.magic/gr.magicM*100<o.manaPercent?'Mana is below the selected bound':fail>o.spellFailMax?'Native backfire chance exceeds your limit':o.spellBuff&&!positiveBonus()?'Waiting for a beneficial buff':performance.now()<backfireUntil?'Waiting for the spell rate limit':'');
+
+        var pant=mini(6),gods=pant&&(Array.isArray(pant.godsById)?pant.godsById:Array.isArray(pant.gods)?pant.gods:null);
+        if(o.pantheonAssist&&pant&&Array.isArray(gods)&&typeof pant.slotGod==='function'){
+            var god=gods.find(function(g,i){return g&&(Number.isInteger(g.id)?g.id:i)===o.pantheonGod;}),slots=Array.isArray(pant.slot)?pant.slot:[];
+            add('pantheon:slot','Place '+text(god&&god.name||('god '+o.pantheonGod),80)+' in '+['Diamond','Ruby','Jade'][o.pantheonSlot]+' slot; spends one worship swap',0,stamp([G.resets,o.pantheonGod,o.pantheonSlot,pant.swaps,slots.join(',')]),function(){var old=pant.slotHovered;try{pant.dragGod(god);pant.slotHovered=o.pantheonSlot;pant.dropGod();}finally{pant.slotHovered=old;}},!god?'God unavailable':!Number.isFinite(pant.swaps)||pant.swaps<1?'No worship swaps available':typeof pant.dragGod!=='function'||typeof pant.dropGod!=='function'||!nativeElement('templeGod'+god.id)?'Open the Pantheon first':slots[o.pantheonSlot]===o.pantheonGod?'That worship slot already has this god':'');
+        }
+        if(o.pantheonAssist&&o.pantheonSales&&pant&&Array.isArray(gods)&&typeof pant.slotGod==='function'){
+            var godzamok=pant.gods&&pant.gods.ruin||gods.find(function(g){return g&&g.key==='ruin';}),slots=Array.isArray(pant.slot)?pant.slot:[],worshipped=godzamok&&slots.some(function(id){return id===godzamok.id;});
+            if(worshipped)(G.ObjectsById||[]).slice(0,32).forEach(function(building){
+                if(!building||num(building.amount)<=0||typeof building.sell!=='function')return;
+                add('sell:'+building.id,'Godzamok: sell one '+text(building.name,80),0,stamp([G.resets,godzamok.id,building.id,building.amount]),function(){building.sell(1);},'');
+            });
+        }
+        var market=mini(5);
+        if(o.stock&&market&&Array.isArray(market.goodsById)&&typeof market.getGoodPrice==='function'){
+            market.goodsById.slice(0,32).forEach(function(g){
+                if(!g||!Number.isInteger(g.id))return;
+                var price=g.val,cost=stockCost(market,g),buyOk=Number.isFinite(price)&&price>=0&&price<=o.stockBuy&&num(g.stock)<o.stockCap&&typeof market.getGoodMaxStock==='function'&&num(g.stock)<market.getGoodMaxStock(g)&&g.last!==2&&tradeSpent+cost<=o.stockBudget&&available(cost)&&typeof market.buyGood==='function';
+                var sellOk=Number.isFinite(price)&&price>=o.stockSell&&num(g.stock)>0&&g.last!==1&&typeof market.sellGood==='function';
+                if(buyOk)add('stock:buy:'+g.id,'Buy one '+text(g.name,80)+' at $'+price.toFixed(2),cost,stamp([G.resets,g.id,g.val,g.stock,g.last,market.brokers,market.getGoodMaxStock(g),tradeSpent,o.stockBudget,o.stockCap,o.stockBuy,retained]),function(){var before=num(g.stock);market.buyGood(g.id,1);if(num(g.stock)>before){tradeSpent+=cost;counters.trades++;}},'');
+                else if(sellOk)add('stock:sell:'+g.id,'Sell one '+text(g.name,80)+' at $'+price.toFixed(2),0,stamp([G.resets,g.id,g.val,g.stock,g.last,o.stockSell]),function(){var before=num(g.stock);market.sellGood(g.id,1);if(num(g.stock)<before)counters.trades++;},'');
+            });
+        }
+        function namedPurchase(name,key,enabled){
+            var u=G.Upgrades&&G.Upgrades[name];if(!enabled||!u)return;
+            var price=u&&typeof u.getPrice==='function'?u.getPrice():NaN;
+            add(key,'Buy '+name,price,stamp([G.resets,name,u.bought,u.unlocked,price,retained]),function(){u.buy();},u.bought?'Already owned':!u.unlocked?'Upgrade is locked':u.pool==='prestige'||typeof u.buy!=='function'||u.choicesFunction||u.priceLumps>0?'Upgrade requires a manual native choice':!Number.isFinite(price)||price<0?'Native price unavailable':!available(price)?'Reserve protects this purchase':'');
+        }
+        namedPurchase('A crumbly egg','dragon:egg',o.petFocus&&has('How to bake your dragon'));
+        if(o.petFocus&&has('A crumbly egg')){
+            var training=petView(o),level=training.level,entry=(G.dragonLevels||[])[level],trainingCookie=training.cookieCost;
+            if(entry&&level<(G.dragonLevels||[]).length-1&&typeof entry.cost==='function'&&typeof G.UpgradeDragon==='function'){
+                var costsOk=training.need.length?o.petSacrifices&&!training.missing.length:trainingCookie<=num(G.cookies)-retained;
+                var nativeCost=entry.cost();
+                add('dragon:train','Train dragon to level '+(level+1),training.need.length?0:trainingCookie,stamp([G.resets,level,objectsStamp(),training.need.map(function(n){return n.id+':'+n.amount;}).join(','),o.petSacrifices,nativeCost]),function(){G.UpgradeDragon();},!costsOk?'Waiting for explicit sacrifice permission, required buildings or cookie reserve':!nativeCost?'Native training cost is not met':'');
+            }
+        }
+        namedPurchase('A festive hat','santa:hat',o.santaFocus&&G.season==='christmas');
+        if(o.seasonBuy&&G.season)lists(G.season).slice(0,64).forEach(function(name){var u=G.Upgrades&&G.Upgrades[name];if(u&&u.pool==='cookie'&&name!=='Chocolate egg'&&!u.clickFunction&&!u.choicesFunction&&!(u.priceLumps>0))namedPurchase(name,'seasonbuy:'+u.id,true);});
+        if(o.santaFocus&&G.season==='christmas'&&has('A festive hat')&&Array.isArray(G.santaLevels)&&G.santaLevel<G.santaLevels.length-1&&typeof G.UpgradeSanta==='function'){
+            var santaCost=Math.pow(num(G.santaLevel)+1,num(G.santaLevel)+1);
+            add('santa:level','Advance Santa to level '+(G.santaLevel+1),santaCost,stamp([G.resets,G.santaLevel,santaCost,G.season]),function(){G.UpgradeSanta();},!Number.isFinite(santaCost)||santaCost>num(G.cookies)-retained?'Reserve protects this Santa level':'');
+        }
+        var godList=pant&&(Array.isArray(pant.godsById)?pant.godsById:Array.isArray(pant.gods)?pant.gods:[]);
+        return {garden:gardenSummary,grimoire:gr?'Mana '+Math.floor(num(gr.magic))+'/'+Math.floor(num(gr.magicM))+'; spells '+num(gr.spellsCastTotal):'Grimoire unavailable; unlock Wizard tower level 1',pantheon:pant?'Worship swaps '+num(pant.swaps):'Pantheon unavailable; unlock Temple level 1',stock:market?'Profit '+text(market.profit)+'; run budget spent '+text(tradeSpent):'Stock Market unavailable; unlock Bank level 1',plants:plants.slice(0,36).map(function(p,i){return p?{id:Number.isInteger(p.id)?p.id:i,name:text(p.name,60),unlocked:!!p.unlocked,immortal:!!p.immortal,rare:!!p.rare}:null;}).filter(Boolean),soils:garden&&Array.isArray(garden.soilsById)?garden.soilsById.slice(0,5).map(function(s,i){return {id:i,name:text(s&&s.name,40)};}):[],gods:Array.isArray(godList)?godList.slice(0,14).map(function(g,i){return {id:Number.isInteger(g&&g.id)?g.id:i,name:text(g&&g.name,50)};}):[],spells:gr&&Array.isArray(gr.spellsById)?gr.spellsById.slice(0,9).map(function(s,i){return {id:i,name:text(s&&s.name,60)};}):[]};
+    }
+    function execute(request,o,b,now){if(!request||request.id===handled)return false;handled=request.id;var q=quotes.get(request.key);
+        if(comboBusy(o)){log('Action cancelled: pause combo assistance before other game actions');return false;}
+        if(!q||q.id!==request.quote||q.reason||now-q.created>30000){log('Action cancelled: preview expired or game state changed');return false;}
+        // Rebuild the quote and compare the live preconditions before any spending or sacrifice.
+        var previous=q;quoteView(o,b);q=quotes.get(request.key);if(!q||q.fingerprint!==previous.fingerprint||q.cost!==previous.cost||q.reason){log('Action cancelled: resources or requirements changed');return false;}
+        if(o.completionist&&policy(o).target&&/^(ascend|sell:|dragon:|santa:|aura:|special:|level:|lump:|garden:|pantheon:|stock:|spell:|seasonbuy:)/.test(request.key)&&!advancedGoalAllows(o,request.key)){log('Stop Completionist before a conflicting destructive action');return false;}
+        q.run();log('Approved action: '+q.label);return true;
+    }
+    function advancedGoalAllows(o,key){
+        var protection=policy(o);if(protection.hold)return false;if(!protection.target)return true;
+        var name=protection.target;
+        return key==='lump:harvest'&&['Dude, sweet','Sugar rush',"Year's worth of cavities"].includes(name)||key.indexOf('spell:cast:')===0&&['Bibbidi-bobbidi-boo',"I'm the wiz",'A wizard is you'].includes(name)||key.indexOf('garden:harvest:')===0&&['Botany enthusiast','Green, aching thumb'].includes(name)||key.indexOf('stock:')===0&&['Liquid assets','Gaseous assets'].includes(name)||key.indexOf('santa:')===0&&['Coming to town','All hail Santa'].includes(name);
+    }
+    function automaticAdvanced(o,b,now){
+        if(pending||policy(o).hold||comboBusy(o))return false;
+        var offered=quoteView(o,b).filter(function(q){return q.available&&advancedGoalAllows(o,q.key);}),chosen=null;
+        if(o.lumpHarvest)chosen=offered.find(function(q){return q.key==='lump:harvest'&&q.available;})||null;
+        if(!chosen&&o.gardenHarvest)chosen=offered.find(function(q){return q.key.indexOf('garden:harvest:')===0&&q.available;})||null;
+        if(!chosen&&o.petFocus)chosen=offered.find(function(q){return q.key==='dragon:egg'&&q.available;})||offered.find(function(q){return q.key==='dragon:train'&&q.available;})||null;
+        if(!chosen&&o.santaFocus)chosen=offered.find(function(q){return q.key==='santa:hat'&&q.available;})||offered.find(function(q){return q.key==='santa:level'&&q.available;})||null;
+        if(!chosen&&o.seasonBuy)chosen=offered.find(function(q){return q.key.indexOf('seasonbuy:')===0&&q.available;})||null;
+        if(!chosen&&o.spells&&!o.combo)chosen=offered.find(function(q){return q.key.indexOf('spell:cast:')===0&&q.available;})||null;
+        if(!chosen&&o.stock)chosen=offered.find(function(q){return q.key.indexOf('stock:')===0&&q.available;})||null;
+        if(!chosen||!advancedGoalAllows(o,chosen.key))return false;
+        return execute({id:'opt-in:'+chosen.id+':'+now,key:chosen.key,quote:chosen.id},o,b,now);
+    }
+    // Native identities, not pictures, remain authoritative across all seasonal skins.
+    function petView(o){
+        var level=Number.isInteger(G.dragonLevel)?G.dragonLevel:0,levels=G.dragonLevels||[],need=[],cookieCost=0;
+        if(o.petFocus&&level<levels.length-1){
+            if(level<=4)cookieCost=Math.pow(2,level)*1000000;
+            else if(level<levels.length-3)need=[{id:level-5,amount:100}];
+            else need=(G.ObjectsById||[]).slice(0,32).map(function(b){return {id:b.id,amount:level===levels.length-3?50:200};});
+        }
+        var missing=need.filter(function(n){var b=G.ObjectsById&&G.ObjectsById[n.id];return !b||num(b.amount)<n.amount;});
+        var drops=['Dragon scale','Dragon claw','Dragon fang','Dragon teddy bear'],remaining=drops.filter(function(n){var u=G.Upgrades&&G.Upgrades[n];return u&&!u.unlocked&&!u.bought;});
+        var status=!o.petFocus?'Dragon training focus is off':!has('A crumbly egg')?'Requires How to bake your dragon and A crumbly egg':!levels.length?'Dragon rules unavailable':level>=levels.length-1?'Dragon fully trained':need.length&&!o.petSacrifices?'Waiting for permission to sacrifice buildings':missing.length?'Needs '+missing.map(function(n){var b=G.ObjectsById&&G.ObjectsById[n.id];return (b?b.name:'Building '+n.id)+': '+n.amount;}).join(', '):'Next training step ready if its cost fits your reserve';
+        return {level:level,need:need,missing:missing,cookieCost:cookieCost,remaining:remaining,summary:status+'\nDragon level '+level+' / '+Math.max(0,levels.length-1)+'\nPetting drops left: '+(remaining.join(', ')||'None listed')+'\nPetting requires the open dragon panel; chance and time windows stay native.\nSanta: '+num(G.santaLevel)+' / '+Math.max(0,(G.santaLevels||[]).length-1)+(G.season==='christmas'?' (Christmas active)':' (waiting for Christmas; no automatic season purchase)')};
+    }
+    function pets(o,b){
+        if(G.promptOn||G.OnAscend||G.AscendTimer>0||policy(o).target||policy(o).hold)return false;
+        var view=petView(o);
+        if(o.dragonPet&&has('Pet the dragon')&&G.dragonLevel>=4&&G.specialTab==='dragon'&&typeof G.ClickSpecialPic==='function'&&view.remaining.length){G.ClickSpecialPic();return true;}
+        return false;
+    }
+    var ascendPhase='watching',ascendError='',cycleOwned=false,saveSerial=0,lastFresh=-Infinity,lastAscendAction=-Infinity,liveCommand=null,planAt=-Infinity,chipPlan=null;
+    function prestigeGain(){
+        if(typeof G.HowMuchPrestige!=='function'||!Number.isFinite(G.cookiesReset)||!Number.isFinite(G.cookiesEarned)||!Number.isSafeInteger(G.prestige))return 0;
+        var value=Math.floor(G.HowMuchPrestige(G.cookiesReset+G.cookiesEarned))-G.prestige;
+        return Number.isSafeInteger(value)&&value>0?value:0;
+    }
+    function heavenlyPlan(budget){
+        if(!Number.isSafeInteger(budget)||budget<0)return {items:[],spend:0,reason:'Chip balance needs manual review'};
+        var all=G.PrestigeUpgrades;if(!Array.isArray(all)||all.length>256)return {items:[],spend:0,reason:'Heavenly catalog unavailable'};
+        var entries=all.filter(function(u){return u&&u.pool==='prestige'&&!u.bought&&u.vanilla!==0&&!u.clickFunction&&!u.choicesFunction&&!u.activateFunction&&!u.canBuyFunc&&typeof u.buy==='function'&&typeof u.getPrice==='function';});
+        var prices=new Map();entries=entries.filter(function(u){var price=u.getPrice();if(!Number.isSafeInteger(price)||price<0||price>budget)return false;if(u.showIf&&!u.showIf())return false;prices.set(u,price);return true;});
+        // Each package includes unowned parents in dependency order. Bounded best-fit;
+        // live visibility, price, parents and balance are checked again before buying.
+        var best={items:[],spend:0},start=performance.now(),steps=0;
+        function packageFor(u,owned,visiting){if(u.bought||owned.has(u))return [];if(!prices.has(u)||visiting.has(u))return null;visiting.add(u);var result=[],parents=u.parents||[];if(!Array.isArray(parents)||parents.length>32)return null;for(var p of parents){if(p===-1)continue;if(typeof p==='string')p=G.Upgrades&&G.Upgrades[p];if(!p)return null;var chain=packageFor(p,new Set([...owned,...result]),visiting);if(chain===null)return null;result.push(...chain);}visiting.delete(u);result.push(u);return result;}
+        // Try every affordable initial package, then fill the remainder in best-fit
+        // order. The deadline/candidate limit prevents a large tree freezing the game.
+        for(var first=-1;first<entries.length&&steps<4096&&performance.now()-start<2;first++){
+            var owned=new Set(),items=[],spent=0,firstChain=first<0?[]:packageFor(entries[first],owned,new Set());if(firstChain===null)continue;
+            var initial=firstChain.reduce(function(n,u){return n+prices.get(u);},0);if(initial>budget)continue;firstChain.forEach(function(u){owned.add(u);items.push(u);});spent=initial;
+            while(items.length<256&&performance.now()-start<2){var chosen=null,price=-1;for(var u of entries){if(++steps>4096)break;var chain=packageFor(u,owned,new Set());if(!chain||!chain.length)continue;var cost=chain.reduce(function(n,it){return n+prices.get(it);},0);if(cost<=budget-spent&&cost>price){chosen=chain;price=cost;}}if(!chosen||steps>4096)break;chosen.forEach(function(u){owned.add(u);items.push(u);});spent+=price;}
+            if(spent>best.spend||spent===best.spend&&items.length>best.items.length)best={items:items,spend:spent};
+        }
+        best.reason='Bounded best-fit spending; choice upgrades are left for manual setup';return best;
+    }
+    function ascensionView(o,now){
+        var gain=prestigeGain(),chips=num(G.heavenlyChips),budget=G.OnAscend?chips:chips+gain;
+        if(now-planAt>=5000||!chipPlan){planAt=now;chipPlan=heavenlyPlan(budget);}
+        var hold=!o.ascensionAssistant?'Assistant is off':ascendError||ascendPhase==='saving'?'Saving before ascension':!G.OnAscend&&gain<o.ascendMinimum?'Waiting for minimum new prestige':!chipPlan.items.length?'No new automatic heavenly purchases fit the budget':'New heavenly upgrades fit the chip budget';
+        if(ascendError)hold=ascendError;
+        return {gain:gain,phase:ascendPhase,spend:chipPlan.spend,items:chipPlan.items.slice(0,32).map(function(u){return text(u.name,100);}),summary:hold+'\nNew prestige: '+gain+' / '+o.ascendMinimum+' minimum\nChip budget: '+budget+' · Planned spending: '+chipPlan.spend+'\n'+chipPlan.items.slice(0,12).map(function(u){return text(u.name,100);}).join(', ')+'\n'+chipPlan.reason+'\n'+(cycleOwned?'This session owns the ascension cycle.':'Existing manual ascensions are not automatically completed.')};
+    }
+    function ascendTick(command,o,now,fresh){
+        liveCommand=command;if(fresh)lastFresh=now;
+        if(!command.running||!o.ascensionAssistant){saveSerial++;if(ascendPhase==='saving')ascendPhase='watching';return false;}
+        if(!fresh||ascendError||G.promptOn||G.AscendTimer>0||G.ReincarnateTimer>0||policy(o).target||rankingPending&&o.completionist&&o.assist)return false;
+        if(now-lastAscendAction<1000)return false;lastAscendAction=now;
+        if(G.OnAscend){
+            if(!cycleOwned)return false;
+            if(o.heavenlyBuy){var plan=heavenlyPlan(num(G.heavenlyChips)),u=plan.items[0];if(u){var price=u.getPrice(),parents=u.parents||[];
+                if(u.pool!=='prestige'||u.bought||u.canBePurchased!==1||u.showIf&&!u.showIf()||parents.some(function(p){if(p===-1)return false;if(typeof p==='string')p=G.Upgrades[p];return !p||!p.bought;})||price>num(G.heavenlyChips)||!Number.isSafeInteger(price)){ascendError='Heavenly purchase changed; review the tree manually';return false;}
+                var before=u.bought;u.buy();if(u.bought<=before){ascendError='Heavenly purchase did not complete; review manually';return false;}planAt=-Infinity;log('Bought heavenly upgrade: '+u.name);return true;
+            }}
+            if(o.autoReincarnate&&G.nextAscensionMode===0&&typeof G.Reincarnate==='function'){G.Reincarnate(1);cycleOwned=false;ascendPhase='watching';planAt=-Infinity;log('Reincarnated after the approved ascension cycle');return true;}
+            ascendPhase='awaiting reincarnation';return false;
+        }
+        if(ascendPhase==='saving'||!Number.isInteger(G.ascensionMode)||G.ascensionMode!==0||num(G.T)<3||activeBonus())return false;
+        var gain=prestigeGain();if(gain<o.ascendMinimum)return false;
+        var view=heavenlyPlan(num(G.heavenlyChips)+gain);
+        if(!view.items.length||typeof verifySave!=='function'||typeof G.Ascend!=='function')return false;
+        if(o.ascendPayouts){var stored=(G.wrinklers||[]).slice(0,32).filter(function(w){return w&&w.phase>0&&num(w.sucked)>0;});
+            if(stored.length){var payout=stored.find(function(w){return w.type!==1&&w.phase===2&&w.hp>0.5&&fed.has(w)&&(now-fed.get(w))/1000>=o.feedSeconds;});
+                if(payout){popWrinkler(payout);log('Collected a normal feeding wrinkler before ascension');return true;}return false;
+            }
+        }
+        var serial=++saveSerial,epoch=G.resets;ascendPhase='saving';log('Verifying a local save before the approved ascension');
+        Promise.resolve().then(function(){return verifySave();}).then(function(){
+            if(serial!==saveSerial||!liveCommand||!liveCommand.running||!liveCommand.gameplay.ascensionAssistant||performance.now()-lastFresh>250||G.resets!==epoch||G.OnAscend||G.AscendTimer>0||G.promptOn||policy(liveCommand.gameplay).target)return;
+            // Recompute viability after saving; no stale spending/reset approval.
+            var gainNow=prestigeGain(),check=heavenlyPlan(num(G.heavenlyChips)+gainNow);
+            if(gainNow<liveCommand.gameplay.ascendMinimum||!check.items.length||activeBonus()||liveCommand.gameplay.ascendPayouts&&(G.wrinklers||[]).some(function(w){return w&&w.phase>0&&num(w.sucked)>0;}))return;
+            cycleOwned=true;ascendPhase='ascending';G.Ascend(1);log('Requested native ascension after verified save');
+        }).catch(function(){if(serial===saveSerial){ascendError='Save verification failed; ascension stays stopped';log(ascendError);}}).finally(function(){if(serial===saveSerial&&ascendPhase==='saving')ascendPhase='watching';});return true;
+    }
+    function drawWrinklerCountdowns(){
+        if(!liveCommand||!liveCommand.running||!liveCommand.gameplay.wrinklerOverlay||!liveCommand.gameplay.wrinklers||performance.now()-lastFresh>250||!supported||G.OnAscend)return;
+        var ctx=G.LeftBackground;if(!ctx||typeof ctx.fillText!=='function')return;var o=liveCommand.gameplay,now=performance.now(),items=wrinklerView(o,now).items;
+        ctx.save();try{ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.95;
+            items.forEach(function(item){var w=G.wrinklers[item.slot-1];if(!w||!Number.isFinite(w.x)||!Number.isFinite(w.y)||w.hp<=0.5)return;var label=item.type==='Shiny'?'Protected':item.phase!==2?'Feed '+item.waitSeconds+'s':item.waitSeconds>0?item.waitSeconds+'s':item.eligible?'Ready':item.reason.startsWith('Keeping')?'Kept':item.stored<o.storedMinimum?'Minimum':!item.stored?'Not feeding':'Waiting';
+                var width=Math.min(130,ctx.measureText(label).width+12),x=w.x,y=w.y+30;ctx.fillStyle='#111a32';ctx.fillRect(x-width/2,y-10,width,20);ctx.fillStyle='#ff6eb5';ctx.fillText(label,x,y);
+            });
+        }finally{ctx.restore();}
+    }
+
+    function tick(command,o,now,fresh){
+        if(command.releaseSeason&&command.releaseSeason!==released){released=command.releaseSeason;seasonLock='';log('Selected season released; no automatic switch was purchased');}
+        if(session!==command.session){session=command.session;saveSerial++;ascendError='';cycleOwned=false;ascendPhase='watching';tradeSpent=Number.isFinite(command.stockCarry)&&command.stockCarry>=0&&command.stockCarry<=1e300?command.stockCarry:0;lastAction=-Infinity;handled='';fed.clear();comboAttempts=0;comboSales=Number.isInteger(command.comboCarry)&&command.comboCarry>=0&&command.comboCarry<=20?command.comboCarry:0;comboLastCast=-Infinity;comboWindows=new WeakSet();comboSaleWindows=new WeakSet();}
+        if(!supported)return;
+        prepare(o,now);observeWrinklers(now);ascendTick(command,o,now,fresh);
+        var comboActed=comboTick(command,o,now,fresh);
+        if(pending){if(now>=pendingUntil){pending=null;backfireUntil=now+60000;log('Spell result delayed; automatic casting held for one minute');}return;}
+        var p=policy(o);
+        if(command.running&&fresh&&!p.hold&&!G.promptOn&&!G.OnAscend&&G.T>=3){
+            if(!comboActed&&!comboBusy(o)&&now-lastAction>=1000){lastAction=now;var acted=execute(command.action,o,command.autoBuy,now);
+                if(!acted)acted=wrinklers(o,now);if(!acted)acted=pets(o,command.autoBuy);if(!acted)acted=automaticAdvanced(o,command.autoBuy,now);
+
+            }
+        }
+        if(now-lastTick>=1000){lastTick=now;var seasons=seasonView(o,new Date()),can=typeof G.canLumps==='function'&&G.canLumps();
+            var actions=quoteView(o,command.autoBuy);
+            // Snapshot is purpose-built: no bakery name, account identifiers, save text or secrets.
+            snapshot={schema:1,version:text(G.version,20),supported:supported,season:text(G.season,20),resets:num(G.resets),cookies:num(G.cookies),production:num(G.cookiesPs),tradeSpent:tradeSpent,buffs:buffs(),seasons:seasons,goals:rows.slice(o.goalPage*256,(o.goalPage+1)*256),goalTotal:rows.length,goalSummary:rankingPending?'Reading the installed achievement catalog...':rows.length+' matching achievements; sorted by readiness, cost and progress. Choose Suggest only, select a goal, then Pin selected. Filters and search apply to the full catalog.',goalPage:o.goalPage,target:target,policy:policy(o),shop:shop(command.autoBuy,o,p.upgrades,false),wrinklers:wrinklerView(o,now),pets:petView(o),ascension:ascensionView(o,now),counters:Object.assign({},counters),history:history.slice(),actions:actions,
+                tools:{garden:advancedState.garden,grimoire:advancedState.grimoire,pantheon:advancedState.pantheon,dragon:'Level '+num(G.dragonLevel)+'; petting needs the open dragon panel',stock:advancedState.stock,ascension:'Potential prestige '+num(G.ascendMeterLevel)+'; prepare: save, review wrinklers, rare harvests and Chocolate egg; select the native challenge mode after ascension',auraAdvice:'Production: Radiant Appetite / Breath of Milk; clicks: Dragonflight; wrinklers: Dragon Guts. Review your build before sacrificing.'},
+                lumps:{available:num(G.lumps),status:!can?'Locked':!Number.isFinite(G.lumpT)||!Number.isFinite(G.lumpRipeAge)||!Number.isFinite(G.lumpMatureAge)?'Native maturity unavailable':Date.now()-G.lumpT>=G.lumpRipeAge?'Ripe':Date.now()-G.lumpT>=G.lumpMatureAge?'Mature (native harvest may fail)':'Growing',seconds:can&&Number.isFinite(G.lumpT)&&Number.isFinite(G.lumpRipeAge)?Math.max(0,Math.ceil((G.lumpT+G.lumpRipeAge-Date.now())/1000)):0,rule:o.lumpRule},
+                advanced:advancedState,combo:comboView(),
+                stocks:(mini(5)&&Array.isArray(mini(5).goodsById)&&typeof mini(5).getGoodPrice==='function'?mini(5).goodsById:[]).slice(0,32).map(function(g){var market=mini(5);return {name:text(g.name,60),price:num(g.val),stock:num(g.stock),cost:stockCost(market,g),advice:g.val<=o.stockBuy?'Below buy target':g.val>=o.stockSell?'Above sell target':'Watch'};}),seedGoals:advancedState.plants.filter(function(p){return !p.unlocked;}).map(function(p){return p.name;}),steam:'Game-earned flags only; Steam delivery is not independently confirmed'};
+        }
+    }
+    return {comboSales:function(){return comboSales;},spent:function(){return tradeSpent;},draw:drawWrinklerCountdowns,petView:petView,heavenlyPlan:heavenlyPlan,ascensionView:ascensionView,validate:valid,prepare:prepare,policy:policy,tick:tick,shimmers:shimmers,shop:shop,inspect:function(){return supported?Object.assign({schema:1,version:text(G.version,20),supported:true},snapshot):{schema:1,version:text(G.version,20),supported:false,history:['Advanced actions stopped: installed game version needs adapter review']};},seasonView:seasonView,natural:natural,easter:easter,rule:rule,reserve:reserve,execute:execute,quotes:quoteView,counters:counters};
+}
+
+(function () {
+    'use strict';
+    Game.registerMod('cursor free cookie clicker', {
+        init: function () {
+            var token = '__PAIRING_TOKEN__';
+            if (!/^[a-f0-9]{64}$/.test(token)) return;
+            var session = '', instance = '', sequence = -1, clicks = 0, purchases = 0;
+            var busy = false, state = 'ready', lastReport = -Infinity, lastBudget = -Infinity, credit = 0;
+            var maxRate = 9999999999, maxBatch = 256, recentBuckets = 1001;
+            var recent = new Array(recentBuckets).fill(0), recentBucketTimes = new Array(recentBuckets), recentThrough = null, recentSize = 0, lastBuy = -Infinity;
+            var silence = function () {};
+            var faulted = false, terminated = false;
+            var boot = Array.from(crypto.getRandomValues(new Uint8Array(16))).map(function (n) { return n.toString(16).padStart(2, '0'); }).join('');
+            var restartHandled = '', restarting = false;
+            var automation = SlendyAutomation(Game,verifyGameSave), telemetryBusy=false, telemetryAt=-Infinity;
+            function sendTelemetry(steady) {
+                if(telemetryBusy || steady-telemetryAt<1000 || !session) return;
+                var data=JSON.stringify(automation.inspect());if(data.length>524288)throw new Error('Progress exceeded its safety bound');
+                telemetryAt=steady;telemetryBusy=true;
+                var abort=new AbortContro

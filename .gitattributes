@@ -1,2 +1,5 @@
 # Publication fragments must remain byte-identical on Windows and other runners.
 ops/releases/**/SlendyStuffClicker.exe.part* -text
+
+# Treat executable fragments as binary in public diffs.
+ops/releases/**/SlendyStuffClicker.exe.part* -diff
