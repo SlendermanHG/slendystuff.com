@@ -15,7 +15,9 @@ A free portable Windows auto clicker and companion mod for Cookie Clicker on Ste
 - Grouped Gameplay settings, saved profiles, live status and resource checks.
 - Scheduled game restarts, optional private save backups and portable updates with your approval.
 
-[Download and setup](https://slendystuff.com/slendystuffclicker/) · [Setup guide](https://slendystuff.com/slendystuffclicker/setup/) · [Current release: v0.5.2.7](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.7) · [Previous releases](https://github.com/SlendermanHG/slendystuff.com/releases)
+v0.5.2.8 fixes automation staying stopped after brief local connection interruptions. Update the EXE and companion, then save and fully restart the game. Existing profiles and safety safeguards are retained.
+
+[Download and setup](https://slendystuff.com/slendystuffclicker/) · [Setup guide](https://slendystuff.com/slendystuffclicker/setup/) · [Current release: v0.5.2.8](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.8) · [Previous releases](https://github.com/SlendermanHG/slendystuff.com/releases)
 
 The download is one EXE. Companion setup adds a mod to the game folder; pairing settings, profiles and bounded logs stay on the computer. The release tag matches the app's internal four-part version.
 

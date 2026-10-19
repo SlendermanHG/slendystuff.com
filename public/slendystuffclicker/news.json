@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-16",
-  "title": "v0.5.2.7 is available",
-  "message": "A refreshed Gameplay window, optional combo assistance, more minigame controls and scheduled save-and-restart maintenance. Download v0.5.2.7 and update the companion; future EXE updates can be approved inside the app. Read the release notes before enabling sales, sacrifices or ascension."
+  "date": "2026-10-18",
+  "title": "v0.5.2.8 connection-recovery update",
+  "message": "v0.5.2.8 fixes automation staying stopped after a brief local connection interruption. Update the EXE and companion, then save and fully restart the game to apply the fix. Your profiles are retained; manual stops and safety safeguards remain in place."
 }
