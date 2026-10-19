@@ -1,15 +1,7 @@
-name: Publish SlendyStuffClicker v0.5.2.9
+name: SlendyStuffClicker publication - awaiting owner testing
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.gitattributes'
-      - '.github/workflows/clicker-approved-preview.yml'
-      - 'ops/releases/0.5.2.9/**'
-      - 'ops/publish-approved-clicker.cjs'
-      - 'ops/sync-clicker-release-notes.cjs'
-      - 'ops/test-release-notes.cjs'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -20,7 +12,8 @@ concurrency:
 
 jobs:
   publish:
-    if: github.repository == 'SlendermanHG/slendystuff.com' && github.ref == 'refs/heads/main'
+    # Requires owner testing and explicit approval before publication is enabled.
+    if: ${{ false }}
     runs-on: windows-latest
     timeout-minutes: 10
     steps:

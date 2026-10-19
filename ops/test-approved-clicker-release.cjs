@@ -2,7 +2,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const {publish, verifyAsset, assembleApprovedBinary} = require('./publish-approved-clicker.cjs');
+const {publish:publishActual, verifyAsset, assembleApprovedBinary} = require('./publish-approved-clicker.cjs');
+const approvedFixture={...JSON.parse(fs.readFileSync(__dirname+'/releases/0.5.2.9/APPROVAL.json','utf8')),releaseReady:true,ownerApproved:true};
+const publish=(env,request)=>publishActual(env,request,()=>approvedFixture);
 const env = {GITHUB_REPOSITORY:'SlendermanHG/slendystuff.com',GITHUB_REF:'refs/heads/main',GITHUB_EVENT_NAME:'push',GITHUB_SHA:'a'.repeat(40),GITHUB_TOKEN:'test-fixture-token'};
 const notes = fs.readFileSync(__dirname + '/releases/0.5.2.9/RELEASE-NOTES.md','utf8').replace(/\r\n/g,'\n');
 const asset = {name:'SlendyStuffClicker.exe',size:1229312,state:'uploaded',digest:'sha256:0382d8b7f48bec7413c477672bbcf630885ddd377e864483facd02b0efa2b304',browser_download_url:'https://github.com/SlendermanHG/slendystuff.com/releases/download/v0.5.2.9/SlendyStuffClicker.exe'};
@@ -51,3 +53,5 @@ test('GitHub untagged draft URL is accepted only before publishing; public URL m
 });
 
 test('Memory hotfix notes explain advisory, critical limits, required reload and retained guards for users',()=>{assert.match(notes,/85%/);assert.match(notes,/95%/);assert.match(notes,/512 MiB/);assert.match(notes,/Update companion/);assert.match(notes,/fully close and reopen/);assert.match(notes,/Manual stops/);assert.ok(!/C:\\Users\\|E:\\|owner approved|user requested|assistant actions|pairing-key|9999999999/i.test(notes));});
+
+test('Untested candidate cannot publish and workflow has no automatic publication trigger',async()=>{await assert.rejects(publishActual(env,()=>{throw Error('Must not contact GitHub');}),/manifest mismatch/);const workflow=fs.readFileSync(__dirname+'/../.github/workflows/clicker-approved-preview.yml','utf8');assert.match(workflow,/workflow_dispatch:/);assert.doesNotMatch(workflow,/^  push:/m);assert.match(workflow,/if: \$\{\{ false \}\}/);});

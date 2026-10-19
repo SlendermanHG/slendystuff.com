@@ -28,7 +28,7 @@ function verifyAsset(asset, draft = false) {
       (asset.browser_download_url !== expected && !draftUrl)) throw Error('Release asset does not match approval');
 }
 
-async function publish(env = process.env, request = fetch) {
+async function publish(env = process.env, request = fetch, readApproval = () => JSON.parse(fs.readFileSync(path.join(__dirname, 'releases', '0.5.2.9', 'APPROVAL.json'), 'utf8'))) {
   if (env.GITHUB_REPOSITORY !== repo || env.GITHUB_REF !== 'refs/heads/main' || env.GITHUB_EVENT_NAME !== 'push' ||
       !/^[a-f0-9]{40}$/.test(env.GITHUB_SHA || '') || !env.GITHUB_TOKEN) throw Error('Approved main-branch publication context required');
   const root = path.join(__dirname, 'releases', '0.5.2.9');
@@ -36,7 +36,7 @@ async function publish(env = process.env, request = fetch) {
   const notes = fs.readFileSync(path.join(root, 'RELEASE-NOTES.md'), 'utf8').replace(/\r\n/g, '\n');
   if (binary.length !== size || crypto.createHash('sha256').update(binary).digest('hex') !== hash) throw Error('Unapproved binary');
   if (!notes.startsWith('# SlendyStuffClicker v0.5.2.9\n') || !notes.includes(hash)) throw Error('Missing approved version and identity in notes');
-  const product = JSON.parse(fs.readFileSync(path.join(root, 'APPROVAL.json'), 'utf8'));
+  const product = readApproval();
   if (product.version !== '0.5.2.9' || product.size !== size || product.sha256 !== hash || product.releaseReady !== true || product.ownerApproved !== true || product.policy !== 'manual-unsigned-preview') throw Error('Approved artifact manifest mismatch');
   const base = `https://api.github.com/repos/${repo}`;
   async function api(url, method = 'GET', body, binaryBody = false, allow404 = false) {
