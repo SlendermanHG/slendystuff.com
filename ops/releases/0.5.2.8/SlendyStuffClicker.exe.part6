@@ -1,0 +1,238 @@
+;telemetryBusy=true;
+                var abort=new AbortController(), timeout=setTimeout(function(){abort.abort();},1000);
+                // text/plain keeps this paired local JSON report a simple CORS request.
+                fetch(base+'/telemetry?token='+token+'&session='+encodeURIComponent(session)+'&boot='+boot,{method:'POST',headers:{'Content-Type':'text/plain'},body:data,cache:'no-store',signal:abort.signal})
+                    .then(function(r){if(!r.ok)throw new Error('Progress rejected');return r.text();})
+                    .catch(function(){ /* State acknowledgments, not progress, hold the running lease. */ })
+                    .then(function(){clearTimeout(timeout);telemetryBusy=false;});
+            }
+            var supportsRestart = typeof App !== 'undefined' && App && typeof App.quit === 'function' && typeof Game.WriteSave === 'function' &&
+                typeof send === 'function' && typeof localStorageGet === 'function';
+            var base = 'http://127.0.0.1:43821';
+            function report() {
+                if (busy) return;
+                busy = true;
+                var controller = new AbortController();
+                var timeout = setTimeout(function () { controller.abort(); }, 1000);
+                fetch(base + '/state?token=' + token + '&session=' + encodeURIComponent(session) + '&clicks=' + clicks + '&purchases=' + purchases + '&state=' + state + '&boot=' + boot + '&restartSupported=' + (supportsRestart ? '1' : '0'),
+                    { cache: 'no-store', signal: controller.signal })
+                    .then(function (r) {
+                        // Drain each small response before another request; never leave body streams unread.
+                        if (!r.ok) throw new Error('Controller unavailable');
+                        return r.text();
+                    })
+                    .catch(function () { state = 'disconnected'; })
+                    .then(function () { clearTimeout(timeout); busy = false; });
+            }
+            function restartReply(id, outcome) {
+                var abort = new AbortController(), timeout = setTimeout(function () { abort.abort(); }, 1500);
+                return fetch(base + '/restart?token=' + token + '&session=' + encodeURIComponent(session) + '&boot=' + boot + '&id=' + id + '&result=' + outcome + '&clicks=' + clicks + '&purchases=' + purchases + '&tradeSpent=' + encodeURIComponent(automation.spent()) + '&comboSales=' + automation.comboSales(),
+                    { cache: 'no-store', signal: abort.signal }).then(function (response) {
+                        if (!response.ok) throw new Error('Restart not approved');
+                        return response.json();
+                    }).then(function (response) {
+                        if (!response || response.accepted !== true) throw new Error('Restart not approved');
+                    }).finally(function () { clearTimeout(timeout); });
+            }
+            async function verifyGameSave(){
+                if(!supportsRestart||Game.OnAscend||Game.AscendTimer>0||Game.T<3||Game.isSaving)throw new Error('Save unavailable');
+                Game.WriteSave();var expected=localStorageGet(Game.SaveTo);
+                if(typeof expected!=='string'||expected.length<10||expected.length>4194304)throw new Error('Save size');
+                var deadline=performance.now()+18000;while(Game.isSaving){if(performance.now()>deadline)throw new Error('Save deadline');await new Promise(function(resolve){setTimeout(resolve,100);});}
+                var actual=await new Promise(function(resolve,reject){var timeout=setTimeout(function(){reject(new Error('Read-back deadline'));},3000);send('load',function(data){clearTimeout(timeout);resolve(data);});});
+                if(actual!==expected)throw new Error('Read-back mismatch');
+            }
+            if(typeof Game.registerHook==='function')Game.registerHook('draw',function(){automation.draw();});
+            async function saveAndQuit(id) {
+                restarting = true; credit = 0; state = 'paused';
+                try {
+                    if (!supportsRestart || Game.promptOn || Game.OnAscend || Game.AscendTimer > 0 || Game.T < 3 || Game.isSaving) throw new Error('Game is not ready to save');
+                    Game.WriteSave();
+                    var expected = localStorageGet(Game.SaveTo);
+                    if (typeof expected !== 'string' || expected.length < 10 || expected.length > 4194304) throw new Error('Invalid save');
+                    var deadline = performance.now() + 18000;
+                    while (Game.isSaving) {
+                        if (performance.now() > deadline) throw new Error('Save deadline');
+                        await new Promise(function (resolve) { setTimeout(resolve, 100); });
+                    }
+                    // The game's "saved" callback fires on write failure too. Compare actual disk read-back.
+                    var actual = await new Promise(function (resolve, reject) {
+                        var timeout = setTimeout(function () { reject(new Error('Read-back deadline')); }, 3000);
+                        send('load', function (data) { clearTimeout(timeout); resolve(data); });
+                    });
+                    if (actual !== expected) throw new Error('Save read-back mismatch');
+                    await restartReply(id, 'saved');
+                    App.quit();
+                } catch (error) {
+                    state = 'error'; faulted = true;
+                    try { await restartReply(id, 'failed'); } catch (ignored) {}
+                    restarting = false; report();
+                }
+            }
+            function validBuy(options) {
+                return options && typeof options.enabled === 'boolean' && Number.isFinite(options.reserve) && options.reserve >= 0 && options.reserve <= 1e300 &&
+                    Array.isArray(options.buildings) && options.buildings.length <= 32 &&
+                    options.buildings.every(function (id, i, ids) { return Number.isInteger(id) && id >= 0 && id <= 1023 && ids.indexOf(id) === i; }) &&
+                    Array.isArray(options.upgrades) && options.upgrades.length <= 3 &&
+                    options.upgrades.every(function (pool, i, pools) { return (pool === '' || pool === 'cookie' || pool === 'tech') && pools.indexOf(pool) === i; });
+            }
+            // Only fresh executable pulses click; no document timers, mouse APIs, or keyboard hooks.
+            var events = new EventSource(base + '/events?token=' + token);
+            events.onmessage = function (event) {
+                if (terminated) return;
+                try {
+                    var command = JSON.parse(event.data), now = Date.now(), steady = performance.now(), previousState = state;
+                    if(command.stockCarry!==undefined&&(!Number.isFinite(command.stockCarry)||command.stockCarry<0||command.stockCarry>1e300))throw new Error('Invalid stock carry');
+                    if(command.comboCarry!==undefined&&(!Number.isInteger(command.comboCarry)||command.comboCarry<0||command.comboCarry>20))throw new Error('Invalid combo carry');
+                    if (command.protocol !== 7 || !/^[a-f0-9]{32}$/.test(command.session) || !/^[a-f0-9]{32}$/.test(command.instance) ||
+                        !Number.isSafeInteger(command.sequence) || command.sequence < 0 || !Number.isSafeInteger(command.issuedAt) ||
+                        !Number.isSafeInteger(command.cps) || command.cps < 1 || command.cps > maxRate || !Number.isSafeInteger(command.limit) || command.limit < 0 || command.limit > 1000000000 ||
+                        typeof command.running !== 'boolean' || typeof command.safetyStopped !== 'boolean' || typeof command.overrideCooldown !== 'boolean' || typeof command.reduceEffects !== 'boolean' ||
+                        (!command.overrideCooldown && command.cps > 50) || !validBuy(command.autoBuy)) throw new Error('Invalid or expired pulse');
+                    if (command.collectGolden != null && typeof command.collectGolden !== 'boolean') throw new Error('Invalid golden-cookie setting');
+                    if(!automation.validate(command.gameplay)) throw new Error('Invalid gameplay settings');
+                    if(command.action!=null&&(!/^[a-f0-9]{32}$/.test(command.action.id)||typeof command.action.key!=='string'||command.action.key.length>100||!/^[a-z0-9:-]+$/.test(command.action.key)||!/^[0-9]{1,12}$/.test(command.action.quote)))throw new Error('Invalid approved action');
+                    if(command.releaseSeason!=null&&command.releaseSeason!==''&&!/^[a-f0-9]{32}$/.test(command.releaseSeason))throw new Error('Invalid season release');
+                    // Buffered transport messages do not establish fresh authority or end an otherwise healthy run.
+                    if (Math.abs(now - command.issuedAt) > 1000) { credit = 0; lastBudget = steady; return; }
+                    if (instance !== command.instance) {
+                        if (command.running) throw new Error('Controller must introduce itself stopped');
+                        instance = command.instance; sequence = -1; session = ''; credit = 0; lastBudget = steady;
+                    }
+                    if (command.sequence <= sequence) { credit = 0; lastBudget = steady; return; }
+                    sequence = command.sequence;
+                    if (session !== command.session) { session = command.session; clicks = 0; purchases = 0; credit = 0; lastBudget = steady; faulted = false; }
+                    var recoveredTransport = transportInterrupted;
+                    if (recoveredTransport) { transportInterrupted = false; credit = 0; lastBudget = steady; }
+                    if (command.safetyStopped) {
+                        // A resource failure ends the connection as well as game actions.
+                        // Reloading the game is required; a delayed pulse cannot resume this instance.
+                        terminated = true; credit = 0; state = 'error'; events.close(); report(); return;
+                    }
+                    if (command.restartId != null && (!/^[a-f0-9]{32}$/.test(command.restartId) || command.running)) throw new Error('Invalid restart request');
+                    if (command.restartId || restarting) {
+                        credit = 0; lastBudget = steady; state = faulted ? 'error' : 'paused';
+                        if (command.restartId && command.restartId !== restartHandled && !restarting) {
+                            restartHandled = command.restartId; saveAndQuit(command.restartId);
+                        }
+                        if (steady - lastReport >= 1000) { lastReport = steady; report(); }
+                        return;
+                    }
+                    var elapsed = steady - lastBudget; lastBudget = steady;
+                    var gameplay=command.gameplay;automation.prepare(gameplay,steady);var protection=automation.policy(gameplay),advancedProcessed=false;
+                    if (!command.running) { credit = 0; state = command.limit > 0 && clicks >= command.limit ? 'complete' : 'stopped'; }
+                    else if ((command.limit > 0 && clicks >= command.limit) || clicks >= 1000000000) { credit = 0; state = 'complete'; }
+                    else if (faulted) { credit = 0; state = 'error'; }
+                    else if (protection.hold) {credit=0;state='paused';}
+                    else if (Game.promptOn || Game.OnAscend || Game.AscendTimer > 0 || Game.T < 3 || typeof Game.ClickCookie !== 'function' ||
+                        (command.overrideCooldown && !Number.isFinite(Game.lastClick))) { credit = 0; state = 'paused'; }
+                    else {
+                        state = 'clicking';
+                        if(!automation.inspect().supported)throw new Error('Unsupported game version');
+                        if (elapsed > 0 && elapsed <= 100) automation.shimmers(command,gameplay,protection,steady);
+                        // A native pop can earn the active goal immediately. Resolve its successor
+                        // before spending click credit or buying under the previous goal's policy.
+                        var refreshProtection=function(){automation.prepare(gameplay,steady);protection=automation.policy(gameplay);if(protection.hold||Game.promptOn||Game.OnAscend||Game.AscendTimer>0||Game.T<3){credit=0;state='paused';}};
+                        refreshProtection();
+                        // Independent actions get their bounded turn before the click batch can
+                        // consume the callback budget. A high rate must not starve wrinkler payouts.
+                        automation.tick(command,gameplay,steady,state==='clicking'&&elapsed>0&&elapsed<=100&&performance.now()-steady<8);advancedProcessed=true;
+                        refreshProtection();
+                        // Bounded callbacks; discard credit after a stall, with no catch-up queue.
+                        credit = elapsed >= 0 && elapsed <= 100 ? Math.min(maxBatch, credit + elapsed * command.cps / 1000) : 0;
+                        var canMain=protection.main&&state==='clicking',batch = canMain ? Math.floor(credit + 0.000001) : 0; credit = canMain ? credit-batch : 0;
+                        if (batch > 0) {
+                            var prefs = Game.prefs, particles = prefs && prefs.particles, numbers = prefs && prefs.numbers;
+                            var sound = Game.playCookieClickSound;
+                            var suppressEffects = command.reduceEffects || command.cps > 50;
+                            try {
+                                if (suppressEffects) {
+                                    if (prefs) { prefs.particles = 0; prefs.numbers = 0; }
+                                    if (typeof sound === 'function') Game.playCookieClickSound = silence;
+                                }
+                                for (var i = 0; i < batch; i++) {
+                                    if (performance.now() - steady >= 8) break;
+                                    if ((command.limit > 0 && clicks >= command.limit) || clicks >= 1000000000) { state = 'complete'; break; }
+                                    var timestamp = performance.now();
+                                    var bucket = Math.floor(timestamp);
+                                    // A suspended game can return hours later. Expire the fixed ring
+                                    // in bounded work instead of iterating over every missed millisecond.
+                                    if (recentThrough !== null && bucket - recentThrough > recentBuckets + 1) {
+                                        recent = new Array(recentBuckets).fill(0); recentBucketTimes = new Array(recentBuckets);
+                                        recentSize = 0; recentThrough = bucket - recentBuckets;
+                                    }
+                                    if (recentThrough === null) recentThrough = Math.max(-1, bucket - recentBuckets);
+                                    while (recentThrough < bucket - 1000) {
+                                        recentThrough++;
+                                        if (recentThrough < 0) continue;
+                                        var expiredSlot = recentThrough % recentBuckets;
+                                        if (recentBucketTimes[expiredSlot] === recentThrough) {
+                                            recentSize -= recent[expiredSlot]; recent[expiredSlot] = 0; recentBucketTimes[expiredSlot] = undefined;
+                                        }
+                                    }
+                                    if (recentSize >= maxRate) break;
+                                    var before = Game.cookieClicks, previous = Game.lastClick;
+                                    try {
+                                        if (command.overrideCooldown) Game.lastClick = Date.now() - 20;
+                                        Game.ClickCookie();
+                                    } finally {
+                                        if (command.overrideCooldown) Game.lastClick = Game.cookieClicks > before ? Math.max(previous, Game.lastClick) : previous;
+                                    }
+                                    if (Game.cookieClicks > before) {
+                                        clicks++;
+                                        var slot = bucket % recentBuckets;
+                                        if (recentBucketTimes[slot] !== bucket) {
+                                            recentSize -= recent[slot]; recent[slot] = 0; recentBucketTimes[slot] = bucket;
+                                        }
+                                        recent[slot]++; recentSize++;
+                                    }
+                                    if(protection.target&&Game.Achievements&&Game.Achievements[protection.target]&&Game.Achievements[protection.target].won){refreshProtection();if(protection.hold||!protection.main){credit=0;break;}}
+                                }
+                            } finally {
+                                if (suppressEffects) {
+                                    if (prefs) { prefs.particles = particles; prefs.numbers = numbers; }
+                                    if (typeof sound === 'function' && Game.playCookieClickSound === silence) Game.playCookieClickSound = sound;
+                                }
+                            }
+                        }
+                        if ((command.limit > 0 && clicks >= command.limit) || clicks >= 1000000000) state = 'complete';
+                        if (state === 'clicking' && command.autoBuy.enabled && elapsed > 0 && elapsed <= 100 && steady-lastBuy>=250 && performance.now() - steady < 8) {
+                            lastBuy=steady;var bought=automation.shop(command.autoBuy,gameplay,protection.upgrades,true);if(bought.purchased)purchases++;
+                        }
+                    }
+                    // One advanced decision per second, and bounded local progress scans. No timer catch-up.
+                    if(!advancedProcessed){var tickCommand=state==='complete'?Object.assign({},command,{running:false}):command;automation.tick(tickCommand,gameplay,steady,tickCommand.running&&!faulted&&elapsed>0&&elapsed<=100&&performance.now()-steady<8);}
+                    sendTelemetry(steady);
+                    if (recoveredTransport || steady - lastReport >= 1000 || (state === 'complete' && previousState !== 'complete')) { lastReport = steady; report(); }
+                } catch (error) { state = 'error'; credit = 0; faulted = true; report(); }
+            };
+            events.onerror = function () { state = 'disconnected'; transportInterrupted=true; credit=0; lastBudget=performance.now(); };
+        }
+    });
+})();
+       	  {
+  "Name": "SlendyStuffClicker",
+  "ID": "cursor free cookie clicker",
+  "Author": "SlendyStuff",
+  "Description": "A SlendyStuff Production. Independent background clicking, smart shop controls, wrinklers, seasonal progress, Completionist guidance and resource safety stops. Controlled by SlendyStuffClicker.exe without using your mouse.",
+  "ModVersion": 12,
+  "GameVersion": 2.053,
+  "Date": "18/10/2026",
+  "Dependencies": [],
+  "Disabled": 1,
+  "AllowSteamAchievs": 1,
+  "ControllerVersion": "0.5.2.8"
+}   âD ‰PNG
+
+   IHDR         ²§Ó0   IDATxÚìıi°¥ù}ö}ÿÏsÎ¹kï³wOÏ>À $¸€A wŠ¢ÄE–X”iËV*´eU§ìŠc¾H%v^8/—SN9±T9e§ÇÉ–,J2mS&Eq	I€ØwÌ¾ôL/w9ÏóÏ‹sîÙî¹İ=ƒ0ËçÓ¼œ{Ï=ç9K7ªşË÷ÿû•35       À›Zã#       €                  "                 @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @        €                  ’        @   ¸¥Ræ_   o·ù     È[d±«ÖùW[JÚ¦X  ŞÒó ¶,=×* ğ­4ğ  |óÔšIä²MÒ']W“š¥p   @Şb!è®ë§7˜÷  D  €¼eÊ\>Óæ®û†Ù=ß¦.ÜŞ•   €·–fa’3Ü.Ù>3HÓ4)1ù ˆ
+   oN5IJÒîòÓ÷İ‘oÎ•«×òÜc{ùGû7ò[z=İŞäÌ°m2î{§b  €7¥¦)iš’Ò'‡}Ÿº3ÈìîüàKm¶ö÷ó‡gò÷ÿÉËyñù.M)©µÆô     y“,~õ}Íp«Íw}ÇİùÛç';ŸÃö07Î\Í;öŸÊÖ=Ïå37òåç÷søÜ¤4fÛ”ôµ
+   oªÿ}_Ó÷“‰ÌÙƒ|à‘;óW|,ùÄN¶7®å7}&¿ÿ‰Ó @Ò™ó  D    o¢°ÔœÛåç{0ï|úş<ıôNú­­ÿj>vp&ï»|GşÛ¿’ÿè_Ïïşíç3ëÙûü  €¼‰ªŸÍwó‡›ƒüÜûîÌ_½ë‘\ü»÷&_?Ÿrÿ~îíúìî}5É^jÓÿ     xÓ8:ù²yPòg¹ğR›+ã.¥;HÓm¥9¸œ¾~O~òï?›‹‡ùÏ´Éô»Ï¥{yò¸QÓdœù	  €7’¶-”&ûã.µ&çß»“Ÿøş»óO´ùĞgóè³Ó=}_®w;^¿šûÙÍùf3ep%ı¸$IJ‰êg     xÃ:ZÀêkÍ©û7òÜ‘;Nê‹{ÉV—ÁàzÊÎ(/—ì]ÙÍÖ×ùÑwíäËÛÙ9Õæ|9ŸÎaûÿ&I†mÉ¸×   xãÌyš”t]M—.u·ä½wÊÇ¸˜Ÿ]ÌƒŒæÆŞfúÍd¼Ó¥­Mv¯mgw{”~·¤¼d‚   €¼	ÃJêt·şÁwÉÇ¾ïrîşo§^íSÎÕ4uœv|Asf÷tÆ›gòÊ·óÄ†ù·îÚÌ|ÿ³ù¿ŸÌö…çòÊõ>ãØü  Ş8jMºÔFÉp³É»ï;—ùñGó‘ïIóÛÃ¤ÙÌÕÍ’r¶O“Ó´;é63ØßÎ—Nçt»‘W^ÚÏ¬šf   ¯»v4Úü À7®)e¶aÿÄ½gòã§îËCŸÜNnÒm%ÃÚ¥í’¶oÒôISû”ZÒô»Ï=_ŞÌûn$¼«äÏÆyáùq’dXš”VyL   ß¶“ÿ›ƒ6ãi›²ıÔù—¾÷‘ü•g.åƒ_½?§¾#ışV2()Ã.MéÒ¦O7f°7Ì°Ö4ïéòµæ•|áËW“$mÛÌÔ  D  €¼OÃ$“s,w<×æÒ§]ÛÈAM‡}Ú®IÛ5iº6Mú¤ÜHİ<ÌŞp+×÷63üÜ½¹ïÊN~ñ}wf´ùÙüç÷=¯¾’Ã¯öI§%   ğ­Uš’&I××ì»w“yøüÊæÃùè“æÔ‹;?ßäj[Rv’Òti&eÒô}†í8‡M—¦lä¹+O'õÉ$I3¹     xCê§;óı°æ®½Q.=¹•v#µ3<èÒtmJ-)µ$)ISRr˜á`œlïå`ëT^:¸+›¿³“_ºk'ï¹ïLFƒ/ç7WòÜóû9¼Ö'+­   ¾J’Ú×É&ı095æC—/äùwä»şàbö>s:WÏÒïî¥¤¤&©ék“ÚMªû·İaºA—Ã2ÌöÓÙ}q8»~gJ   €¼QKbN7åÛdãÂFî©;Ùyn;]7JmjÚ®Ij3YF+%µÔ¤öÓG×¤dP_LİÚL·±›îÚCyâSgóoİu!¿÷S/äßÿÒóßş§“$ƒ’ƒ.é{+f  À7GÛ6w“9Ë…‹›ùÕ‡Î/ŒÊåzGòü™N·ÉÆ~ú¶Kj?Ùş/“ÿ×Ô2i{6®9l’A›s×¹»¦n–”½š¾ö)E«3 €×}7mş† à_«©iM~ğƒ—òó£rùK§Ò·mÆ£>mS'3§€R2ı>)¥&¥¦iÆ)ÃÃÔaŸınáşvÎŒOåÁƒí\Úè’Ó{ùãë7Òİ˜´”i˜ÀÇ  ¼Nƒ&µNÇ»ïlò±½+qÿüÌ+ïÌ;¯>úüfº¦OÙ:Li’2NIŸ:­ P’”š4Išt7MRÚŒ^çàÒA¾ú½<õôõt5mS   "   ğ†3hJú¾fk4È_}ßcùøÁåŒ>W’¤nv™œı/Ó#1“rš‹ÿ¿¤IJ“R’6‡s°™ìRÿtw–SyÇƒ›yáåéw»ôgj®½<9ecÑ  x=´¥¤›V»ëÎüä÷Ş›¿şÀãùÉO<–Ÿ½;×ö‡iwÆ÷ÒÔÃ$5I?;Íoj“’šRº”¶LÚ¡=×äÜƒ£\d?¿÷©gsãz—¶if­Ô  ˆ   oãiËSƒ<ğ¥­œ}q”¾IjéÓôı¤fmR¦€º ¨Gá€”¤&µÔ”t”ë)›]Ê}Ûé^>wüÁnşİÁV>ñ£Oæÿ±ótşÃÿÛSéöjmÒõş  €|Ã•Íºq—íía~í‡Ê/Üx0÷ıGwdkïô[ƒlöRÇ{©¥K-“Šf©í$LşOMæ5%m'İašœÊÙ¯%leë ™TC³÷   €7’’ÌjğoÕœ=;Ê]Ï3¼2ÈÕaŸ¶í–šZ–Ræ÷Ÿ Ê Ì¨5)ãÔÒ§nöne¸*;ı;ò=p>ç/îäæÿü§Oæë_>L’ŒÚ&ãÔôU4  àö4mÉ %]Ÿƒq—‹—Oå¯¼ûÁüÜ•{òĞgÎ%W¶s¸Ù¥“²—ZÆ)iRSRjŸRë´ÒÙre²zÔõ¬vI³?è³qu#÷·2¼6¹Cçã ˆ   o eaÿì}›ùÑG.æÇ»7g_ÚÎŞ(i}RúiEÌ2	 »H]øo,’¥JŸ”ıÔáaÉÕÃaê¶rÇ;yï¥´å0Ïoä©2N¿_SkÒh	   Ü†fÚÊ¬«5ÙL¾k7¿ôÈCù•GrßÎøÙQºsm2'ÍA’.iêdó?IIŸ²xê?uxnú”¦&Í8µ&e”ÍƒAÆÃkù½ÇË×³—ñËı±y     øviJ™­o½çâ¹üõGÍ»¿t>õÅaú¤iº”fZ³”å…­2kyT/svûÑİjS'KM›ƒsº5H¿w*£ÏoçC;;¹|1ùÓf/Ï¤tI¯   p&â¤%İu:ÿÒ{Í/\ÎéßÛÎpo7íÖ0M©)¥Kijj3)í?I×ù|&õx¸¹é'_¥ORÒ5¾Ôfs·ËÕŸçóı•<÷¹ıY¡
+1 D  €|»Ìæ«TwîóÈÓ[ÙØeo˜¤­I“éq–’šf².¶´°Ujÿ—ÙM³»Ôfá~5¥¦4WS}ºÃŸz$yq3ÿÇ6ÿğŸÏú•ògÿÍõ””GÉÁU4  `ÙhTrx09±ÿÄGwó3Ş™ïşÇ§òşÏ]Ì¹rp8H%)]’>µô+Iæ£ªe5µ6Ó0@YniVî5ù}iÆI³‘ëÛyÏ×ÏåâË[ùtóJú¾¦˜¶  D    ßş^™}7Y©zğ};ùŞ³çræs%İ^›ñf“Rî™åF˜™-›ÕÙ÷eõ×}ªLÑÔÃdt5}Ûç¥½ì¾r1ßÓmäÁ¿ší‹_ÌògòG¿ÿJ’QÛä°ï¦  R’Ú2	
+—ä½ï;—_ºtw~ö•‹yğÚùtÏnçzÛ¦İhRÊx2!™†˜ët3)`6İş?
+8ŸXÃ¿Ì"ÏMÆ9Øè³ÑòĞ§¶sç“ƒô}U"   Z   |[Rm3Y°*ÉŸÿØ}ùKçïÏ½t*e¼•~cRş?¥Î×ÂjY­ôŸrTî¿–c·­~Í+´)éÓ”Ã†‡6r°:ƒ?ä];›9ÿÁA>÷âÕ¼øòaÇu±¶   ·ïæMÒ×d0LŞñĞn~ı#ïÌO~ê¾œÿÍ³Ù?8ŸƒÍQ£.Mí¦s“’RÊt×²í_j˜'·ÔÙ}ç=ÍJJ©“vÓÇ¦–¦Í`0È©ş0ŸÜx!¿Ó<Ÿîú-2  D   à[1*%55£¶ä'î¾¿rOv¾²›¾¤»4¥_ZÄ*G%2vúËÊÉÿ£ŸÊRc€…åµ…AÉ´gö“ô)Ín¶_9ËWyâİm¾Ş\Ë—:H’l´%¿2  xÛ¶MúéQûxßéü+ï}8?ğÉûsö‹çRú­4m›¦éRJŸ22—¦u4›ÌEêJLy©ZYRš£¹LIši  MJš”¾f<¦­mÊ•>Íûóì»®ç‹Ÿ¾~œÍ¬"   Ñ  à[­ë'¥*û¾æÜ×9İndÜl$MRJ7«ù_J_NN¾Lk\–ã%ÿëÑÒY=Öbs¥‹ÀÑ²Z—’)ÍaÆ›§sco;Û_¹˜Ÿ$w•œ÷WóŸáÙì_›<jĞ–t}Ub  ŞJ)i›’R“Ã®O5ât~å®Ëù¡'Nûå³éi·jšñÁ4À¼xjÍEëúyÊÉu&óŸ’¤iÆé»aêÁ(Ö;òşá¹ü£ò\Æ©)æ(     ø6êkŸv;yäòV.×Q¶^æj3LÓŒSÒg^d3K«cåØnnµ\¶²Ò¶xËQyÍ.Ã¼œÃš«Ãí4p>{h˜{ï?•ƒ½’ßzò¹¼r­Ï¸›ÆŠ>›  ·ôæRkÍ¶¶JŞ÷nşæCæ{|,7>s>İ©·3Ø'µŸæŒçaå²4Y—R^˜ó”ik³z´é_¥›ÛŒ“æ0ãv”S_ŞÎ¥¶3L“é“Şß @´   È·e!­iJjMîy`˜æÇ.ä#Ï\ÈöO'Û[)å0Éxzzf±Dæê®şr(`v¯ZÖ –ÛLæj™,ª•¦&m—¦¦×Ôl¦{a+÷¼¸•ß±—ÎìåŸŞ¸š²?¶E    ŞÂÇüµ­ù™wÉ¿qéá¼ë³¤<}gÊh#í¸Ï ?L“nÖ²ì( 0ù~ÈÂ>9jSV¦…ÊüçÌ7iyv4{i&ÿmúÔZÒrº-y¾)¿¹÷L^Ù§3A ˆ
+   ßuZ3I.d÷ß8;÷w“®M-ã¤v)u^üÿH3ı¹NOâÌ‹ù×5:{®Õ A]¸c£I3Y¬+µÏ ßOI23ºr>÷ÎæoÔÍÜÿ®SùÇ<Ÿğ÷Ïá3}†m“®V}6 à-¤i’¦”Œ»š»‡ù‘Üw}~+?òüù®ıûÓ?·›½$£v?¥ï“¾Km&;ûõh¶QË< ¤Ô•Òe³zı‹÷?^álöc?©PRÓ×š~X“ëƒœÏFÎæË×S®ÕÊ  "   oW I¶¯¶¹û“£l¼´›ÃÁ0é»…E°¬/ñ_sbIÿWg¨9ZP›œ²öûi7»ì÷m®?·wöæñK;ùÎû?ŸæC}şûßy)¯|½K’´MI'   yóoş—ô}MŸš³÷mäÃßsW~õ¡òágÏfûS§rp°›l%ÃáaÊ¸K6/«µ™Ò_­A¶&¼Ô`mK³…pÀ´ @úé5º:	S“şzrns;ßùÓùB-¯\íü D    ßú>š“üı¹6ÛÎÅ—w3ÚÛÊ^Ó¦öÍœ˜©™¥™ş_¿é_æO’Ú/ò/³Å³’åº«mıäYÔRRúq†åjÚÍ.7ºşô|ïSW³ûÓ5gN}5ÿÏÿø©ÉUš’   À[b¾’$ÃA“Ÿıè¥üÂ¹Kyø¿ÜHÙÊA;JİéSRS»ÉÌ¢6uzx¿,—ù?iÖ2­VV—
+”å ôBË€R'“£šf>íIŸfĞg¼WrG»“yøÎüÑ3/æsm6ª1? ˆ   @¾%'jºn²õ½ßu>¿ûşœúíSéo’a›Rûı¯G=4s|Û¿•ïŸ.˜Möö{dæf¥~š/®Íªr–£c6I)‡)MŸ®$‡{›Ùzöş|ğldóMvÿÒ ÿáßûzÆ/÷Ù49ìûô½¿c  xÓÍSJ2j›ìûŒÎ6ù•]Ê/Ü•wıÖ©ÜM3ŞJ?*iš.)uºÁ>ÙüŸÌ[ú,LP–§e¹Êÿ|Ş²Rô¬LãËÑj=ª0GOş¯KmFÙ:ÜÈÃW¶rş õ—   €o¹²°©ÿ§Oç»·ïÊ`+]ß¦Ôo¬ª]<¶óÚ/T›£33eºàÖ¥i®¥Û®9¨Û)Ÿ¼7ïßÛÎöwï¦¼¯Ëÿ÷ÓÏäÉ§&å6MÉX5   xÓhKIWköÆ}î»{+?ñè]ùµÁå¼óÎ¦ûüv§vR%%]JúÉF~©+»úßH[²º¨‹é€ùïgaç¾¦)}ºA“ÑÁ(w~y˜3×“}ÒWó €   |kÔ~^ÚòÜ×F9{e3¥ßJ7XXø*Ç[_®vÍ¬+?¶©kÊû;÷_³prfX\»«mjjJ©äFÒô©wœÎøëÛyôï5ù_ÿHÉÙÍ’ÿÓóOæÆaMg±  ŞTÆğ›£’¿üîËùN=œ#íŞéÔs›IíSúnÒj¬LBÂ5·Øø¯Ëß/f”ëÚ¶ GS•º¦ÙÙ¬GÚ,Rİö5‡ÃšR‡¹óùíœÏ(u»¦\-K­×  xõ @n»Ÿf7M F%w_İÊù+»éêFº¦Ié3)kyô5]Ü:ZêZüºÙ	ÿ£
+ş¥-˜Õ£šóU´£Íÿ2?fSf?–…_”¤6)µ¤¤OÉ~šòrºQŸÒİ“s¿óüş=ù7äR¶¶'‹l£¦IÓ,¦  €7Şü¤d³”ÎßÙnó¯ÿà£ùg»GrçŞ•ÁøÎÔÁvÚ¾¤Ôé\¡”ù¶|=úZ˜n,Ì)–&+ƒ²2»©MĞ–¦/+s™z4k)%Mß¥vIi²õÊfîÜet¡Yzo  ¼6íh´ù> €[kšÉi™³m>ğ‘;ò3›÷çÁ¯ŸK×Rk.x•ÉF}÷À,G}2KnR6s9 °~ó½[›_´Î¾/¥;wÓL_I)}š:NF}Ãì½t*çëé<zv˜ÍÓã<Õìå™—§­JÚvò €¼Qú’¥™6ı×šûïå¯=~)¿²ùDîÿê=Ù{v#ekÒÖ”¾.•&+Y=ı_ÖÌHVöÏ§óIß±dı5f\ş*%)µf<(Ö&Ù?Ì•G÷óå3×òµ/íOç^Mª‰ @   òÍ L¡ÎÜ9ÊÏÿì#ùs×/fçSÛ©£6¥ïS&»æ)eáäÌt=leÛ>«'wJOüÏÛ]óØÊÛò·K÷9ZÂ›ı)ËËz“j ]28Lwj”/oeûùíüà#»©;ùäë¹ÖwéÇ5«O  äÛ¹÷?ß~$vùk_Êß8ÿ®lâ®ì]ÛJ{¦dĞSº:™XM6æ)å5ó”õï{b„¹¬T3[¸éh®3ŸŸ}_SIíJšƒ’s%ÏŒ®ææ¥$É )é   ^“  àö”:YÀÚ:lséËÛ9ıÂNJ¤+5M©“ƒÿeÍ©ı£$@ÍìKY\E«õøÊÙÂbW©+;şåØÒßt	í„¹ºxd§Ì¯_Ó”W’İíôãítŸº˜¿v¦ÍcOìäßºñùü|%åzT>HMßû7   ßÎ–dMÓ¤ïjê æşû6ò¯]z0?x4›rWJ=•º]Sê~úôiêÑ&~Ÿ¦/Çç™0+Kó‹¥éÉÂşº8ó(õa…Å¹N3ï@¤I—4mÒlä§vó@İÌÆ°ÍÁa—˜{  D   à›¬¯“…³ÁÕ’û¾4ÊÎ‹ÃÔLJê—>µ™œş¯‹`7=)“•ÿRç«aëŠş×r¬GÀbeÙÓ–z¬Kç´Át¯$MŸRÆiÒ'ƒqººÃ+£œŞ ?z°•Ãí’ÿú/})¿ùÔùÒß›¬¾F%Ná  À·ZÛ6éº>]×'›5ï¹¼“_;û`~jÿ‘\xîÎ¼t}”fgœRú¤ë’¦Kš’Zæ‹­ ·[_	 ¬Äçó—zl>S×?ş¨¤X©³ĞA™NmšÚ§ojö‡ƒl?¿•{Ç[i›É•ÆNÿ h  oâI›d²µuç |ôÎüÜûr÷³g³¿ŸšÃ¤ô)‹ôÇú`®‰”Åeµ£ŸXVÚfÎiÎî_Öõ(‹Ku%= ’ÒLîÚÔ¤©“2œ]ÒÖ.m)¹~c”òÂNŸÎïİH¹t˜/}?W®ué“¦h   ßJM)éûšfPrñÒnŞy×©üÊÎù«ãwdôõó¹¾7ÈÆNM“Ã”qMé“¦ô™oû×…9Åº­ú²~ëeì¿î^óû”•ÿ¿ğóJ´ÉMRºôm“q»‘ÑäÆö+ù§¼˜g¯¤Û   ˆ   À7ë´M™UÈ|÷GïÈ/}ÿ#ùî?<—Ñ“[éGe²Ğ6;«_WÊ`–Éñ–º¸¿|Â¦Lväç]1Ë¼CfÉr`ùöùIÿºÒ„³–’ºüÀå0@IjÚ”¾M3nSº’R»Ú.¥İJ?¾3§ÿät¾£nç¾—|òéWòâ‹ãi;   à[¥išÔZóè£gó/ÿÌ;ó×Í?{_6¯œM›QÃ>M7N3îÓö“ùÇ¬òW™ÌOjYœ#,Õ£|ñQy%Ÿ\g·Õ…ü²47)e!Ø¼Ğ Ìæ!ÍÑTèè]¥¤Oš’6S_(Ù|`œëŞË§¾şJ^y¾KÓ D  €o†yIË;Æ[yèú¹l¼²•ŒkÒ'=0§e5o×ÌOºÔ…2şÉÒ‰ş²ĞW³–y²\Ns¹ÔæÊéR·8zºZf­&/µ™*8ªZjRöS›WÒõI{ãtîú³ò3§ÿÃü_Î|%ğû×SR²1HöÇ¢   ğÍ259<èÓõ}ø3ùÅ÷=|ş<ú•sé7sØ7)ƒ>éûÙ˜¾”y ¹.Í¯ua¾P—Êœ•µçüëmÔ	˜J-Óë¯ÌEjY×Ål©ÚdNÒ'¥ÍÙ»y÷‹grf<Ì“å`23å  ˆ   Àë­Ÿ{îéaÎg”ìr8ìS›.é_U©zâ²ÚkyT¹å#¿íÓ—’&“…»R®¥mrx~7ıÕQF¿so~ákòP—ïÊ×òÇŸ»‘ıq2hJº¾ª   yı«L&"<±“Ÿ{âb~ú•{sáŸlåú6u«Ï°ÖÉùÑæ{)ég“—r|P_Íœã›}ú¾Në $µïÒÛ´/oçÒ§v³}e¾ÖÉü €W­ñ  Ü\W§ı37ú\<åÒó›iú6ã&Iº¤ô7İÀŸã_*üŸåÚš9:C³òûyyÍºòØåòkÖëÊš.µ¦ÔšZkæ2-Ú§–:-ñ9Î°{9es?Íæ¹ä·îË/>õÎü¯>ôH»w3Myr  À1µ&¥Iî}`;íÇÉŸê¾Üó··²]Ïd¸½™Q™”Ğ¯M—Úô³Rÿó®_Ge¾ê|ªR
+…Mçe±}YYi’ZË¬ŠY]˜ƒÌo^7:züü5L*œÕ¥Q§Uš¾Ïa[SÆ›¹|å|<w&åLÒ×ÉŠ  À«ÒF›¿ác  X¯­6’SwòS£{óƒ/İ›ñŞ(ƒqšÁ8%IS›”4óŞ˜™—µœ®À¥¤I)eòµ°±´ĞVêQÍÎŞ”²°W–·ÿËÊ‚ÛâÏeñªó(BY,.öMÛ”Ò%¥KÒ¤Öl½|&—nlå½óõr5Ÿş0MJFm“NmN  ø††“ö]}­yçûOç×>üh~êS÷ç¡?;›áŞvšÁ0µ©IúÙû4Á»<¦¯óùBïsÔ¬,ÎXÿdí×±ùÉb7¬Îo^Îò£,JÚi´Ék·Ão´õ}®4ùú{yòÓ×’$mÛ¤šo  h  ğzhš’®«K>ø»óÄËçR¿šômMÚ…õ²¶MæM{hæ6
+nŞö£jN®Òy³ß•œØD OM©)MŸ~w7W¯ìdô™Kùs5×ï­w_Êo}îZö»šAiÒ¥×£  ^£á Éáá¤ºØÃïßÎ_|âşüÜ³åÎ?:“vº›¤ëSú~:î›+ş¯”×¯yÙÉĞîsÒ$©,ß³ö)í8µ6)‡›ùÎ3wç±ı¯çŸæéÉœ¬$     x-6mùsïÎ;û;sx=©§kšfr:'™”î/©'k²æÌıêúW]³ÕòŠÜô\~nµË_×à|UAƒ£Ô£’Ÿ]ÚúrênMw¸›kxO~ìİ%;OŒòÂÕÏæÏ¿–qW_mÆ  XpØÕ”arÏ½ùå_ÊÏ~ñrÎıƒİ4ÛÛ©;5Mw˜ÒO§Íš‘~]ÿÃñmø£±{™ÍdV¯Vo'­¼æşÇ
+“p½º#¨‡š4ƒAN}~”³/nóÅ    €¼ªã-¥”l5ÃÜ÷ÌfÎ½8J)mRú”¦Ÿ”íŸTàÌbùüÔ©óÕ°²f7¾ŞF`±_çR0 Ô…buòTuåù×ÿ8uR˜3µ™4 M—Ò^MÕô»9üÊ=ùÀŞ0ÿîwìæûõÏäï~æé¤&MJj©*  ÀmjÛÉœbÜ×<üÄF~í‡îÏG?q9÷şÙ…4)m7÷ı4€\Rû:½OÆş“ñ÷êÙüz<ø[ç-Åæ¿®Óß••ÙÅr[±ç7Yæº8É)«™ÅĞsYšŒ´}Ÿ¾éRÛQÎ¿¼™»®o¦–ÔÃš®÷o     ¯q_SkÍp\r××G¾<Êş MÒ§Ôùi™&9v–¥¬w©+Õ.åNØÊŸ·ëÌÚu´õ}8³*¨ËyƒÜ¼‚@]¾©6“÷YúÔr˜~x5Œsõê(;Oß•wò?;7ÈîÃÉÿëÉgÒ_«•&‡Ú  @nÕ÷k£m²?ìp¿ÿ}»ùÅÇîÉO~áÁ\øäİ©W·RÏÖô9L9è—fÇ/UO×º¾CÀ­Šû/ÿ\òÚz“•µ÷)KÓ¤šÒ×t©É ÉÎÁ(gö†©Gs™*    €×G­5£;›<vÿ¹Ü··“öåAúaMiVË[ÎOĞ¬ï‚yÛ•ş_SÿÍå%¶Ûm [/ğÕù5û’ÔŒSÊÕŒv7²°›_ØÍÜóÎÜqGÉÕáA~óK/äàzÓŸ  {ÿ©5“ÍÿaòÀ][ù•ï¸”?ÿüÙøïÏ$Û›)g“ÒŒ“¾&MMm’tÍš­şÛÛÎ¿å/Êš'´XJ6—Ûõ×²¦Àäá¥ö©m—¾Ô4/6¹ok7<~&Ÿÿì•ô{5M™|  ÜZ;mş† `YÓ”Ù	ö‡Ş.ñ#æû>s>Ã'7Òo—”¶OikšRÓLÎ¥L´JJY>Å_jYè9ù³tD¿””ÙMÓü³¯Õª›e¹¬æÊïnö5ûS¦¯¡.´XYL[zú’”f~l¨4I“>m©iÛaúwrw¿•÷ß7Î'¯ä‹W^ÏŒ  ¼å´iâGŞÊÿü‡ÍG?u)§şä\ÚÍİ†%M3N“>¥KJúÉ)ÿÅò`©eşË¬²Yš$”ÅßÎZÜ´²©ãS‹²n2RÖ|Ÿ2»~™½‚ÅGÖÙk*éS‡%}$ÏÔl?”\ûƒ|ò/fïj—¶mÒ+1    ^êF?<ı6éÇÉ M©uº.V’:)¸y´¸UWÖÎÖ±)ùÇÿÿ±³A'ÜRÖ·X8SëtQoñu¹èñ.ŸevıYmÎ’”Ú¤í’ÚX:L)×sPšŒ^¾#=ışü›g·sûgùŸ:¹ÒgXšÔAŸñX9   H’aSrØ×Ô¶É?qo~á¾Kù¡/Ü•ó_9•ñÁFšš’qÊ¸OM3=õŸôGcıé	ıY¸®ÛÍ_,N&J‡ç'ôëüšeı¥Öå9ÇQzõ®'‚ËÂ¬fÒV­”¤IMÛ×Ô½6÷]ÛÉ{®ŸÎvä¥ D    ßXéÿù÷»W9ıù6Í^›2œ,½•Ô”.I¦•fGYê¯¶h–Ëy¾¦Ç§Iúi5ƒéÂ`IMÊ~F[Éƒ&yòB¾ç÷f÷Â /Æù¯ë³Ù¹Oº$  ·oÙÿfºùŸAòıOÜ‘îÁóñ.eïéÛN•4ıaêd»?MJj_Ò•6uR+ÿx#°òfı4Ê,l\k’Ú§­ãd¸‘áƒÜı™A¶šÉ4¦÷ï     ù “EµÚÔœÉ0®meĞm¤+G€úh.œÂ)+¿,·Ú/'mÒ/ÿ¢®9ÿ¿\`}Å£’uå\ĞQâañÀP©e²Àx¤o.½üîKA{%äà¹Í<±÷Hşí³7rp¡ÏßéO¹æß  ,ÃŸ¸çtşæw<˜ïûÒ¹ìº¦İ¥ôMÒw“ûÕ2«ÌUKŸ2?¦?­²tò¿Î[
