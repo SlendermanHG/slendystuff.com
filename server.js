@@ -20,9 +20,9 @@ const QWERTYLOCK_MAX_USES = 2;
 
 const defaultConfig = {
   supportEmail: "support@slendystuff.com",
-  discordUrl: "https://discord.gg/your-invite",
-  twitchUrl: "https://twitch.tv/slendermanhg",
-  youtubeUrl: "https://youtube.com/@slendermanhg",
+  discordUrl: "https://discord.gg/Ayvk4bz8TS",
+  twitchUrl: "https://www.twitch.tv/slendystuff",
+  youtubeUrl: "https://www.youtube.com/@slendystuff",
   schedulerUrl: ""
 };
 
