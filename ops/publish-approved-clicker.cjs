@@ -5,13 +5,13 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 const path = require('node:path');
 const repo = 'SlendermanHG/slendystuff.com';
-const tag = 'v0.5.2.8';
+const tag = 'v0.5.2.9';
 const name = 'SlendyStuffClicker.exe';
-const hash = '2cd07301aff15112c702b1b202d89d95059f62e8ebf02a5a0a3ec7f7afec4cbb';
-const size = 1228800;
+const hash = '0382d8b7f48bec7413c477672bbcf630885ddd377e864483facd02b0efa2b304';
+const size = 1229312;
 
 function assembleApprovedBinary() {
-  const root = path.join(__dirname, 'releases', '0.5.2.8');
+  const root = path.join(__dirname, 'releases', '0.5.2.9');
   const binary = Buffer.concat(Array.from({length:38},(_,i)=>i+1).map(n => fs.readFileSync(path.join(root, name + '.part' + n))));
   if (binary.length !== size || crypto.createHash('sha256').update(binary).digest('hex') !== hash) throw Error('Unapproved publication parts');
   fs.writeFileSync(path.join(root, name), binary);
@@ -31,13 +31,13 @@ function verifyAsset(asset, draft = false) {
 async function publish(env = process.env, request = fetch) {
   if (env.GITHUB_REPOSITORY !== repo || env.GITHUB_REF !== 'refs/heads/main' || env.GITHUB_EVENT_NAME !== 'push' ||
       !/^[a-f0-9]{40}$/.test(env.GITHUB_SHA || '') || !env.GITHUB_TOKEN) throw Error('Approved main-branch publication context required');
-  const root = path.join(__dirname, 'releases', '0.5.2.8');
+  const root = path.join(__dirname, 'releases', '0.5.2.9');
   const binary = fs.readFileSync(path.join(root, name));
   const notes = fs.readFileSync(path.join(root, 'RELEASE-NOTES.md'), 'utf8').replace(/\r\n/g, '\n');
   if (binary.length !== size || crypto.createHash('sha256').update(binary).digest('hex') !== hash) throw Error('Unapproved binary');
-  if (!notes.startsWith('# SlendyStuffClicker v0.5.2.8\n') || !notes.includes(hash)) throw Error('Missing approved version and identity in notes');
+  if (!notes.startsWith('# SlendyStuffClicker v0.5.2.9\n') || !notes.includes(hash)) throw Error('Missing approved version and identity in notes');
   const product = JSON.parse(fs.readFileSync(path.join(root, 'APPROVAL.json'), 'utf8'));
-  if (product.version !== '0.5.2.8' || product.size !== size || product.sha256 !== hash || product.releaseReady !== true || product.ownerApproved !== true || product.policy !== 'manual-unsigned-preview') throw Error('Approved artifact manifest mismatch');
+  if (product.version !== '0.5.2.9' || product.size !== size || product.sha256 !== hash || product.releaseReady !== true || product.ownerApproved !== true || product.policy !== 'manual-unsigned-preview') throw Error('Approved artifact manifest mismatch');
   const base = `https://api.github.com/repos/${repo}`;
   async function api(url, method = 'GET', body, binaryBody = false, allow404 = false) {
     const parsed = new URL(url);

@@ -4,10 +4,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const {publish, verifyAsset, assembleApprovedBinary} = require('./publish-approved-clicker.cjs');
 const env = {GITHUB_REPOSITORY:'SlendermanHG/slendystuff.com',GITHUB_REF:'refs/heads/main',GITHUB_EVENT_NAME:'push',GITHUB_SHA:'a'.repeat(40),GITHUB_TOKEN:'test-fixture-token'};
-const notes = fs.readFileSync(__dirname + '/releases/0.5.2.8/RELEASE-NOTES.md','utf8').replace(/\r\n/g,'\n');
-const asset = {name:'SlendyStuffClicker.exe',size:1228800,state:'uploaded',digest:'sha256:2cd07301aff15112c702b1b202d89d95059f62e8ebf02a5a0a3ec7f7afec4cbb',browser_download_url:'https://github.com/SlendermanHG/slendystuff.com/releases/download/v0.5.2.8/SlendyStuffClicker.exe'};
-const release = {id:123,tag_name:'v0.5.2.8',prerelease:true,draft:true,body:notes,assets:[],target_commitish:env.GITHUB_SHA,html_url:'https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.8'};
-test('Publication parts reconstruct the exact approved binary',()=>{ assert.equal(assembleApprovedBinary().length,1228800); });
+const notes = fs.readFileSync(__dirname + '/releases/0.5.2.9/RELEASE-NOTES.md','utf8').replace(/\r\n/g,'\n');
+const asset = {name:'SlendyStuffClicker.exe',size:1229312,state:'uploaded',digest:'sha256:0382d8b7f48bec7413c477672bbcf630885ddd377e864483facd02b0efa2b304',browser_download_url:'https://github.com/SlendermanHG/slendystuff.com/releases/download/v0.5.2.9/SlendyStuffClicker.exe'};
+const release = {id:123,tag_name:'v0.5.2.9',prerelease:true,draft:true,body:notes,assets:[],target_commitish:env.GITHUB_SHA,html_url:'https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.9'};
+test('Publication parts reconstruct the exact approved binary',()=>{ assert.equal(assembleApprovedBinary().length,1229312); });
 test('Windows checkout cannot normalize publication fragment line endings',()=>{assert.match(fs.readFileSync(__dirname+'/../.gitattributes','utf8'),/^ops\/releases\/\*\*\/SlendyStuffClicker\.exe\.part\* -text$/m);});
 function mock(sequence) {
   const calls=[];
@@ -27,7 +27,7 @@ test('Creates draft, uploads exact bytes, reads identity back before publishing 
   const m=mock([{method:'GET',status:404},{method:'POST',value:release},{method:'POST',value:asset},{method:'GET',value:uploaded},{method:'PATCH',value:publicRelease}]);
   const result=await publish(env,m.request);assert.equal(result.draft,false);assert.equal(m.sequence.length,0);
   const creation=JSON.parse(m.calls[1].options.body);assert.equal(creation.body,notes);assert.equal(creation.draft,true);assert.equal(creation.prerelease,true);
-  assert.equal(m.calls[2].options.body.length,1228800);assert.equal(m.calls[2].options.redirect,'error');
+  assert.equal(m.calls[2].options.body.length,1229312);assert.equal(m.calls[2].options.redirect,'error');
 });
 test('Exact published release is verified without any mutation',async()=>{
   const r={...release,draft:false,assets:[asset]};const m=mock([{method:'GET',value:r},{method:'GET',value:r}]);
@@ -50,4 +50,4 @@ test('GitHub untagged draft URL is accepted only before publishing; public URL m
   assert.equal(m.calls.length,3);assert.equal(m.calls.filter(c=>c.options.method==='POST').length,0);
 });
 
-test('Hotfix notes explain recovery, required companion reload and retained safeguards for users',()=>{assert.match(notes,/brief interruption/);assert.match(notes,/Update companion/);assert.match(notes,/fully close and reopen/);assert.match(notes,/manual Stop/);assert.ok(!/C:\\Users\\|E:\\|owner approved|user requested|assistant actions|pairing-key|9999999999/i.test(notes));});
+test('Memory hotfix notes explain advisory, critical limits, required reload and retained guards for users',()=>{assert.match(notes,/85%/);assert.match(notes,/95%/);assert.match(notes,/512 MiB/);assert.match(notes,/Update companion/);assert.match(notes,/fully close and reopen/);assert.match(notes,/Manual stops/);assert.ok(!/C:\\Users\\|E:\\|owner approved|user requested|assistant actions|pairing-key|9999999999/i.test(notes));});

@@ -1,4 +1,4 @@
-name: Publish SlendyStuffClicker v0.5.2.8
+name: Publish SlendyStuffClicker v0.5.2.9
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
     paths:
       - '.gitattributes'
       - '.github/workflows/clicker-approved-preview.yml'
-      - 'ops/releases/0.5.2.8/**'
+      - 'ops/releases/0.5.2.9/**'
       - 'ops/publish-approved-clicker.cjs'
       - 'ops/sync-clicker-release-notes.cjs'
       - 'ops/test-release-notes.cjs'
@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: slendystuffclicker-approved-0-5-2-8
+  group: slendystuffclicker-approved-0-5-2-9
   cancel-in-progress: false
 
 jobs:
@@ -33,14 +33,14 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $binary = Get-Item -LiteralPath 'ops/releases/0.5.2.8/SlendyStuffClicker.exe'
-          if ($binary.Length -ne 1228800) { throw 'Unexpected binary size' }
+          $binary = Get-Item -LiteralPath 'ops/releases/0.5.2.9/SlendyStuffClicker.exe'
+          if ($binary.Length -ne 1229312) { throw 'Unexpected binary size' }
           $digest = (Get-FileHash -LiteralPath $binary.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($digest -ne '2cd07301aff15112c702b1b202d89d95059f62e8ebf02a5a0a3ec7f7afec4cbb') { throw 'Unapproved binary' }
+          if ($digest -ne '0382d8b7f48bec7413c477672bbcf630885ddd377e864483facd02b0efa2b304') { throw 'Unapproved binary' }
           $metadata = [Diagnostics.FileVersionInfo]::GetVersionInfo($binary.FullName)
-          if ($metadata.FileVersion -ne '0.5.2.8' -or $metadata.ProductVersion -ne '0.5.2.8') { throw 'Version mismatch' }
+          if ($metadata.FileVersion -ne '0.5.2.9' -or $metadata.ProductVersion -ne '0.5.2.9') { throw 'Version mismatch' }
           $assembly = [Reflection.AssemblyName]::GetAssemblyName($binary.FullName)
-          if ($assembly.Version.ToString() -ne '0.5.2.8') { throw 'Assembly version mismatch' }
+          if ($assembly.Version.ToString() -ne '0.5.2.9') { throw 'Assembly version mismatch' }
       - name: Verify publisher boundaries
         run: node --test ops/test-approved-clicker-release.cjs
       - name: Check release-note synchronization
