@@ -11,13 +11,13 @@ A free portable Windows auto clicker and companion mod for Cookie Clicker on Ste
 - Independent clicking, golden-cookie collection and selected shop purchases.
 - Seasonal hearts, cookie-storm rewards, optional wrath cookies and Christmas reindeer.
 - Wrinkler rules, shop targets and reserves, seasonal progress and Completionist guidance.
-- Optional combo and spell assistance, Garden and sugar-lump harvesting, and budgeted Stock Market trading.
-- Grouped Gameplay settings, saved profiles, live status and resource checks.
-- Scheduled game restarts, optional private save backups and portable updates with your approval.
+- Optional combo and spell assistance, Garden and sugar-lump harvesting, and simple Automatic or manual Stock Market trading.
+- Grouped Gameplay settings, saved profiles, clear click-hold status, Fortune collection and upgrade protections.
+- Scheduled game restarts, optional memory relief and private save backups, and portable updates with your approval.
 
-v0.5.2.8 fixes automation staying stopped after brief local connection interruptions. Update the EXE and companion, then save and fully restart the game. Existing profiles and safety safeguards are retained.
+Automatic Stock Market controls, green Fortune collection, upgrade-aware protections and optional memory relief are here. Safety-stop recovery no longer requires closing both apps. Update the companion, save and fully restart the game once to load this release. Your profiles are retained.
 
-[Download and setup](https://slendystuff.com/slendystuffclicker/) · [Setup guide](https://slendystuff.com/slendystuffclicker/setup/) · [Current release: v0.5.2.8](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.2.8) · [Previous releases](https://github.com/SlendermanHG/slendystuff.com/releases)
+[Download and setup](https://slendystuff.com/slendystuffclicker/) · [Setup guide](https://slendystuff.com/slendystuffclicker/setup/) · [Current release: v0.5.3.1](https://github.com/SlendermanHG/slendystuff.com/releases/tag/v0.5.3.1) · [Previous releases](https://github.com/SlendermanHG/slendystuff.com/releases)
 
 The download is one EXE. Companion setup adds a mod to the game folder; pairing settings, profiles and bounded logs stay on the computer. The release tag matches the app's internal four-part version.
 

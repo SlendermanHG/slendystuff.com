@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-18",
-  "title": "v0.5.2.8 connection-recovery update",
-  "message": "v0.5.2.8 fixes automation staying stopped after a brief local connection interruption. Update the EXE and companion, then save and fully restart the game to apply the fix. Your profiles are retained; manual stops and safety safeguards remain in place."
+  "date": "2026-10-20",
+  "title": "v0.5.3.1: smarter automation and easier recovery",
+  "message": "Automatic Stock Market controls, green Fortune collection, upgrade-aware protections and optional memory relief are here. Safety-stop recovery no longer requires closing both apps. Update the companion, save and fully restart the game once to load this release. Your profiles are retained."
 }
