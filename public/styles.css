@@ -1733,3 +1733,5 @@ body[data-page="software"] .page-hero .hero-panel { max-width: 1100px; }
 }
 
 .software-pricing > div { padding-inline: 0 !important; }
+
+.site-nav a.nav-game-room{color:#ff9cbc;font-weight:750}.site-nav a.nav-game-room:hover{color:#fff}
